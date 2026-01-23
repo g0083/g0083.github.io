@@ -1,6 +1,7 @@
 /* CSS Variables for Emerald Green Theme */
 :root {
-    --primary-color: #50C878; /* Emerald Green */
+    --primary-color: #50C878;
+    /* Emerald Green */
     --primary-hover: #3da862;
     --background-dark: #121212;
     --surface-dark: #1e1e1e;
@@ -9,7 +10,8 @@
     --font-heading: 'Noto Sans JP', sans-serif;
     --font-body: 'Inter', sans-serif;
     --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 10px 15px rgba(80, 200, 120, 0.2); /* Greenish glow on hover */
+    --shadow-hover: 0 10px 15px rgba(80, 200, 120, 0.2);
+    /* Greenish glow on hover */
 }
 
 /* Global Styles */
@@ -23,7 +25,9 @@ body {
     transition: all 0.3s ease;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     font-family: var(--font-heading);
     color: var(--primary-color);
 }
@@ -53,6 +57,12 @@ header {
 .header-content {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
     align-items: center;
 }
 
@@ -148,7 +158,8 @@ header {
 .card-image-wrapper img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensures images fill the area nicely */
+    object-fit: cover;
+    /* Ensures images fill the area nicely */
     transition: transform 0.5s ease;
 }
 
@@ -186,21 +197,25 @@ footer {
 
 /* Language Switching Logic */
 /* Default is hidden, specific language class shows relevant text */
-.text-jp, .text-en {
+.text-jp,
+.text-en {
     display: none;
 }
 
 body.lang-jp .text-jp {
     display: inline-block;
 }
-.hero body.lang-jp .text-jp, 
+
+.hero body.lang-jp .text-jp,
 .card-content body.lang-jp .text-jp {
-    display: block; /* Block elements for paragraphs/headings */
+    display: block;
+    /* Block elements for paragraphs/headings */
 }
 
 body.lang-en .text-en {
     display: inline-block;
 }
+
 .hero body.lang-en .text-en,
 .card-content body.lang-en .text-en {
     display: block;
