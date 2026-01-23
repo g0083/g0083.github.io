@@ -74,13 +74,21 @@ header {
 
 /* Buttons */
 .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: 1px solid var(--primary-color);
     color: var(--primary-color);
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
     cursor: pointer;
     font-family: var(--font-heading);
+    font-size: 0.9rem;
+    line-height: 1;
+    min-width: 80px;
+    height: 38px;
+    box-sizing: border-box;
     transition: all 0.3s ease;
 }
 
