@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
 
     // Detect browser language
-    const userLang = navigator.language || navigator.userLanguage; 
+    const userLang = navigator.language || navigator.userLanguage;
     let currentLang = userLang.startsWith('ja') ? 'ja' : 'en';
 
     function updateLang(lang) {
@@ -57,4 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Optional: Disable button or show error text if critical
             // linkElement.href = "https://play.google.com/store/apps/details?id=..."; // Fallback if known
         });
+
+    // Mobile Detection and Layout Application
+    function checkMobile() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        if (isMobile) {
+            body.classList.add('is-mobile');
+            console.log('Mobile device/view detected.');
+        } else {
+            body.classList.remove('is-mobile');
+            console.log('Desktop view detected.');
+        }
+    }
+
+    // Run on load and resize
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
 });
