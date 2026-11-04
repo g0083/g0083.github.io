@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【検証】話題の「Weight-Space Programming」を0.09Bの極小言語モデルで試してみた 〜勾配計算なしでモデルのバグは直せるのか？〜 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【検証】話題の「Weight-Space Programming」を0.09Bの極小言語モデルで試してみた">
+    <meta property="og:description" content="MIT CSAILで話題の重み直接編集手法を、ZeroConvert-IMEのZeroCon Model Standard v4（90M）で検証。再学習なしで数字バグが直った成功例と、直面した本質的な限界をレポートします。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/weight-space-programming-zerocon.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .callout-warning {
+            background: rgba(255, 170, 0, 0.08);
+            border-left-color: #ffaa00;
+        }
+
+        .callout-warning .callout-title {
+            color: #ffaa00;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            margin-top: 3.5rem;
+            padding: 1.5rem;
+            background: var(--surface-dark);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html" class="nav-back">← トップページに戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">LLM Research & Experiment</span>
+                <h1 class="article-title">【検証】話題の「Weight-Space Programming」を0.09Bの極小言語モデルで試してみた 〜勾配計算なしでモデルのバグは直せるのか？〜</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月4日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>対象モデル: ZeroCon Model Standard v4 (90.5M)</span>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                    最近、MIT CSAILの研究チーム（Rikiya Takehi氏ら）が公開した<strong>「Sparks of Weight-Space Programming: LLMs can understand and write neural network weights」</strong>という論文・実験ログが世界的な注目を集めています。
+                </p>
+                <p>
+                    従来の「学習データを用意して勾配降下法（Backpropagation）で重みを最適化する」方法とは異なり、<strong>フロンティアLLMがニューラルネットワークの生重み（Weight tensors）をバイナリのように直接解釈し、コードや低ランク更新によって直接書き換える</strong>という驚きの手法です。
+                </p>
+                <p>
+                    特に話題になったのが、<code>Qwen3.5-0.8B</code> の思考ループ（Thinking Loop）というバグを、MLP層の重みからループ方向のベクトルを引き算するだけで一発解消し、数学ベンチマークのスコアを 7.9% から 48% へ急上昇させた実験（<code>exp8_math</code>）でした。
+                </p>
+                <p>
+                    これを見て、筆者は思いました。<br>
+                    <strong>「僕が開発している自作日本語IME用の極小モデル（ZeroCon Model Standard v4 は 0.09B、Nano は 0.03B）なら、Qwen（0.8B）の1/10以下の小ささだし、この重み直接編集でサクッと賢くできるんじゃないか？」</strong>
+                </p>
+                <p>
+                    そこで、実際に重みテンソルを直接分析し、重み空間での外科手術（Weight Surgery）を試してみました。
+                </p>
+
+                <h2>1. 対象モデルと残っていた「謎の退行バグ」</h2>
+                <p>
+                    今回実験台にしたのは、開発中の日本語IME「<a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a>」の変換エンジンである <strong>ZeroCon Model Standard v4（約90.5Mパラメータ）</strong> です。
+                </p>
+                <p>
+                    このモデルは 480 問の厳格なかな漢字変換ベンチマークにおいて、すでに <strong>95.62%（459/480問正解）</strong> という高精度を叩き出しています。しかし、残余の失敗ケースの中に、どうしても解せない「謎の退行バグ」が潜んでいました。
+                </p>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">🚨 謎の退行バグの例 (id=246)</div>
+                    <p>
+                        <strong>入力:</strong> <code>健康のために毎週末の朝にジョギングコースを走る。［１０きろはしる］</code><br>
+                        <strong>期待する正解:</strong> <code>10キロ走る</code>（半角数字）<br>
+                        <strong>実際のモデル出力:</strong> <code>１0キロ走る</code>（！？）
+                    </p>
+                </div>
+                <p>
+                    なんと、1文字目は全角の <code>１</code> で出ているのに、2文字目でなぜか半角の <code>0</code> にスイッチしてしまい、<strong>「全角・半角キメラ」</strong> という非常に不格好な出力を吐いていたのです。
+                </p>
+
+                <h2>2. ロジットの解剖：なぜキメラ現象が起きたのか？</h2>
+                <p>
+                    モデルの生ロジットをステップごとに分解して測定したところ、原因が完全に特定できました。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>生成ステップ</th>
+                            <th>候補トークン</th>
+                            <th>生ロジット値 (logit)</th>
+                            <th>採択された文字</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="2">ステップ 1（開始時）</td>
+                            <td>全角 <code>１</code> (token 678)</td>
+                            <td><strong>20.1462</strong></td>
+                            <td rowspan="2">全角 <code>１</code> がわずか <strong>+0.67差</strong> で勝利</td>
+                        </tr>
+                        <tr>
+                            <td>半角 <code>1</code> (token 20)</td>
+                            <td>19.4767</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">ステップ 2（`１` 出力直後）</td>
+                            <td>半角 <code>0</code> (token 19)</td>
+                            <td><strong>25.0743</strong></td>
+                            <td rowspan="2">半角 <code>0</code> が <strong>+2.90差</strong> で圧勝！</td>
+                        </tr>
+                        <tr>
+                            <td>全角 <code>０</code> (token 814)</td>
+                            <td>22.1701</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    入力プロンプトが全角 <code>１０</code> だったため、ステップ1では入力に引っ張られて全角 <code>１</code> がギリギリ勝ちました。しかし、ステップ2では言語モデルが普段よく学習している半角 <code>0</code> の強固なバイアスが勝ってしまい、文字種がねじれたのです。
+                </p>
+                <p>
+                    埋め込み空間における半角 <code>1</code> と全角 <code>１</code> のコサイン類似度を測ると <strong>-0.1459</strong>。モデル内では完全に別個の無関係なベクトルとして扱われていました。
+                </p>
+
+                <h2>3. 実践：重み空間の外科手術（Weight Surgery）</h2>
+                <p>
+                    「だったら、全角数字の重みベクトルを少しだけ弱めて、半角 <code>1</code> に道を譲らせれば一発で直るのでは？」
+                </p>
+                <p>
+                    そこで、モデルのトークン埋め込み・出力射影行列 <code>transformer.wte.weight</code>（形状: 6000 × 768）から、全角数字（<code>０</code>〜<code>９</code>）の行ベクトルだけを直接 <strong>5% スケーリング減衰</strong> させてみました。
+                </p>
+
+                <pre><code># 勾配降下法・追加データセット一切なし！
+# 重みテンソルを直接1行修正するだけ
+with torch.no_grad():
+    w = model.transformer.wte.weight
+    full_digits = [tok.encode(c)[0] for c in '０１２３４５６７８９']
+    for fd in full_digits:
+        w[fd] *= 0.95  # 全角数字の重みノルムを5%だけ抑制</code></pre>
+
+                <p>
+                    この編集はモデル全体の <strong>わずか 0.0085%（7,680個の重み）</strong> にしか触れていません。
+                </p>
+
+                <h3>結果はどうなったか？</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>テストケース</th>
+                            <th>修正前</th>
+                            <th>重み直接編集後</th>
+                            <th>判定</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>１０きろはしる</code></td>
+                            <td><code>１0キロ走る</code></td>
+                            <td><strong class="badge-success">10キロ走る</strong></td>
+                            <td class="badge-success">一発で解消！</td>
+                        </tr>
+                        <tr>
+                            <td><code>３かいのへや</code></td>
+                            <td><code>3階の部屋</code></td>
+                            <td><strong class="badge-success">3階の部屋</strong></td>
+                            <td>退行なし（維持）</td>
+                        </tr>
+                        <tr>
+                            <td><code>５０％のかくりつ</code></td>
+                            <td><code>50%の確率</code></td>
+                            <td><strong class="badge-success">50%の確率</strong></td>
+                            <td>退行なし（維持）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    <strong>再学習は1ステップも回していません。</strong><br>
+                    全角 <code>１</code> のロジットが 19.14 に抑えられたことで、ステップ1で半角 <code>1</code>（19.48）が首位に逆転。結果として後続の文字もすべて半角に統一され、見事に <code>10キロ走る</code> が出力されました。他の数字変換にも一切の悪影響（退行）はありませんでした。
+                </p>
+
+                <h2>4. 直面した「重み直接編集」の限界</h2>
+                <p>
+                    「これは凄い！残りのエラーも全部この調子で直せるのでは？」と意気揚々と他の失敗ケースの解剖に進みましたが、そこで<strong>「重み空間プログラミングの絶対的な壁」</strong>にぶち当たりました。
+                </p>
+
+                <h3>壁 ①: 語彙（Tokenizer Vocabulary）の壁</h3>
+                <p>
+                    230問テストでの失敗の多くは、<code>LM Studio</code> が <code>LM　Studio</code>（全角空白）になってしまう問題でした。<br>
+                    「半角空白のロジットを重みでブーストしよう！」と思いトークナイザーを調べたところ、衝撃の事実が判明します。
+                </p>
+                <pre><code>tok.encode(" ")      # 出力: [] （空リスト！？）
+tok.encode("　")     # 出力: [567] (Token 567: '\u3000')</code></pre>
+                <p>
+                    なんと、元祖モデル（zenz-v3.2）の語彙ファイルには、<strong>そもそもASCII半角スペース（<code>\x20</code>）のトークンが定義されておらず、空白文字は全角空白（ID: 567）しか存在しなかった</strong>のです。
+                </p>
+                <div class="callout">
+                    <div class="callout-title">💡 学び 1</div>
+                    <p>重み空間プログラミングは連続的なテンソルの回転やスケーリングを行う手法です。離散的なトークナイザー語彙に存在しない文字は、重みをどうこねくり回しても物理的に出力できません。</p>
+                </div>
+
+                <h3>壁 ②: 深く浸透した頻度アトラクターの壁</h3>
+                <p>
+                    もう一つの難題が、<code>１００えんのあめ</code> が <code>1000円の飴</code> に化けてしまう（100円が1000円になる）問題でした。<br>
+                    <code>100</code> まで生成した直後のロジットを調べると：
+                </p>
+                <ul>
+                    <li><code>0</code> (token 19): <strong>logit = 22.0178</strong></li>
+                    <li><code>円</code> (token 746): <strong>logit = 17.4934</strong></li>
+                </ul>
+                <p>
+                    なんと、正解の「円」より、もう1個「0」を重ねるロジットが <strong>4.5ポイント以上</strong> も上回っていました。日本語の大規模コーパスにおいて、「1000円」「10000円」の出現頻度が「100円」を圧倒しているため、言語モデル全体が <code>0</code> の連打に強烈な引力（アトラクター）を持っているのです。
+                </p>
+                <p>
+                    この <code>0 → 0</code> の引力を重み引き算で消そうとすると、「100」や「200」といった正当な2桁以上の数字変換全体が道連れで破壊されてしまいました。
+                </p>
+
+                <h2>5. まとめ：重み空間プログラミングの「3層構造」</h2>
+                <p>
+                    今回の実験とMIT CSAILの論文から得られた知見をまとめると、言語モデルにおける重み空間操作は以下の3つの階層に分類できます。
+                </p>
+
+                <div class="callout">
+                    <div class="callout-title">Layer 1: 局所病理の切除（Subtractive Surgery） 【有効】</div>
+                    <p>特定トークンの過剰な暴走（今回の全角数字）や、特定層のMLPに集中した無限ループの解消。低ランク方向を少し引き算・スケーリングすることで、再学習なしで綺麗に治せる。</p>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title">Layer 2: モデル空間の合成（Task Arithmetic / Merging） 【極めて有効】</div>
+                    <p>「通常変換モデル」と「タイポ補正モデル」の差分ベクトルを重み空間でブレンドする（WiSE-FT / Blend85）。ZeroConですでに採用されており、極小モデルだからこそ秒単位でイテレーションが回せる最強の領域。</p>
+                </div>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">Layer 3: 知識や意味理解の直接書き込み（Constructive） 【原理的に無理】</div>
+                    <p>「机の端」と「食べる箸」の文脈判断や、未知の専門用語の追加。これらは数十層の数千万パラメータに分散表現として広がっているため、勾配降下法（データセット学習）なしで重みを手書きすることはできない（CSAIL論文でもGemma 270Mへの適用は+0.8%で失敗）。</p>
+                </div>
+
+                <h2>おわりに：IMEの設計思想へ</h2>
+                <p>
+                    今回の実験を通して痛感したのは、<strong>「ニューラルネットワークの重みに無理な責務を負わせすぎない」</strong> というソフトウェア工学の大切さでした。
+                </p>
+                <p>
+                    数字の全角半角や空白文字の制御なんて、IMEのクライアント層（Rust / C++ / Swift）のコードで数行書けば 100% 確実にハンドリングできます。それを無理に数千万個の重み空間の微細なバランス調整で解かせようとするのは、モデル容量の浪費であり本末転倒です。
+                </p>
+                <p>
+                    重み空間プログラミングは魔法の杖ではありませんが、<strong>「モデルの悪癖をピンポイントで麻酔手術するツール」</strong>、そして<strong>「別々に鍛えた特化モデル同士を合成するTask Vector」</strong>として、今後もエッジAI開発における強力な武器になることは間違いありません。
+                </p>
+                <p>
+                    ZeroConvert-IMEのプロジェクトや検証データはすべてGitHubで公開していますので、興味のある方はぜひ覗いてみてください！
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    極小モデルでの重み空間プログラミング検証レポートが参考になりましたら、ぜひXなどでご感想をお寄せください！
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E6%A4%9C%E8%A8%BC%E3%80%91%E8%A9%B1%E9%A1%8C%E3%81%AE%E3%80%8CWeight-Space%20Programming%E3%80%8D%E3%82%920.09B%E3%81%AE%E6%A5%B5%E5%B0%8F%E8%A8%80%E8%AA%9E%E3%83%A2%E3%83%87%E3%83%AB%E3%81%A7%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F%20%EF%BD%9E%E5%8B%BE%E9%85%8D%E8%A8%88%E7%AE%97%E3%81%AA%E3%81%97%E3%81%A7%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AE%E3%83%90%E3%82%B0%E3%81%AF%E7%9B%B4%E3%81%9B%E3%82%8B%E3%81%AE%E3%81%8B%EF%BC%9F%EF%BD%9E&url=https://g0083.github.io/posts/weight-space-programming-zerocon.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
