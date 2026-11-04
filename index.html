@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">5</span>
+                <span class="tab-badge">6</span>
             </button>
         </div>
 
@@ -98,6 +98,11 @@
                             <a href="posts/weight-space-programming-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【検証】話題の「Weight-Space Programming」を0.09Bモデルで試してみた</span>
                                 <span class="text-en">【Experiment】Testing Weight-Space Programming on 0.09B Model</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/slm-trend-why-009b-ime.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】なぜ私は0.09Bにこだわったのか？――あえて18MBで作る日本語入力モデル</span>
+                                <span class="text-en">【Architecture】Why 0.09B? Designing an 18MB Edge SLM for Japanese IME</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -348,7 +353,30 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
-                                <!-- Article: ZeroConvert-IME Custom Model Training Journey -->
+                <!-- Article: Why 0.09B SLM IME -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="Why 0.09B SLM IME Article">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Architecture / Edge AI</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>【考察】なぜ私は0.09Bにこだわったのか？――SLM全盛期にあえて「18MB」で作るオンデバイス日本語入力モデルの設計思想</h3>
+                        <p class="text-jp">世間は0.5B〜14BのSLMブーム。だがキー打鍵ごとの即時推論が求められるIMEでは0.5Bでも重い。18MB・0.09Bの極小モデルに特化させた設計思想と、エッジAIの未来を考察します。</p>
+                        <p class="text-en">Why 0.09B? Exploring the architecture and philosophy of shrinking an edge SLM to just 18MB for real-time Japanese IME typing without cloud latency.</p>
+                        <a href="posts/slm-trend-why-009b-ime.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: ZeroConvert-IME Custom Model Training Journey -->
                 <article class="card">
                     <div class="card-image-wrapper">
                         <img src="zeroconvert.png" alt="ZeroConvert-IME Custom Model Training Article">

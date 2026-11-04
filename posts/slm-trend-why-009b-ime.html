@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】なぜ私は0.09Bにこだわったのか？――SLM全盛期にあえて「18MB」で作るオンデバイス日本語入力モデルの設計思想 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【考察】なぜ私は0.09Bにこだわったのか？――SLM全盛期にあえて「18MB」で作るオンデバイス日本語入力モデルの設計思想">
+    <meta property="og:description" content="世間は0.5B〜14BのSLM（小型言語モデル）で大盛り上がりの中、なぜあえて18MB（26.7M / 90M）の極小サイズにこだわったのか。打鍵レイテンシ0msと常駐メモリ制約を両立するIME特有の設計思想と、エッジAIの未来を考察します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/slm-trend-why-009b-ime.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(80, 200, 120, 0.2);
+            color: #50C878;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo" style="text-decoration: none; color: inherit;">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="https://github.com/g0083" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">GitHub</a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">X(twitter)</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="article-container">
+            <a href="../index.html" class="nav-back">← プロジェクト一覧へ戻る</a>
+
+            <header class="article-header">
+                <span class="article-category">Architecture / Edge AI</span>
+                <h1 class="article-title">【考察】なぜ私は0.09Bにこだわったのか？――SLM全盛期にあえて「18MB」で作るオンデバイス日本語入力モデルの設計思想</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月5日</span>
+                    <span>著者: O-ya tech (@ooyatech)</span>
+                    <span>関連プロジェクト: <a href="../index.html#project-zeroconvert" style="color: var(--primary-color);">ZeroConvert-IME</a></span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <h2>1. 「SLM（小型モデル）」全盛の時代がやってきた</h2>
+                <p>
+                    2026年現在、AI業界のトレンドは明らかな転換点を迎えています。数百億〜数千億パラメータを誇る巨大なクラウドLLM一強の時代から、0.5B〜14Bクラスの「SLM（Small Language Model / 小型言語モデル）」を、手元のPCやスマートフォン、ブラウザ上で軽快に走らせるオンデバイスAIが主流になりつつあります。
+                </p>
+                <p>
+                    クラウドAPIの従量課金を回避し、プライバシーを完全に端末内で担保し、ネットワーク遅延のないゼロレイテンシ推論を実現する。この潮流自体は、私が長年追求してきた方向性と完全に一致しています。
+                </p>
+                <p>
+                    しかし、ここでひとつの疑問が浮かびます。<strong>「世間で言われている0.5B〜3BのSLMは、本当に日常のあらゆるアプリで実用的なのか？」</strong>という点です。
+                </p>
+
+                <h2>2. IME（日本語入力）という過酷すぎる戦場</h2>
+                <p>
+                    チャットボットや要約ツールであれば、最初のトークンが出るまでに200ms〜500ms待たされてもユーザーは許容してくれます。しかし、<strong>文字入力（IME）は全く別の世界</strong>です。
+                </p>
+                <div class="callout">
+                    <div class="callout-title">タイピングにおける「許容遅延」の壁</div>
+                    人間が打鍵して違和感を抱かない限界速度は<strong>20ms〜30ms以内</strong>と言われています。キーを1文字叩くたびに推論が走り、文脈に合わせて変換候補や自動確定をストリーミング更新するIMEにおいて、100msの遅延は「使い物にならないガクつき」として即座に体感されてしまいます。
+                </div>
+                <p>
+                    また、メモリ消費も無視できません。0.5B〜1Bのモデルを4bit量子化しても、最低でも300MB〜600MB前後のVRAMやRAMを常時占有します。バックグラウンドで常に立ち上がっているIMEがメモリを数百MB食い潰し、バッテリーを削り、GPUファンを回すようでは、常用アプリとしての失格を意味します。
+                </p>
+
+                <h2>3. だからこそ「18.7MiB / 0.09B」を狙い撃った</h2>
+                <p>
+                    ZeroConvert-IMEで採用したアプローチは、世間のSLMのトレンドよりもさらに2桁小さい**「極小モデルへの特化」**でした。
+                </p>
+                <ul>
+                    <li><strong>ZeroCon Model Nano v4</strong>: わずか26.7Mパラメータ、ファイルサイズ18.7 MiB。Androidスマホや低スペックPCでもCPUのみで瞬時に動作。</li>
+                    <li><strong>ZeroCon Model Standard v4</strong>: 90M（約0.09B）パラメータ。より深い文脈理解とタイポ補正、先読みアシストを高精度に両立。</li>
+                </ul>
+                <p>
+                    「なんでも答えられる汎用AI」を目指すなら0.09Bは無力です。しかし、「日本語の読みから漢字仮名交じり文への変換・文脈推定・タイポ訂正」という<strong>ドメイン特化タスクに全パラメータを集中投下</strong>すれば、わずか18MBでも商用IMEに迫る驚異的な変換精度と実用速度を叩き出すことができます。
+                </p>
+
+                <h2>4. 極小モデルを実用化するための3つの工夫</h2>
+                <p>
+                    パラメータ数をここまで削ると、当然ながら「表現力の不足」や「局所的なバグ」に直面します。これを乗り越えるために導入したのが以下の3つの技術的工夫です。
+                </p>
+                <ol>
+                    <li><strong>Target-Corrected 知識蒸留</strong>: 巨大モデルの推論ログからただ真似るのではなく、日本語特有の同音異義語や助詞の繋がりを集中的に矯正する蒸留パイプラインを構築。</li>
+                    <li><strong>Weight-Space Programming（重み空間プログラミング）</strong>: 先日の記事でも紹介した通り、再学習によるカタストロフィック忘却を起こさずに、特定の変換バグだけを重み直接編集でピンポイント修正。</li>
+                    <li><strong>ストリーミング確定エンジン</strong>: キーを叩いた瞬間に確定できる確信度の高いトークンだけを先行コミットし、推論の負荷を時系列に分散。</li>
+                </ol>
+
+                <h2>5. まとめ：エッジAIの未来は「小ささ」にある</h2>
+                <p>
+                    モデルを大きくして賢くするのは、計算資源さえあれば誰でもできます。しかし、<strong>「日常の道具として違和感なく溶け込むサイズまで削ぎ落とし、ローカルで完結させる」</strong>ことこそが、エンジニアリングの最大の醍醐味だと感じています。
+                </p>
+                <p>
+                    クラウドに一切データを送らず、打鍵遅延0msで変換キーを押す動作そのものをなくしていく――この挑戦の成果を、ぜひ一度Windows / Android版のZeroConvert-IMEで体験してみてください。
+                </p>
+
+                <div style="margin-top: 3rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(80, 200, 120, 0.2); border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: var(--primary-color);">ZeroConvert-IME を試してみる</h3>
+                    <p style="margin-bottom: 1rem;">Windows版・Android版のバイナリおよびソースコードをGitHubにて公開中です。</p>
+                    <a href="https://github.com/g0083/ZeroConvert-IME" class="btn-primary" target="_blank" rel="noopener noreferrer">GitHubで見る →</a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>
