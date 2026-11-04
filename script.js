@@ -73,4 +73,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run on load and resize
     checkMobile();
     window.addEventListener('resize', checkMobile);
+
+    // Tab Switching Logic (Projects vs Blog)
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    function switchTab(tabId) {
+        tabBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+        });
+        tabPanels.forEach(panel => {
+            panel.classList.toggle('active', panel.id === `tab-${tabId}`);
+        });
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-tab');
+            switchTab(target);
+        });
+    });
+
+    // Handle Project Pill clicks (linking blog -> project card)
+    document.querySelectorAll('.project-pill-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const projectId = btn.getAttribute('data-target-project');
+            switchTab('projects');
+            const targetCard = document.getElementById(`project-${projectId}`);
+            if (targetCard) {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetCard.classList.remove('highlighted');
+                void targetCard.offsetWidth; // trigger reflow
+                targetCard.classList.add('highlighted');
+            }
+        });
+    });
+
+    // Check URL query parameters (e.g. ?tab=blog or ?project=zeroconvert)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'blog') {
+        switchTab('blog');
+    }
+    const targetProjectParam = urlParams.get('project');
+    if (targetProjectParam) {
+        switchTab('projects');
+        const card = document.getElementById(`project-${targetProjectParam}`);
+        if (card) {
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.classList.add('highlighted');
+            }, 250);
+        }
+    }
 });
