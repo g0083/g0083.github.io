@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【開発記】「表示」ではなく「変換」する――なぜ世の中にダークモードPDF変換アプリが存在しなかったのか？ | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【開発記】「表示」ではなく「変換」する――なぜ世の中にダークモードPDF変換アプリが存在しなかったのか？">
+    <meta property="og:description" content="ダークモード表示できるビューアはあっても、PDFそのものをダークモードに変換して保存できるアプリはなかった。ベクターPDF内部ストリームの解析、写真のホラー化防止、背景不在問題など、開発で直面した泥臭い変換ロジックの裏側を公開します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/darkmodepdf-conversion-logic.html">
+    <meta property="og:image" content="https://g0083.github.io/DarkModePDF.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.1);
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/DarkModePDF" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Tech Article / App Dev</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【開発記】「表示」ではなく「変換」する――なぜ世の中にダークモードPDF変換アプリが存在しなかったのか？</span>
+                    <span class="text-en">【DevLog】Converting vs Viewing: Why Dark Mode PDF Converters Didn't Exist</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-01-20">2026.01.20</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: DarkModePDF / DarkModePDF on Web</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>夜間の作業や長時間の論文読み、電子書籍リーダーでの閲覧において、「ダークモード」は現代のデジタル生活に欠かせない機能となりました。</p>
+                    <p>しかし、ある日私は決定的な不満に直面しました。<strong>「PDFをダークモードで『表示』できるビューアアプリは世の中に山ほどあるのに、PDFそのものをダークモードに『変換して保存』できるツールがどこにも存在しない」</strong>ということです。</p>
+                    <p>ビューアアプリが画面上で色を反転させていても、そのPDFを他の人へ共有したり、電子ペーパー端末やKindleに転送したり、標準の印刷ダイアログに送ると、元の眩しい「真っ白なPDF」に戻ってしまいます。</p>
+                    <p>「なら自分で作ろう」と意気込んで始めたのが<strong><a href="https://github.com/g0083/DarkModePDF" target="_blank">DarkModePDF</a></strong>の開発でした。しかし、そこにはPDFの仕様が立ちはだかる、想像を絶する変換ロジックの苦難が待っていました。</p>
+
+                    <h2>1. 「ビューアの反転」と「ファイルの恒久変換」の決定的な違い</h2>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>一般的なPDFビューア</th>
+                                <th>DarkModePDF (本アプリ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>仕組み</td>
+                                <td>画面描画（GPU）にネガ反転シェーダーをかけるだけ</td>
+                                <td><strong>PDFの内部バイナリ・命令ストリームを書き換えて保存</strong></td>
+                            </tr>
+                            <tr>
+                                <td>他端末・他アプリ共有</td>
+                                <td>×（開く側のアプリで再設定が必要）</td>
+                                <td><strong>◎（どの端末・どのアプリで開いても最初から黒背景）</strong></td>
+                            </tr>
+                            <tr>
+                                <td>電子ペーパー / Kindle</td>
+                                <td>×（専用ビューアが動かない端末では白に戻る）</td>
+                                <td><strong>◎（ファイルそのものがダークモードなので完璧に表示）</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>2. 安易な「画像化（ラスタライズ）方式」が犯す致命傷</h2>
+                    <p>最も手っ取り早く変換PDFを作る方法は、「各ページを画像（PNG）としてレンダリングし、Canvasで色反転して新しいPDFに貼り直す」ことです。</p>
+                    <p>しかしこの方法には、実用に耐えない致命的な欠陥が3つあります：</p>
+                    <ol>
+                        <li><strong>文字のベクター情報が消滅する:</strong> 拡大すると文字がギザギザに潰れ、鮮明さが失われます。</li>
+                        <li><strong>テキスト選択・検索・コピペが全滅する:</strong> 単なる画像になってしまうため、重要なキーワード検索や翻訳コピペが一切できません。</li>
+                        <li><strong>ファイルサイズが10倍以上に激増する:</strong> 1MBだった論文PDFが数十MBに膨れ上がり、端末ストレージを圧迫します。</li>
+                    </ol>
+                    <p>したがって、「<strong>文字や線のベクター品質・テキスト情報を100%保持したまま、色情報だけを内部ストリームレベルで反転させる</strong>」という困難な道を選ぶしかありませんでした。</p>
+
+                    <h2>3. 開発で直面した3大ハードルと変換ロジックの工夫</h2>
+
+                    <h3>① PDFには「背景」という概念が存在しない</h3>
+                    <p>PDFの仕様書を深く読み進めて最初に驚いたのは、<strong>大半のPDFには「白い背景」というオブジェクト自体が存在しない</strong>という事実です。</p>
+                    <p>PDFは「白い物理用紙にインクを乗せる」という印刷機の発想で作られているため、何も描かれていない部分は単なる「透明（紙の白が透けて見えているだけ）」なのです。</p>
+                    <div class="callout">
+                        <div class="callout-title">🛠 解決策：背景矩形コマンドの動的注入</div>
+                        <p>ページのコンテンツストリームの先頭に、用紙サイズにぴったり合わせた黒い塗りつぶし矩形コマンド（<code>q 0 0 0 rg ... re f Q</code>）を強制的に割り込ませるパッチロジックを開発しました。</p>
+                    </div>
+
+                    <h3>② 写真や図表がネガフィルム化する「ホラー画像問題」</h3>
+                    <p>ページ内の色命令を単純に全て反転させると、論文中のグラフや挿絵、筆者の顔写真までもがネガポジ反転され、<strong>まるでホラー映画のような不気味な青白い顔写真</strong>になってしまいます。</p>
+                    <p>そこで開発したのが「<strong>スマートモード</strong>」です：</p>
+                    <ul>
+                        <li>PDF内の描画オペレータ（<code>rg</code> / <code>RG</code>: RGB、<code>g</code> / <code>G</code>: グレースケール、<code>k</code> / <code>K</code>: CMYK）を解析し、<strong>文字・図形・罫線の色のみ</strong>を反転。</li>
+                        <li>埋め込み画像オブジェクト（XObject <code>/Subtype /Image</code>）を検出し、写真やカラー図表はそのまま無傷で保護。</li>
+                    </ul>
+
+                    <pre><code>// 描画オペレータを直接書き換えるコアロジックの抜粋
+// RGB色指定 (例: "0.1 0.1 0.1 rg") の明度を反転
+modified = text.replace(/(\d+(?:\.\d+)?)([\s\0]+)(\d+(?:\.\d+)?)([\s\0]+)(\d+(?:\.\d+)?)([\s\0]+)(rg|RG)/g,
+    (match, r, s1, g, s2, b, s3, op) => {
+        return `${invert(parseFloat(r))}${s1}${invert(parseFloat(g))}${s2}${invert(parseFloat(b))}${s3}${op}`;
+    }
+);</code></pre>
+
+                    <h3>③ スマホ（React Native / JavaScript）のメモリ制限（OOM）</h3>
+                    <p>何百ページもある分厚いPDFや高解像度ファイルの場合、全ページを一度にメモリ上に展開するとスマートフォンのOSから容赦なくメモリ不足（Out Of Memory）でアプリが強制終了させられます。</p>
+                    <p>これを防ぐため、ファイルサイズの事前バリデーション、1ページずつの逐次ストリーム処理、ガベージコレクションを促すバッファ解放など、徹底的なメモリ軽量化を積み重ねました。</p>
+
+                    <h2>4. まとめとWeb/PWA版への展開</h2>
+                    <p>「ビューアで間に合わせる」のではなく「ファイル自体を変換する」というアプローチをとったことで、Kindle、各種タブレット、Webブラウザなど、どんな環境に持っていっても美しく目に優しい読書体験を提供できるようになりました。</p>
+                    <p>現在、Androidアプリ版（Google Play）に加え、インストール不要でPCやMacのブラウザから使える<strong><a href="https://g0083.github.io/DarkModePDFonWEBandPWA/" target="_blank">DarkModePDF on Web/PWA</a></strong>も公開しています。夜間のPDF閲覧で目が疲れている方は、ぜひ試してみてください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>While there are countless PDF viewers that offer dark mode displays, there was no tool that could permanently convert and save the PDF itself into dark mode.</p>
+                    <p>In this article, we share the technical story behind <strong>DarkModePDF</strong>: preserving vector clarity, bypassing the "missing background" quirk of PDF specs, and preventing embedded images from turning into inverted horror pictures.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>DarkModePDF を使ってみる</h3>
+                    <p>Webブラウザ版（インストール不要）またはAndroidアプリで無料でお試しいただけます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://g0083.github.io/DarkModePDFonWEBandPWA/" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            Web/PWA版を開く ↗
+                        </a>
+                        <a href="https://github.com/g0083/DarkModePDF" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
