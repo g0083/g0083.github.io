@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【解説】Typst Wasmでブラウザ完結の超美麗ベクターPDF出力を実現する 〜Markdown TeX Viewerの開発〜 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【解説】Typst Wasmでブラウザ完結の超美麗ベクターPDF出力を実現する">
+    <meta property="og:description" content="ブラウザ上で動作するMarkdown TeX Viewerに、WebAssembly化した新世代組版エンジンTypstを統合。ラスタライズや文字化けのない学術論文レベルのベクターPDFを出力する技術構成を解説します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/markdown-tex-viewer-typst-wasm.html">
+    <meta property="og:image" content="https://g0083.github.io/markdown-tex-viewer.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/markdown-tex-viewer" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Tech Article / WebAssembly</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【解説】Typst Wasmでブラウザ完結の超美麗ベクターPDF出力を実現する</span>
+                    <span class="text-en">【Tech】High-Quality Browser Vector PDF Export with Typst Wasm</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-08-03">2026.08.03</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: Markdown TeX Viewer</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>ブラウザ上でMarkdownやTeX数式を執筆し、そのまま綺麗なPDFとして出力したい――。この要求は多くの学生や研究者、エンジニアが抱える共通の願いです。</p>
+                    <p>しかし従来のWebアプリにおけるPDF出力は、<strong>html2canvasによる画像ラスタライズで文字がボケる</strong>、あるいは<strong>ブラウザの印刷機能（Ctrl+P）で余白や改ページ位置が崩れる</strong>といった数々の妥協に悩まされてきました。</p>
+                    <p>本記事では、自作エディタ「<strong><a href="https://markdown-tex-viewer.pages.dev/" target="_blank">Markdown TeX Viewer</a></strong>」において、新世代のRust製組版エンジン「<strong>Typst</strong>」をWebAssembly化して内蔵し、<strong>サーバーを一切介さずブラウザ完結で学術論文クオリティのベクターPDFを出力する技術設計</strong>を解説します。</p>
+
+                    <h2>1. なぜブラウザでのPDF出力は破綻しやすいのか？</h2>
+                    <p>クライアントサイドのPDF生成ライブラリには大きく2つのアプローチが存在します：</p>
+                    <ul>
+                        <li><strong>DOMラスタライズ方式 (html2pdf.js, html2canvas):</strong> HTML要素を一旦Canvasに描画してPNG画像化し、それをPDFに貼り付ける方式。文字選択ができず、拡大するとピクセルが荒れ、ファイルサイズも巨大化します。</li>
+                        <li><strong>ブラウザ標準印刷 (window.print):</strong> ブラウザのエンジン任せになるため、印刷余白・ヘッダー/フッター・数式の改ページ位置の精密な制御が不可能です。</li>
+                    </ul>
+
+                    <div class="callout">
+                        <div class="callout-title">💡 目指したゴール</div>
+                        <p>「テキストや数式が完全なベクターデータとして保持され、フォントが綺麗に埋め込まれ、改ページや段組が数学的に美しく計算されること。しかも外部サーバーへの通信なし（完全オフライン・PWA対応）。」</p>
+                    </div>
+
+                    <h2>2. 救世主としての「Typst」とWebAssembly</h2>
+                    <p>ここで採用したのが、LaTeXの現代的な代替として脚光を浴びている組版エンジン「<strong>Typst</strong>」です。TypstはRustでゼロから書かれており、LaTeXと同等以上の数式組版品質を持ちながら、数千倍高速にコンパイルできます。</p>
+                    <p>さらに重要なのが、<strong>Rust製であるためWebAssembly（WASM）へのコンパイルが極めて自然に行える</strong>という点です。</p>
+
+                    <pre><code>// MarkdownのASTからTypst記法への変換レイヤー（概念コード）
+function markdownToTypst(markdownText) {
+    let typstDoc = `
+#set page(paper: "a4", margin: (x: 2cm, y: 2.5cm))
+#set text(font: ("Noto Sans CJK JP", "Inter"), size: 10.5pt)
+#set par(justify: true, leading: 0.75em)
+`;
+    // KaTeX数式ブロック ($$...$$) を Typst数式 ($ ... $) へ変換
+    typstDoc += convertFormulasAndSyntax(markdownText);
+    return typstDoc;
+}
+
+// Typst WebAssemblyコンパイラによる直接PDFバイナリ生成
+const pdfBytes = await typstWasmCompiler.compile({
+    mainFile: typstDoc,
+    fonts: embeddedFontBuffers
+});
+saveAsFile(pdfBytes, "output.pdf");</code></pre>
+
+                    <h2>3. リアルタイム表示（KaTeX）とTypstのハイブリッド設計</h2>
+                    <p>入力中のタイピングレスポンスを犠牲にしないため、エディタは<strong>2層構造</strong>をとっています：</p>
+                    <ol>
+                        <li><strong>入力・プレビュー時:</strong> KaTeX + Markdown-it + Prism.js を用いてDOMに直接差分レンダリング（60fpsの即時フィードバック）。Obsidian風の <code>[!NOTE]</code> コールアウトもここで装飾。</li>
+                        <li><strong>エクスポート時:</strong> バックグラウンドのWeb WorkerでTypst WASMが数式・図表・ページネーションを計算し、生PDFバイナリ（Uint8Array）を生成。</li>
+                    </ol>
+
+                    <h2>4. Web File System Access APIによる「本物のデスクトップ感」</h2>
+                    <p>ChromeやEdge等のモダンブラウザでは、<strong>Web File System Access API</strong>（<code>showOpenFilePicker</code> / <code>FileSystemWritableFileStream</code>）をサポートしています。</p>
+                    <p>これにより、WebアプリでありながらローカルPC上の <code>.md</code> ファイルを直接開き、<code>Ctrl + S</code> でそのファイルへ直接上書き保存できるようになりました。クラウドへのログインもアップロード待ちも不要です。</p>
+
+                    <h2>5. まとめと今後の展望</h2>
+                    <p>WebAssemblyの成熟によって、従来は重量級サーバーやネイティブアプリでしか行えなかった「本格組版」がブラウザ内のサンドボックスで瞬時に完結する時代になりました。</p>
+                    <p>Markdown TeX ViewerはオープンソースとしてGitHubで公開しています。ぜひWeb版やAndroid PWAでお試しください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>Writing Markdown and TeX math in the browser and exporting it directly as a beautiful PDF has always been a universal dream for developers and researchers.</p>
+                    <p>In this article, we explain how we integrated <strong>Typst (compiled to WebAssembly)</strong> into <strong>Markdown TeX Viewer</strong> to achieve academic-grade vector PDF exports with zero server dependencies.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>Markdown TeX Viewer を試してみる</h3>
+                    <p>ブラウザ上でインストール不要ですぐに利用できます。PWA・オフライン対応。</p>
+                    <a href="https://markdown-tex-viewer.pages.dev/" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                        アプリを起動する ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
