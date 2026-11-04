@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">4</span>
+                <span class="tab-badge">5</span>
             </button>
         </div>
 
@@ -90,7 +90,12 @@
                                 <span class="text-jp">📝 関連記事</span>
                                 <span class="text-en">📝 Related Article</span>
                             </div>
-                            <a href="posts/weight-space-programming-zerocon.html" class="related-link">
+                            <a href="posts/zerocon-ime-custom-model-training.html" class="related-link">
+                                <span class="text-jp">【開発記】18MBの極小モデルで変換キーをゼロへ――独自モデル学習の全軌跡</span>
+                                <span class="text-en">【DevLog】Pushing 18MB SLMs to the Limit: Custom Model Training</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/weight-space-programming-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【検証】話題の「Weight-Space Programming」を0.09Bモデルで試してみた</span>
                                 <span class="text-en">【Experiment】Testing Weight-Space Programming on 0.09B Model</span>
                                 <span class="arrow">→</span>
@@ -343,7 +348,30 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
-                <!-- Article: Weight-Space Programming -->
+                                <!-- Article: ZeroConvert-IME Custom Model Training Journey -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME Custom Model Training Article">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">LLM / ML</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自モデル学習の全軌跡</h3>
+                        <p class="text-jp">わずか18.7 MiBの極小モデルでGoogle日本語入力に迫る変換精度とタイポ補正78%を両立。DoRA、Target-Corrected蒸留、Induction Head自己コピー抑止、QWERTYタスク統合など、これまで積み重ねてきた独自モデル学習の歩みを総括。</p>
+                        <p class="text-en">How we trained our custom 18.7 MiB edge SLM to achieve 92.7% Japanese conversion accuracy and 78% typo correction through DoRA, target-corrected distillation, and unified multi-task architectures.</p>
+                        <a href="posts/zerocon-ime-custom-model-training.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+<!-- Article: Weight-Space Programming -->
                 <article class="card">
                     <div class="card-image-wrapper">
                         <img src="zeroconvert.png" alt="Weight-Space Programming Article">

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自モデル学習の全軌跡 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自モデル学習の全軌跡">
+    <meta property="og:description" content="わずか26.7Mパラメータ・18.7MiBの超極小モデルで高難度漢字変換・タイポ補正78%・先読みアシストを実現したZeroConvert-IME。DoRA、Target-Corrected蒸留、Induction Headの自己コピー抑止、タスク統合など、これまで行ってきた独自モデル学習の全貌を記録します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zerocon-ime-custom-model-training.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1.1rem 1.3rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">LLM / Machine Learning / IME</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自モデル学習の全軌跡</span>
+                    <span class="text-en">【DevLog】Pushing 18MB SLMs to the Limit: The Evolution of Custom Model Training in ZeroConvert-IME</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-04">2026.11.04</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: ZeroConvert-IME</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>「変換キーを押すという操作そのものを、過去のものにしたい」</p>
+                    <p>そんな構想から始まったのが、次世代AI日本語IME「<strong><a href="https://github.com/g0083/ZeroConvert-IME" target="_blank">ZeroConvert-IME</a></strong>」の開発です。人間がスペースキーや変換キーを連打して意図した漢字を探すのではなく、文脈を完璧に理解した極小AIが、打鍵したそばからストリーミングで自動確定していく世界を目指しています。</p>
+                    <p>しかし、PCやスマートフォンのバックグラウンドで常駐し、1打鍵ごとにリアルタイム推論を行うIMEにおいて、巨大な7B〜70Bモデルを動かすことは不可能です。許されるリソースは<strong>「メモリ数十MB、CPU推論で20〜30ms以内」</strong>という極限の制約でした。</p>
+                    <p>本記事では、azooKeyの <code>zenz-v3.2-xsmall</code>（6層・約26.7Mパラメータ）を出発点に、独自モデル「<strong>ZeroCon Model Nano / Standard</strong>」をどのように鍛え上げ、<strong>わずか18.7 MiBのサイズで総合正解率92.7%・タイポ補正78%を叩き出すに至ったのか</strong>、その学習の歩みと泥臭い実験の全貌を記録します。</p>
+
+                    <h2>1. 出発点と立ちはだかった「極小モデルの限界」</h2>
+                    <p>ベースとしたモデルは、azooKeyプロジェクトが公開している日本語変換モデル <code>zenz-v3.2-xsmall</code>（純粋 Apache-2.0ライセンス）です。6層・26.7Mという小ささで基本的なかな漢字変換をこなす素晴らしいモデルですが、実用IMEとして「無変換での自動確定」を託すには、以下の致命的な課題がありました：</p>
+                    <ul>
+                        <li><strong>文脈による漢字選択の甘さ:</strong> 同音異義語（例:「きかん」「こうしょう」など）で前後の文脈を汲みきれず、初手で外す確率が高い。</li>
+                        <li><strong>専門用語・四字熟語・複合文節の弱さ:</strong> パラメータ数が少ないため、少し難度の高い熟語になると途端に誤変換が発生する。</li>
+                        <li><strong>英数字・記号・空白の破壊:</strong> プログラミングのパスやURL、半角スペースを含む文章を入力すると、勝手に全角化されたり空白が消滅したりする。</li>
+                        <li><strong>文末の幻覚（Hallucination）:</strong> 文末（<code>&lt;/s&gt;</code>）付近で不要な句点や特殊トークンを勝手に生成してしまう。</li>
+                    </ul>
+
+                    <h2>2. スーパー教師「Standardモデル（90.5M）」の育成</h2>
+                    <p>「6層の極小モデルに直接難語を詰め込もうとしても容量（キャパシティ）が足りず破綻する」――。そこで取ったアプローチが、<strong>まず12層・90.5Mの『ZeroCon Model Standard』を育成し、圧倒的な知識を持つ“スーパー教師”を作る</strong>ことでした。</p>
+                    <p>Standardシリーズでは、Argon-4マージや広範なコーパス学習を重ね、難関ベンチマーク（250-Hard）で<strong>正解率98.0%</strong>を記録する高精度モデルを構築。このStandardを「絶対に答えを曲げない教師（Frozen Super-Teacher）」として固定し、Nanoへの蒸留へ進む布石としました。</p>
+
+                    <h2>3. Nano v4 で導入した5大ブレイクスルー</h2>
+                    <p>こうして誕生したのが、現行の主力モデル「<strong>ZeroCon Model Nano v4</strong>」です。パラメータ数・層数はBase Nanoと同じ6層・26.7Mのまま、以下の技術を組み込みました。</p>
+
+                    <h3>① 高ランク DoRA（r=64, alpha=128）＆ 6層別学習率</h3>
+                    <p>通常のLoRAではなく、重みの大きさと方向を分離して更新する<strong>DoRA (Weight-Decomposed Low-Rank Adaptation)</strong>を採用。ランクを旧Nano v3（r=16）の4倍である <code>r=64</code> に引き上げ、FFNの記憶容量を一気に拡大しました。</p>
+                    <p>さらに、浅い層（構文把握）の学習率は <code>0.45x</code> に抑え、深い層（語彙選択）の学習率を <code>1.35x</code> に引き上げる「層別学習率」を適用。学習後にAdapterを重み行列へ完全統合（Merge）するため、<strong>推論時の計算コストやファイルサイズは1バイトも増えません</strong>。</p>
+
+                    <h3>② Target-Corrected 二重アンカー蒸留</h3>
+                    <p>知識の蒸留において最大の罠は「教師モデル自身の誤答」です。教師が間違った確率分布をそのまま生徒に真似させると、生徒も同じバグを学習してしまいます。</p>
+                    <div class="callout">
+                        <div class="callout-title">💡 Target-Corrected ロジットスワップ</div>
+                        <p>教師（Standard）やBase Nanoが誤答しているトークン位置を自動検出し、そのトップ1ロジットを「正解トークンのロジット」と強制的にスワップした補正ソフト分布（\(P_T^{\text{corr}}\)）を生成。6,000語彙に及ぶダークナレッジ（暗黙の言語感覚）を保全しながら、教師の誤答引きずりを完全にゼロ化しました。</p>
+                    </div>
+
+                    <h3>③ Induction Head の自己コピー抑止対照マージン</h3>
+                    <p>6層という浅いTransformerを詳細に解析したところ、Attentionの「Induction Head」が暴走し、<strong>第1文節で出力した漢字を第2文節へ無意味に繰り返してしまう自己コピー現象</strong>が頻発していることを突き止めました。</p>
+                    <p>系列内で既に出現した表記をコピーしようとする動きを自動検知し、対照学習のマージン閾値 \(\gamma\) を通常の <code>2.2</code> から <strong><code>3.0</code></strong> へブースト。文節の変わり目での重複バグを根絶しました。</p>
+
+                    <h3>④ 半角スペース二重トークナイズ（[UNK]=0 / \u3000=567）</h3>
+                    <p>学習時の推論エンジン（<code>llama-server</code>）と実IME（Swift / Kotlinエンジン）で、半角空白の内部トークナイズ表現が異なるという「泥臭い実装ギャップ」がありました。どちらの入力経路を通っても空白が失われないよう、両パターンの系列を並行して学習させ、空白保持率100%を達成しました。</p>
+
+                    <h2>4. 成果：ベースモデルからどこまで進化したか？</h2>
+                    <p>開発評価ベンチマーク（基本・文脈230問＋高難度250問＝全480問）における単体性能の比較です：</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>モデル</th>
+                                <th>層数 / パラメータ</th>
+                                <th>サイズ</th>
+                                <th>基本・文脈 (230問)</th>
+                                <th>高難度 (250問)</th>
+                                <th>全480問 総合正解率</th>
+                                <th>CPU平均遅延</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Base zenz-v3.2 Q4_K_M</td>
+                                <td>6層 / 26.7M</td>
+                                <td>17.6 MB</td>
+                                <td>181 (78.7%)</td>
+                                <td>172 (68.8%)</td>
+                                <td>353 / 480 (73.5%)</td>
+                                <td>27.8 ms</td>
+                            </tr>
+                            <tr>
+                                <td>旧 Nano v3 IQ4_NL_emb8</td>
+                                <td>6層 / 26.7M</td>
+                                <td>18.7 MB</td>
+                                <td>190 (82.6%)</td>
+                                <td>176 (70.4%)</td>
+                                <td>366 / 480 (76.2%)</td>
+                                <td>24.0 ms</td>
+                            </tr>
+                            <tr>
+                                <td>Standard v3 F16 (教師)</td>
+                                <td>12層 / 90.5M</td>
+                                <td>183.2 MB</td>
+                                <td>207 (90.0%)</td>
+                                <td>245 (98.0%)</td>
+                                <td>452 / 480 (94.2%)</td>
+                                <td>30.1 ms</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.08); font-weight: 700;">
+                                <td>新 Nano v4 IQ4_NL_emb8</td>
+                                <td>6層 / 26.7M</td>
+                                <td>18.7 MB</td>
+                                <td>206 (89.6%)</td>
+                                <td>239 (95.6%)</td>
+                                <td>445 / 480 (92.7%)</td>
+                                <td>23.0 ms</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>新 Nano v4 Q6_K</td>
+                                <td>6層 / 26.7M</td>
+                                <td>23.3 MB</td>
+                                <td>208 (90.4%)</td>
+                                <td>245 (98.0%)</td>
+                                <td>453 / 480 (94.4%)</td>
+                                <td>24.9 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>わずか<strong>18.7 MB</strong>のサイズでありながら、ベースモデルから<strong>92問（+19.2ポイント）改善</strong>。180MB超の12層スーパー教師とほぼ同等の精度を、6層の超軽量モデルで再現することに成功しました。</p>
+
+                    <h2>5. タイポ補正の劇的進化：メインモデル1本化への大改革（v0.2.2）</h2>
+                    <p>ZeroConvert-IMEの最大の強みは「変換操作の削減」ですが、キーボード入力で最も変換操作を増やしている元凶は<strong>「タイポ（打ち間違い）」</strong>です。</p>
+                    <p>従来のバージョンでは、タイポ補正専用のCorrectorモデルを独立した常駐プロセス（ポート18090）として動かしていました。しかしこれには「常駐サーバーが2重にメモリを消費する」「プロセス間通信で遅延が増える」「補正正解率が20.8%と実用に遠い」という三重苦がありました。</p>
+
+                    <h3>「変換モデル自身がタイポを直す」統合モデルへの挑戦</h3>
+                    <p>v0.2.2では独立サーバーを完全撤廃。<strong>メイン変換モデル（Nano v4）1本の中で、読み候補の尤度判定・表層リランキング・漢字変換を一気通貫で処理する新アーキテクチャ</strong>へ刷新しました。</p>
+                    <ul>
+                        <li>QWERTYキーボードの物理配列（隣接キー誤打鍵）をモデル化したシミュレーションデータを投入。</li>
+                        <li>正常な入力に対して余計な補正を行わない「Abstain（自制）学習」を徹底。</li>
+                        <li>タスク間勾配干渉（変換タスクの勾配と補正タスクの勾配が打ち消し合う現象）を測定し、衝突を防ぐ学習制約を導入。</li>
+                    </ul>
+                    <p>この結果、常駐メモリを半減させながら、タイポ補正正解率は <strong>20.8% → 78.0%（実質86.7%）</strong> へと劇的に跳ね上がりました。</p>
+
+                    <h2>6. 極限の量子化技術：18.7 MiBの秘密（IQ4_emb8）</h2>
+                    <p>通常の4bit量子化（Q4_K_M）では、単語の意味の入り口である「Token Embedding」や最後の「Output Tensor」まで4bitに潰してしまい、稀少な漢字や記号の判別力が低下します。</p>
+                    <p>そこで採用したのが<strong>「IQ4_NL + Q8_0」のハイブリッド量子化</strong>です。重みの大部分を占めるFFN中間層には重要度マトリクス（imatrix）に基づく高精度非線形4bit（IQ4_NL）を用いつつ、語彙表現を司るEmbedding層・Output層を8bit（Q8_0）で保護。これによって、非量子化F16と遜色ない表現力を保ったまま、18MB台への極小化を成し遂げました。</p>
+
+                    <h2>7. 徹底して「ズル」を許さない評価哲学</h2>
+                    <p>言語モデルの開発で最も陥りやすい罠が「評価データへの過学習（データリーク）」です。開発テストで100%が出ても、実IMEで触った瞬間にボロボロでは何の意味もありません。</p>
+                    <div class="callout">
+                        <div class="callout-title">🛡 データ分離と退行テストの鉄則</div>
+                        <ul>
+                            <li><strong>予約キーのSHA256照合:</strong> 評価ベンチマークに含まれる1,626の語彙・キーと学習コーパスの重複を自動検査し、リーク0件（PASS）を数学的に証明。</li>
+                            <li><strong>退行（Regression）の厳格監視:</strong> 難語が直っても、日常会話の漢字や数字・URLが1つでも壊れたらそのモデルは即時不採用。</li>
+                            <li><strong>失敗した実験の完全記録:</strong> 「R7」など、更新制約を試みて目標に届かなかった実験もすべてログ・考察とともにリポジトリへ残し、次の一手の糧とする。</li>
+                        </ul>
+                    </div>
+
+                    <h2>8. おわりに：変換キーのない未来へ</h2>
+                    <p>極小エッジSLMの可能性は、まだ始まったばかりです。「小さなモデルだから賢くない」のではなく、<strong>「用途を研ぎ澄まし、徹底した蒸留と数学的工夫を注ぎ込めば、18MBのモデルでも驚異的な知性を発揮できる」</strong>ということを、ZeroCon Modelの開発を通じて確信しました。</p>
+                    <p>現在、ZeroConvert-IMEはWindows版インストーラーおよびAndroid版APKとしてGitHub Releasesで無料公開しています。ぜひ、変換キーを押さずに思考のスピードで文字が紡がれていく感覚を体験してみてください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>ZeroConvert-IME aims to eliminate conversion keypresses entirely. In this comprehensive technical log, we document how we pushed a 6-layer 26.7M edge SLM to achieve 92.7% benchmark accuracy, 78% typo correction, and 23ms latency within an astonishing 18.7 MiB footprint.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
