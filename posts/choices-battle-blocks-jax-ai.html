@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【開発記】JAX×CEMで落ち物パズルAIを訓練しWebで動かすまで 〜Choices Battle Blocks〜 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【開発記】JAX×CEMで落ち物パズルAIを訓練しWebで動かすまで">
+    <meta property="og:description" content="相手にブロックを選ばせる新感覚の対戦パズル「Choices Battle Blocks」。JAXによるGPU超並列環境シミュレーションとCEM（進化的アルゴリズム）を用いたAI訓練、ONNX Runtime Webによるブラウザ上での1手先読み推論の実装をまとめました。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/choices-battle-blocks-jax-ai.html">
+    <meta property="og:image" content="https://g0083.github.io/choices-battle-blocks.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/Choices-Battle-Blocks" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Game Dev / Machine Learning</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【開発記】JAX×CEMで落ち物パズルAIを訓練しWebで動かすまで</span>
+                    <span class="text-en">【DevLog】Training Puzzle AI with JAX/CEM and Serving on the Web</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-03-30">2026.03.30</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: Choices Battle Blocks</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>従来の落ち物パズルは、ランダムに供給されるブロックをいかに効率的に平らに積み上げて消すかという「個人の操作精度・平積み技術」が重視されるゲームでした。</p>
+                    <p>しかし、もし<strong>「相手に落とすブロックをこちらが指名できる」</strong>としたらどうなるでしょうか？</p>
+                    <p>この記事では、戦略的ブロック選択システムを取り入れたWeb対戦パズルゲーム「<strong><a href="https://choices-battle-blocks.pages.dev/" target="_blank">Choices Battle Blocks</a></strong>」の開発において、<strong>JAXを活用した超高速シミュレーション環境</strong>と<strong>CEM（Cross-Entropy Method）</strong>による強力な思考AIの学習、そしてブラウザ上でのONNX/P2P対戦の実装秘話をまとめます。</p>
+
+                    <h2>1. 「ブロック選択」がもたらすゲーム性の劇的変化</h2>
+                    <p>本作の基本ルールは、提示された4つの選択肢の中から<strong>「自分のブロック」と「相手のブロック」</strong>を互いに指定し合う点にあります。</p>
+                    <div class="callout">
+                        <div class="callout-title">⚔️ 戦術のジレンマ</div>
+                        <p>相手の盤面に凸凹を作らせるために厄介なブロック（S字・Z字）を押し付けたいが、そのためには相手が自分に渡してくるブロックにも耐えられる「受けの広さ」を維持しなければならない。</p>
+                    </div>
+                    <p>このルール下では、従来のテトリスAIのような「定型的な置き方」だけでは勝てず、相手の隙を突く高度な先読みAIが必要となります。</p>
+
+                    <h2>2. JAXによる超高速並列シミュレーション環境</h2>
+                    <p>強化学習や進化的最適化でAIを訓練する場合、最大のボトルネックは「ゲームのシミュレーション速度」です。Pythonの通常のループでは1秒間に数百手程度しか回せません。</p>
+                    <p>そこでゲーム盤面（20×10のビットマップ）、ブロックの落下・回転・ライン消去判定をすべて<strong>JAXの純粋関数（Pure Function）</strong>として記述し、<code>jax.vmap</code> と <code>jax.jit</code> でXLAコンパイルしました。</p>
+
+                    <pre><code>import jax
+import jax.numpy as jnp
+
+@jax.jit
+def step_game_state(state, action):
+    # state: (batch_size, 20, 10) の盤面テンソル
+    # 1万ゲームをGPUメモリ上で完全に並列実行
+    new_board, reward, done = simulate_placement(state.board, action)
+    return state.replace(board=new_board, score=state.score + reward)</code></pre>
+
+                    <p>これにより、単一のGPU上で<strong>1秒間に100万手以上の盤面シミュレーション</strong>が可能になり、数時間で数千世代の進化学習を回せるようになりました。</p>
+
+                    <h2>3. CEM（Cross-Entropy Method）による評価関数の最適化</h2>
+                    <p>AIの思考エンジンには、各配置後の盤面状態をスコアリングする評価関数（特徴量：最大高さ、穴の数、窪みの深さ、平坦度、相手への妨害度など）を採用しました。</p>
+                    <p>これらの重みパラメータベクトルを<strong>CEM（交叉エントロピー法）</strong>によって最適化：</p>
+                    <ol>
+                        <li>重みの多変量正規分布から候補エージェント集団（100個体）をサンプリング。</li>
+                        <li>JAX並列シミュレータ上で総当たり戦やサバイバルテストを実施。</li>
+                        <li>成績上位の「エリート個体」の平均・分散を計算し、次のサンプリング分布を更新。</li>
+                    </ol>
+                    <p>このループを繰り返すことで、人間でも容易には崩せない、粘り強く意地悪な「Lv11+（1手先読みCEM強化AI）」が誕生しました。</p>
+
+                    <h2>4. ブラウザでのONNX推論 & PeerJSによる完全P2P対戦</h2>
+                    <p>Web版ではサーバーのインフラ費用をかけずに誰もが気軽に遊べるよう、以下の技術を採用しました：</p>
+                    <ul>
+                        <li><strong>ONNX Runtime Web:</strong> 最適化されたモデル重みと先読みロジックをJavaScript Worker内で軽量に推論実行（ラグなし）。</li>
+                        <li><strong>PeerJS (WebRTC DataChannel):</strong> プレイヤー間の通信は完全なP2P。中央サーバーを介さず直接通信するため、超低遅延で対戦が成立します。</li>
+                        <li><strong>PWA対応:</strong> 端末にインストールすれば、スマホのテザリング機能を使って完全オフラインのLAN対戦も可能です。</li>
+                    </ul>
+
+                    <h2>5. おわりに</h2>
+                    <p>JAXとWebAssembly/WebRTCの組み合わせは、個人開発のインディゲームでも「高度なAI」と「リアルタイム通信対戦」をゼロコスト・高パフォーマンスで提供できる非常に強力な武器です。</p>
+                    <p>Choices Battle BlocksはWeb上で今すぐプレイできますので、ぜひAIや友達との熱い駆け引きをお楽しみください！</p>
+                </section>
+
+                <section class="text-en">
+                    <p>"Choices Battle Blocks" is a competitive puzzle game where players choose falling blocks for each other. In this article, we share the technical behind-the-scenes: massive parallel simulation with JAX, heuristic optimization via CEM, and serverless P2P WebRTC networking.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>Choices Battle Blocks をプレイする</h3>
+                    <p>ブラウザで今すぐP2Pオンライン対戦＆AI対戦を楽しめます。</p>
+                    <a href="https://choices-battle-blocks.pages.dev/" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                        ゲームを開始する ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
