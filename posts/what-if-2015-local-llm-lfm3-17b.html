@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>もし2015年に今の小型ローカルLLMを持って行ったら？――LFM3-1.7B（約1GB）の衝撃から考える知能のブラックボックス | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="もし2015年に今の小型ローカルLLMを持って行ったら？――LFM3-1.7B（約1GB）の衝撃から考える知能のブラックボックス">
+    <meta property="og:description" content="約1GBの重みファイルで、翻訳、コーディング、文章生成から論理推論までこなすLFM3-1.7B。もしこの小型モデルを2015年のAI研究室に持ち込んだら何が起きるか？ 既知の数学でできているのに誰も到達できなかった、現代LLMの本質的な謎を考察します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/what-if-2015-local-llm-lfm3-17b.html">
+    <meta property="og:image" content="https://g0083.github.io/Web-Local-LLM.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.9;
+            color: #e0e0e0;
+        }
+
+        .article-content a {
+            color: #8ee6ad;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.25);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2.2rem;
+            margin-bottom: 0.9rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.3rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.6rem;
+            margin: 1.2rem 0;
+        }
+
+        .article-content li {
+            margin: 0.5rem 0;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.2rem 1.4rem;
+            margin: 1.8rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(80, 200, 120, 0.15);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #d8d8d8;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fact-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .fact-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .fact-card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 0.3rem;
+        }
+
+        .fact-card-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .math-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-size: 1.15rem;
+        }
+
+        .nav-back {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .hero-img-box {
+            margin: 2rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-img-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo" style="text-decoration: none; color: inherit;">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="https://github.com/g0083" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">GitHub</a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">X(twitter)</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="article-container">
+            <a href="../index.html?tab=blog" class="nav-back">← 記事一覧へ戻る</a>
+
+            <header class="article-header">
+                <span class="article-category">AI Architecture / Essay</span>
+                <h1 class="article-title">もし2015年に今の小型ローカルLLMを持って行ったら？――LFM3-1.7B（約1GB）の衝撃から考える知能のブラックボックス</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月5日</span>
+                    <span>著者: O-ya tech (@ooyatech)</span>
+                    <span>テーマ: Liquid AI LFM3-1.7B / エッジAI / 解釈性</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <div class="hero-img-box">
+                    <img src="../Web-Local-LLM.png" alt="Web Local LLM Concept">
+                </div>
+
+                <p>
+                    Liquid AIから登場した「LFM3-1.7B」をローカル環境で動かしていて、ふと奇妙な思考実験が頭をよぎった。
+                </p>
+                <p>
+                    <strong>「もし2015年に今の小型ローカルLLMを持って行ったら、当時のAI研究者たちにどれほどの衝撃を与えるだろうか？」</strong>
+                </p>
+                <p>
+                    未来の超巨大モデルを持っていく必要すらない。今の1B〜3Bクラス、手元のノートPCやスマホの上で軽々と動く小型モデルひとつで十分だ。2015年の技術水準から見れば、それだけで物理法則を疑いたくなるほどのオーパーツに見えるはずだ。
+                </p>
+                <p>
+                    何より面白いのは、次の2つの事実が同時に成立する点にある。
+                </p>
+                <ul>
+                    <li><strong>仕組みの基本原理は理解できる</strong>：ニューラルネットワークも誤差逆伝播法も、2015年にはすでに確立していた。</li>
+                    <li><strong>なぜこんなに高性能なのかはすぐには理解できない</strong>：数GB程度の重みファイルで、翻訳、プログラミング、文章生成、論理推論までこなせる事実は、当時の常識から大きく外れている。</li>
+                </ul>
+                <p>
+                    未知の物理法則で動く機械ではない。既知の数学の延長線上にあるのに、誰も到達していなかった性能を実現してしまった機械。そのギャップを掘り下げていくと、現代のLLMが抱える本質的な謎が見えてくる。
+                </p>
+
+                <h2>1. 2015年のAI研究室に持ち込んだら何が起きるか？</h2>
+                <p>
+                    2015年当時のAI研究の最前線を振り返ってみよう。この頃はLSTMやSeq2Seqを使った対話モデルの研究が急速に進み始めた時期だった。
+                </p>
+                <p>
+                    Googleの研究チームが発表した論文『<a href="https://arxiv.org/abs/1506.05869" target="_blank" rel="noopener noreferrer">A Neural Conversational Model</a>』（Vinyals & Le, 2015）も、会話をエンドツーエンドのニューラルネットワークで生成する画期的な試みとして注目を集めていた。だが同時に、文脈の一貫性の欠如やすぐに破綻する論理など、実用化には深い溝が横たわっていた。自然言語処理の世界では、翻訳、構文解析、要約、対話のそれぞれに専用のモデルを丹念に組み上げるのが当たり前の常識だったのだ。
+                </p>
+                <p>
+                    そこに、2026年の小型ローカルLLMをインストールしたノートPCを持ち込んで見せたら、研究者たちはどう反応するだろうか。
+                </p>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>研究者に見せる挙動</th>
+                                <th>2015年の研究者の推測される反応</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>自然な日本語で長時間会話</strong></td>
+                                <td>「対話モデルが文脈を失わずにここまで破綻なく続くのか？」</td>
+                            </tr>
+                            <tr>
+                                <td><strong>初見の専門文書を高精度に翻訳</strong></td>
+                                <td>「翻訳専用のSeq2Seqではなく、雑談モデルと同じ重みでこの精度なのか？」</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Pythonコードを即座に生成・解説</strong></td>
+                                <td>「自然言語モデルがプログラミング言語の構文とアルゴリズムまで扱えるのか？」</td>
+                            </tr>
+                            <tr>
+                                <td><strong>数学の解法を論理立てて説明</strong></td>
+                                <td>「単なる次の単語の統計的サンプリングではないのか？ 思考しているのか？」</td>
+                            </tr>
+                            <tr>
+                                <td><strong>約1GBの単一モデルファイル</strong></td>
+                                <td>「世界中の知識や構文規則が、本当にこの1ファイルに収まっているのか？」</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ネットワーク接続なしで動作</strong></td>
+                                <td>「背後で巨大なクラウドデータベースを検索しているのではないのか？」</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>
+                    とりわけ衝撃的なのは、<strong>タスクごとに専用モデルを用意していないのに、全く同じパラメータの集合体がこれらすべての作業をこなしてしまう</strong>ことだ。汎用言語モデルという概念そのものが、当時の研究者にとっては認識のパラダイムシフトになる。
+                </p>
+
+                <h2>2. 仕組みを解剖すれば理解できるのか？</h2>
+                <p>
+                    では、モデルのソースコードと重みを渡し、アーキテクチャを完全に開示したらどうなるだろうか。
+                </p>
+                <p>
+                    結論から言えば、<strong>計算の仕組み自体はかなりの部分をすんなり理解できるはずだ</strong>。現代のLLMを構成する要素技術の大半は、すでに2015年の時点で出揃っていたからだ。
+                </p>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>時代区分</th>
+                                <th>技術要素</th>
+                                <th>2015年時点のステータス</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>2015年以前</strong></td>
+                                <td>ニューラルネットワーク、誤差逆伝播法、Word2Vec / Embedding、CNN、LSTM、Attentionの萌芽（Bahdanau Attention）</td>
+                                <td><strong>既知・理解可能</strong><br>基礎理論としてすでに定着</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2017年登場</strong></td>
+                                <td>Transformer（Self-Attentionによる並列系列処理）</td>
+                                <td><strong>当時は未知</strong><br>ただし数式自体は線形代数とSoftmaxで構成され、完全に解読可能</td>
+                            </tr>
+                            <tr>
+                                <td><strong>その後の10年</strong></td>
+                                <td>数兆トークン規模の事前学習レシピ、指示チューニング（Instruction Tuning）、RLHF / DPOなどのアライメント、知識蒸留、高度な量子化（4bit / AWQ）</td>
+                                <td><strong>未確立</strong><br>経験的スケーリング則と最適化ノウハウの結晶</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>
+                    2017年にGoogleが発表した歴史的論文『<a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer">Attention Is All You Need</a>』で示されたTransformerの構造も、使われている演算は行列積、正規化、活性化関数、そしてSoftmaxに過ぎない。2015年の数学で解読できない数式はひとつもない。
+                </p>
+                <p>
+                    「計算手順」はわかる。どこでどんな掛け算が行われ、どのようにベクトルが変換されているかは完全に追跡できる。
+                </p>
+                <p>
+                    しかし、本当の難問はその先にある。<strong>「この極めて単純な行列積の連鎖によって、なぜ文章の文脈理解や論理的な推論能力が立ち現れるのか」</strong>という疑問には、コードをどれだけ眺めても答えが書いていないのだ。
+                </p>
+
+                <h2>3. 最大のミステリー：「なぜ1GBの重みに22兆トークンの知恵が宿るのか」</h2>
+                <p>
+                    現代の小型モデルの驚異を象徴する具体例として、冒頭で触れた <strong>LFM3-1.7B</strong>（Liquid AI）の諸元を見てみたい。
+                </p>
+
+                <div class="fact-cards">
+                    <div class="fact-card">
+                        <div class="fact-card-value">17.3億</div>
+                        <div class="fact-card-label">総パラメータ数 (1.73B)</div>
+                    </div>
+                    <div class="fact-card">
+                        <div class="fact-card-value">約865 MB</div>
+                        <div class="fact-card-label">4bit量子化時の重み容量</div>
+                    </div>
+                    <div class="fact-card">
+                        <div class="fact-card-value">22兆</div>
+                        <div class="fact-card-label">事前学習トークン数 (Tokens)</div>
+                    </div>
+                </div>
+
+                <p>
+                    LFM3-1.7Bの4bit量子化モデルのファイルサイズは、メタデータや量子化スケールを含めても1GB前後に収まる。重みだけの理論サイズを計算すると以下の通りだ。
+                </p>
+
+                <div class="math-block">
+                    $$17.3\text{億パラメータ} \times 4\text{ bit} \div 8 = \text{約 } 865\text{ MB}$$
+                </div>
+
+                <p>
+                    ここで直面するのが、知能の凝縮度に対する直感の破壊だ。約1GBというのは学習データの容量ではない。学習を終えた「パラメータそのものの容量」である。そしてこの小さなファイルは、<strong>22兆トークン</strong>という気の遠くなるような量の事前学習を経て作られている。
+                </p>
+                <div class="callout">
+                    <div class="callout-title">22兆トークンを「圧縮保存」しているわけではない</div>
+                    テキストデータとしての22兆トークンは、平文なら数十テラバイト、圧縮しても数テラバイトに達する。それが1GBのファイルに入っているからといって、zipアーカイブのように文章を丸ごと保存しているわけではない。事前学習で反復されたのは情報の暗記ではなく、「世界の事象、言語の構造、単語の意味関係、論理のパターン」を、多次元パラメータ間の複雑な相互作用として焼き付ける作業だった。
+                </div>
+                <p>
+                    2015年の研究者に「この865MBのファイルには22兆語を読ませた知見が入っている」と伝えたら、おそらく即座には信じてもらえないだろう。なぜなら、その圧縮効率はデータを可逆圧縮する情報理論の常識を遥かに超え、「意味と推論パターンの幾何学的埋め込み」という別次元の領域に達しているからだ。
+                </p>
+
+                <h2>4. 本当にブラックボックスなのは何か？</h2>
+                <p>
+                    現代のディープラーニングにおいて、私たちはモデルの挙動をどこまで理解していて、どこからが分からないのか。理解度を3つの階層に分けて整理すると、その輪郭が浮き彫りになる。
+                </p>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>探求の問い</th>
+                                <th>現代の理解度</th>
+                                <th>現状の説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1. どうやって次のトークンを計算しているか？</strong></td>
+                                <td><strong>ほぼ完全に説明可能</strong></td>
+                                <td>入力埋め込み、Attention演算、FFN、活性化関数、Softmax確率出力。すべての計算グラフは既知の数式で1ステップずつ追跡できる。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. どうすれば高性能なモデルを学習できるか？</strong></td>
+                                <td><strong>かなり理解されている（経験則多数）</strong></td>
+                                <td>スケーリング則、コサイン減衰、学習率ウォームアップ、高品質データのフィルタリング、合成データの活用など。再現性の高いレシピが確立している。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. なぜ内部で知識や推論能力が形成されるのか？</strong></td>
+                                <td><strong>部分的にしか解明されていない</strong></td>
+                                <td>数億〜数千億の高次元空間でパラメータが協調し、どのような幾何学的構造として事実や推論ロジックを保持しているかは今なお最前線の研究課題。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>
+                    たとえばモデルに「日本の首都は？」と尋ねて「東京」と返ってきたとする。だが、モデルの内部の特定の重みアドレスに「日本 → 首都 → 東京」というリレーショナルデータベースのような明示的なレコードが存在するわけではない。
+                </p>
+                <p>
+                    知識は数億個のニューロンに広く薄く分散して表現されている（Distributed Representation）。特定のニューロンを覗いても意味のある数字は見えず、それらが連動した高次元の射影ベクトルとして初めて意味が立ち現れる。
+                </p>
+                <p>
+                    さらに不思議なのは、未経験のパズルや初見のプログラミング課題に直面したときだ。事前学習の文章予測をただ最適化しただけのネットワークが、なぜ未知の論理の組み立てにまで適応できるのか。統計的パターン認識の極限が、なぜ演繹的・帰納的な推論の振る舞いへと跳躍するのか。この一般化能力（Generalization）の本質は、2026年のAIリサーチャーにとっても解明しきれていない領域なのだ。
+                </p>
+
+                <h2>5. 2015年に持ち込んで歴史を変えられるか？</h2>
+                <p>
+                    仮にタイムマシンで2015年にこの1GBのファイルと推論用スクリプトを持ち込んだとして、当時の研究者たちはすぐに同じものを作れるだろうか？
+                </p>
+                <p>
+                    答えはおそらく<strong>「すぐには作れない」</strong>だ。
+                </p>
+                <p>
+                    推論コードとモデルウェイトがあれば、フォワードプロパゲーションを走らせて動かすことはできる。リバースエンジニアリングしてアーキテクチャの構造を論文にまとめることもできるだろう。
+                </p>
+                <p>
+                    しかし、ゼロから同じモデルを再学習しようとした瞬間、<strong>ハードウェアとデータの巨大な壁</strong>に直面する。2015年のフラグシップGPUはNVIDIA GeForce GTX TITAN X（Maxwell世代、12GB VRAM）やTesla K40だった。22兆トークンもの膨大な学習ステップをこなすには、当時のクラスタ規模では電力も計算時間も桁違いに不足している。
+                </p>
+                <p>
+                    もしアーキテクチャの青写真、データセットのフィルタリング手法、指示チューニングの手順、量子化アルゴリズムをすべてセットで渡せば、研究開発の針を5年から8年は前倒しできるかもしれない。だが、高性能なAIを生み出すには、理論だけでなく<strong>計算資源とデータの暴力的なスケール</strong>が不可欠であるという身も蓋もない現実を、当時の研究者は突きつけられることになる。
+                </p>
+
+                <h2>結び：11年を経ても解けない「共通の謎」</h2>
+                <p>
+                    この思考実験を通じて一番感慨深いのは、<strong>2015年の研究者と2026年の私たちが、最も深い部分で同じ疑問を共有している</strong>という事実だ。
+                </p>
+                <p>
+                    2015年の研究者がLFM3-1.7Bを見て「なぜこの行列の数値群がこれほど賢く会話できるのか？」と呆然とするとき、現代の私たちもまた、本質的には同じ問いの前で首を傾げている。
+                </p>
+                <p>
+                    過去11年間で、モデルを「学習させる技術」や「小型化して高速に推論させる技術」は人間業とは思えないスピードで進化した。RTX 4070のような家庭用GPUや手元のスマートフォンで1GBのモデルが毎秒何十トークンも吐き出し、実用的な翻訳やコーディング支援をこなす日常が現実になった。
+                </p>
+                <p>
+                    だが、「なぜそれが知能として成立するのか」というニューラルネットワークの表現論は、依然として解き明かされるのを待っている。
+                </p>
+                <p>
+                    2015年の研究者にとって未知のオーパーツに見える1GBの重みファイル。それは2026年の私たちにとっても、数学の皮を被ったもっとも美しく不可解なブラックボックスであり続けているのだ。
+                </p>
+
+                <div style="margin-top: 3.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(80, 200, 120, 0.2); border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: var(--primary-color);">関連記事・プロジェクト</h3>
+                    <p style="margin-bottom: 0.8rem; font-size: 0.95rem;">本サイトでは、さらに極小サイズ（0.09B / 18MB）を追求したオンデバイスAIや、ローカルLLMの実測ベンチマークを公開しています。</p>
+                    <ul style="margin: 0; padding-left: 1.2rem;">
+                        <li><a href="slm-trend-why-009b-ime.html">【考察】なぜ私は0.09Bにこだわったのか？――SLM全盛期にあえて「18MB」で作る日本語入力モデル</a></li>
+                        <li><a href="lmstudio-plamo3-gemma4-translation-benchmark.html">RTX 4070 12GBで翻訳LLM対決：話題のPLaMo 3 Translate vs Gemma 4 QAT＋MTP実測レビュー</a></li>
+                        <li><a href="zerocon-ime-custom-model-training.html">【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自学習の軌跡</a></li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>
