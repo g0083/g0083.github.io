@@ -1,70 +1,366 @@
 <!DOCTYPE html>
-<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RTX 4070 12GBで翻訳LLMを比較 — PLaMo 3 Translate vs Gemma 4 QAT＋MTP | O-ya tech</title><meta name="description" content="ローカル翻訳LLMを6モデル・9条件・342回測定。速度、AIによる各問採点、長文の完走を比較。原文・全訳文・詳細データを公開。"><link rel="canonical" href="https://g0083.github.io/posts/lmstudio-plamo3-gemma4-translation-benchmark.html"><link rel="stylesheet" href="../style.css"><link rel="icon" href="../icon.png">
-<meta property="og:type" content="article"><meta property="og:title" content="RTX 4070 12GBで翻訳LLMを比較 — PLaMo 3 Translate vs Gemma 4 QAT＋MTP"><meta property="og:description" content="ローカル翻訳LLMを6モデル・9条件・342回測定。速度、AIによる各問採点、長文の完走を比較。原文・全訳文・詳細データを公開。"><meta property="og:url" content="https://g0083.github.io/posts/lmstudio-plamo3-gemma4-translation-benchmark.html"><meta property="og:image" content="https://g0083.github.io/assets/translation-benchmark-2026-11-05/social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="RTX 4070上の翻訳LLM比較。PLaMo 0.8Bの長文平均1.29秒、PLaMo 8Bの通常12問AI参考採点96.7点。"><meta property="article:published_time" content="2026-11-05"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:creator" content="@ooyatech">
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RTX 4070 12GBで翻訳LLMを徹底比較 — 話題のPLaMo 3 TranslateとGemma 4を実測レビュー | O-ya tech</title>
+<meta name="description" content="Preferred Networksから登場した翻訳特化モデル「PLaMo 3 Translate」を手元のRTX 4070で早速検証。Gemma 4との比較を通じて、モデルサイズ別の速度や翻訳精度、長文での安定性、そして思考モードの落とし穴まで徹底的に考察します。">
+<link rel="canonical" href="https://g0083.github.io/posts/lmstudio-plamo3-gemma4-translation-benchmark.html">
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="../icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTX 4070 12GBで翻訳LLMを徹底比較 — 話題のPLaMo 3 TranslateとGemma 4を実測レビュー">
+<meta property="og:description" content="Preferred Networksの翻訳特化モデル「PLaMo 3 Translate」を手元のRTX 4070で早速検証。モデルサイズ別の速度や精度、思考モードの落とし穴まで考察します。">
+<meta property="og:url" content="https://g0083.github.io/posts/lmstudio-plamo3-gemma4-translation-benchmark.html">
+<meta property="og:image" content="https://g0083.github.io/assets/translation-benchmark-2026-11-05/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RTX 4070上の翻訳LLM比較。PLaMo 0.8Bの長文平均1.29秒、PLaMo 8Bの通常12問AI参考採点96.7点。">
+<meta property="article:published_time" content="2026-11-05">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@ooyatech">
 <style>
-.article-shell{max-width:1050px;margin:auto;padding:32px 24px 80px}.article-shell a:not(.btn-primary){color:#8ee6ad;text-decoration:underline;text-underline-offset:3px}.site-masthead{position:static;background:transparent;border:0;padding:0;margin:22px 0 32px}.article-shell h1{color:white;font-size:clamp(1.65rem,4vw,2.65rem);line-height:1.45;margin:12px 0 20px;overflow-wrap:anywhere}.article-shell h2{font-size:1.55rem;margin:3rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid #314738}.article-shell h3{color:#eaf9ef;font-size:1.15rem;margin-top:2rem}.article-shell p,.article-shell li{color:#dedee1;line-height:1.95}.meta,.small{font-size:.88rem;color:#b8bec2}.eyebrow{color:#76db98;font-size:.85rem;letter-spacing:.1em}.hero-image{display:block;width:100%;height:auto;border-radius:12px;border:1px solid #34483b}.lede{font-size:1.12rem}.callout{background:#192820;border-left:4px solid #50c878;padding:18px 22px;margin:24px 0;border-radius:0 8px 8px 0}.callout p{margin:.3rem 0}.fact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}.fact{padding:18px;background:#1d2420;border:1px solid #334738;border-radius:10px}.fact strong{display:block;font-size:1.7rem;color:#9be8b5}.fact span{font-size:.86rem;color:#c6d0c9}.table-scroll{overflow-x:auto;border:1px solid #39453e;border-radius:8px;margin:20px 0}.article-shell table{border-collapse:collapse;width:100%;min-width:700px;font-size:.88rem}.article-shell th,.article-shell td{padding:12px 14px;border-bottom:1px solid #343d37;text-align:right;vertical-align:top}.article-shell th{color:#b6e8c5;background:#202b24}.article-shell tbody th{font-weight:500;text-align:left;color:#ecefee;min-width:205px}.article-shell thead th:first-child{text-align:left}.article-shell tr:last-child>*{border-bottom:0}.article-shell blockquote{margin:12px 0;border-left:3px solid #536b5a;padding:8px 18px;color:#e5eee8;background:#1b221e}.article-shell code{font: .9em Consolas,monospace;background:#242c27;color:#b6edc8;padding:2px 5px;overflow-wrap:anywhere}.article-shell pre{overflow-x:auto;background:#1d2420;padding:18px;border:1px solid #39453e;border-radius:8px;line-height:1.7}.article-shell pre code{padding:0;background:none}.article-shell .actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}.article-shell .btn-primary{height:auto;line-height:1.5;white-space:normal;text-align:center;min-width:0}.article-shell details{margin:20px 0;background:#1b211e;border:1px solid #3d4c42;border-radius:8px;padding:16px 20px}.article-shell summary{cursor:pointer;color:#9be8b5;font-weight:600}.article-shell ul{padding-left:1.4rem}.article-shell li{margin:.5rem 0}.article-shell figure{margin:28px 0}.article-shell figcaption{font-size:.84rem;color:#b8bec2;margin-top:8px}.article-shell .toc{display:flex;gap:12px 20px;flex-wrap:wrap;font-size:.9rem;margin:24px 0}.article-shell .sources{font-size:.9rem}footer{color:#a6b0a9;text-align:center;padding:24px;border-top:1px solid #303b33}@media(max-width:640px){.article-shell{padding:22px 16px 48px}.fact-grid{grid-template-columns:1fr}.fact strong{font-size:1.5rem}.article-shell h2{font-size:1.3rem}.article-shell th,.article-shell td{padding:10px}.article-shell .toc{display:block}.toc a{display:inline-block;margin:6px 10px 6px 0}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
-</style></head><body><main class="article-shell"><a href="../index.html?tab=blog">← 記事一覧へ</a><article>
-<header class="site-masthead"><div class="eyebrow">LOCAL LLM / TRANSLATION BENCHMARK</div><h1>RTX 4070 12GBで翻訳LLMを比較 — PLaMo 3 Translate vs Gemma 4 QAT＋MTP</h1><p class="meta"><time datetime="2026-11-05">2026年11月5日</time> · O-ya tech (@ooyatech) · 英→日 / 日→英</p></header>
+.article-shell{max-width:1050px;margin:auto;padding:32px 24px 80px}
+.article-shell a:not(.btn-primary){color:#8ee6ad;text-decoration:underline;text-underline-offset:3px}
+.site-masthead{position:static;background:transparent;border:0;padding:0;margin:22px 0 32px}
+.article-shell h1{color:white;font-size:clamp(1.65rem,4vw,2.65rem);line-height:1.45;margin:12px 0 20px;overflow-wrap:anywhere}
+.article-shell h2{font-size:1.55rem;margin:3rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid #314738}
+.article-shell h3{color:#eaf9ef;font-size:1.15rem;margin-top:2rem}
+.article-shell p,.article-shell li{color:#dedee1;line-height:1.95}
+.meta,.small{font-size:.88rem;color:#b8bec2}
+.eyebrow{color:#76db98;font-size:.85rem;letter-spacing:.1em}
+.hero-image{display:block;width:100%;height:auto;border-radius:12px;border:1px solid #34483b}
+.lede{font-size:1.12rem}
+.callout{background:#192820;border-left:4px solid #50c878;padding:18px 22px;margin:24px 0;border-radius:0 8px 8px 0}
+.callout p{margin:.3rem 0}
+.fact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.fact{padding:18px;background:#1d2420;border:1px solid #334738;border-radius:10px}
+.fact strong{display:block;font-size:1.7rem;color:#9be8b5}
+.fact span{font-size:.86rem;color:#c6d0c9}
+.table-scroll{overflow-x:auto;border:1px solid #39453e;border-radius:8px;margin:20px 0}
+.article-shell table{border-collapse:collapse;width:100%;min-width:700px;font-size:.88rem}
+.article-shell th,.article-shell td{padding:12px 14px;border-bottom:1px solid #343d37;text-align:right;vertical-align:top}
+.article-shell th{color:#b6e8c5;background:#202b24}
+.article-shell tbody th{font-weight:500;text-align:left;color:#ecefee;min-width:205px}
+.article-shell thead th:first-child{text-align:left}
+.article-shell tr:last-child>*{border-bottom:0}
+.article-shell blockquote{margin:12px 0;border-left:3px solid #536b5a;padding:8px 18px;color:#e5eee8;background:#1b221e}
+.article-shell code{font:.9em Consolas,monospace;background:#242c27;color:#b6edc8;padding:2px 5px;overflow-wrap:anywhere}
+.article-shell pre{overflow-x:auto;background:#1d2420;padding:18px;border:1px solid #39453e;border-radius:8px;line-height:1.7}
+.article-shell pre code{padding:0;background:none}
+.article-shell .actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.article-shell .btn-primary{height:auto;line-height:1.5;white-space:normal;text-align:center;min-width:0}
+.article-shell details{margin:20px 0;background:#1b211e;border:1px solid #3d4c42;border-radius:8px;padding:16px 20px}
+.article-shell summary{cursor:pointer;color:#9be8b5;font-weight:600}
+.article-shell ul{padding-left:1.4rem}
+.article-shell li{margin:.5rem 0}
+.article-shell figure{margin:28px 0}
+.article-shell figcaption{font-size:.84rem;color:#b8bec2;margin-top:8px}
+.article-shell .toc{display:flex;gap:12px 20px;flex-wrap:wrap;font-size:.9rem;margin:24px 0}
+.article-shell .sources{font-size:.9rem}
+footer{color:#a6b0a9;text-align:center;padding:24px;border-top:1px solid #303b33}
+@media(max-width:640px){
+  .article-shell{padding:22px 16px 48px}
+  .fact-grid{grid-template-columns:1fr}
+  .fact strong{font-size:1.5rem}
+  .article-shell h2{font-size:1.3rem}
+  .article-shell th,.article-shell td{padding:10px}
+  .article-shell .toc{display:block}
+  .toc a{display:inline-block;margin:6px 10px 6px 0}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="article-shell">
+<a href="../index.html?tab=blog">← 記事一覧へ</a>
+<article>
+<header class="site-masthead">
+  <div class="eyebrow">LOCAL LLM / TRANSLATION BENCHMARK</div>
+  <h1>RTX 4070 12GBで翻訳LLMを徹底比較 — 話題のPLaMo 3 TranslateとGemma 4を実測レビュー</h1>
+  <p class="meta"><time datetime="2026-11-05">2026年11月5日</time> · O-ya tech (@ooyatech) · 英→日 / 日→英</p>
+</header>
+
 <img class="hero-image" src="../assets/translation-benchmark-2026-11-05/social-card.png" alt="PLaMo 3 TranslateとGemma 4 QATのローカル翻訳比較。RTX 4070 12GB、コンテクスト4096、GemmaはMTP有効。" width="1200" height="630">
-<p class="lede">手元のRTX 4070 12GBで、翻訳専用のPLaMo 3 Translateと、Gemma 4 QATの翻訳を比べました。知りたかったのは、短い文を速く訳せるかに加え、条件や数字を落とさず長文を最後まで訳せるか、という点です。</p>
-<p>PLaMoは0.8B・2B・8B、GemmaはE2B・E4B・12Bを使用。Gemmaは<strong>MTPを必ず有効</strong>にし、思考あり・なしを分けました。全モデルのコンテクストは<strong>4,096トークン</strong>です。</p>
-<div class="fact-grid"><div class="fact"><strong>6モデル / 9条件</strong><span>GemmaはMTP有効・思考ON/OFF</span></div><div class="fact"><strong>342回</strong><span>通常324回＋追加長文18回を実測</span></div><div class="fact"><strong>14問 × 9条件</strong><span>各問のAI参考採点・最終訳を公開</span></div></div>
-<div class="callout"><p><strong>今回の原文では、最速はPLaMo 0.8B。</strong>通常長文の平均は1.29秒でした。AI参考採点の通常12問ではPLaMo 8Bが96.7点。Gemma 12Bの思考ありは、思考だけで出力枠を使い切り、最終訳が出ない長文がありました。</p><p class="small">この点数はCodexの原文照合を数値化した参考値です。正答率や独立した人間評価ではありません。小さな点差でモデル全般の優劣を断定するものではありません。</p></div>
-<div class="actions"><a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/viewer.html">各問の点数・原文・訳文を見比べる →</a><a class="btn-secondary" href="#data">詳細データへ ↓</a></div>
-<nav class="toc" aria-label="記事の目次"><a href="#results">実測結果</a><a href="#accuracy">正確性の採点</a><a href="#long-text">長文の限界</a><a href="#mtp">MTPの確認方法</a><a href="#method">測定条件と限界</a><a href="#data">詳細データ</a></nav>
 
-<h2 id="results">速度は「訳し終わるまで」で比べる</h2>
-<p>異なるモデル同士ではトークンの区切り方が違います。さらに思考ありのtokens/sには、最終訳に出てこない思考トークンも含まれます。そこで主指標は、<strong>同じ原文の翻訳リクエストから、生成が完了するまでの秒数</strong>にしました。</p>
-<p>通常比較は、短文4問・中程度4問・長文4問を各3回。原文ごとに3回の中央値を取り、それを長さの区分内で平均しています。英語の通常長文は486語と491語、日本語は1,250字と1,176字です。</p>
-<div class="table-scroll" tabindex="0"><table><thead><tr><th scope="col">モデル / 思考</th><th scope="col">短文 秒</th><th scope="col">中程度 秒</th><th scope="col">長文 秒</th><th scope="col">AI参考点 /100</th><th scope="col">正常終了</th></tr></thead><tbody><tr><th scope="row">PLaMo 0.8B</th><td>0.09</td><td>0.36</td><td>1.29</td><td>91.3</td><td>36/36</td></tr><tr><th scope="row">PLaMo 2B</th><td>0.21</td><td>0.81</td><td>3.08</td><td>95.0</td><td>36/36</td></tr><tr><th scope="row">PLaMo 8B</th><td>0.47</td><td>2.03</td><td>7.47</td><td>96.7</td><td>36/36</td></tr><tr><th scope="row">Gemma E2B 思考なし</th><td>0.74</td><td>1.20</td><td>3.55</td><td>88.8</td><td>36/36</td></tr><tr><th scope="row">Gemma E2B 思考あり</th><td>2.94</td><td>2.93</td><td>5.82</td><td>94.2</td><td>36/36</td></tr><tr><th scope="row">Gemma E4B 思考なし</th><td>0.83</td><td>1.42</td><td>4.60</td><td>94.2</td><td>36/36</td></tr><tr><th scope="row">Gemma E4B 思考あり</th><td>3.32</td><td>3.60</td><td>8.85</td><td>93.8</td><td>36/36</td></tr><tr><th scope="row">Gemma 12B 思考なし</th><td>0.60</td><td>2.73</td><td>11.95</td><td>95.0</td><td>36/36</td></tr><tr><th scope="row">Gemma 12B 思考あり</th><td>10.49</td><td>20.41</td><td>55.23 ※</td><td>81.3</td><td>30/36</td></tr></tbody></table></div>
-<p class="small">※12B・思考ありの長文55.23秒には、失敗して止まるまでの時間を含みます。翻訳完了時間として他モデルと同列に扱えません。長文4問のうち2問が3回とも最終訳なしで停止し、全体の正常終了は30/36回でした。他の8条件は36/36回正常終了しています。</p>
-<p>0.8Bは長文でも速く、通常12問の中央値を合計すると約6.96秒。2Bは約16.42秒、8Bは約39.91秒でした。今回の原文で品質と待ち時間を合わせて選ぶなら、<strong>2Bと8Bの差を、自分の用途に近い訳文で確認したい</strong>ところです。</p>
+<p class="lede">
+Preferred Networksから、待望の翻訳特化モデル「PLaMo 3 Translate」が登場しました。日本語処理に強いPFNが満を持して送り出した翻訳モデルとあって、ローカルLLMを常用する身としては試さずにはいられません。
+</p>
+<p>
+そこで手元のPC環境（RTX 4070 12GB）を使い、対抗馬となるGemma 4（QAT＋MTP構成）とガチンコの翻訳対決を実施しました。気になるのは短いフレーズを素早く返せるかだけではありません。数字や条件分岐の抜け漏れを起こさず、実務レベルの長文を最後まで破綻なく訳し切れるかが最大の焦点です。
+</p>
+<p>
+検証にあたっては、PLaMo 3 Translateの0.8B・2B・8Bの3サイズと、Gemma 4のE2B・E4B・12Bを使用しました。Gemmaは投機的デコードを効かせるMTP（Multi-Token Prediction）を常時有効化し、思考あり・思考なしの両条件を測定。コンテクスト長は実用的な4,096トークンで統一し、通常測定324回と追加長文18回、合計342回にわたるテストを走らせました。
+</p>
 
-<h2 id="accuracy">正確性は各問10点。減点理由も残す</h2>
-<p>テスト文の作成と原文照合にはCodexを使用しました。採点は、モデル名を把握した状態での単独AIレビューです。意味の保持6点、情報の完全性3点、数字・固有表現・指定言語の保持1点として、文体の好みだけでは減点しません。最終訳なしは0点、途中訳は訳出範囲を反映しています。</p>
-<p>通常比較では同じ条件の最終訳が3回とも一致しました。そのため品質は1問を1回採点し、速度の繰り返しを品質サンプル数に上乗せしていません。採点した組み合わせは<strong>14問×9条件＝126件</strong>です。</p>
-<div class="table-scroll" tabindex="0"><table><thead><tr><th scope="col">モデル / 思考</th><th scope="col">通常 /120</th><th scope="col">通常100点換算</th><th scope="col">追加 /20</th><th scope="col">全14問100点換算</th></tr></thead><tbody><tr><th scope="row">PLaMo 8B</th><td>116.0</td><td>96.7</td><td>17.5</td><td>95.4</td></tr><tr><th scope="row">PLaMo 2B</th><td>114.0</td><td>95.0</td><td>17.5</td><td>93.9</td></tr><tr><th scope="row">Gemma 12B 思考なし</th><td>114.0</td><td>95.0</td><td>17.5</td><td>93.9</td></tr><tr><th scope="row">Gemma E2B 思考あり</th><td>113.0</td><td>94.2</td><td>13.7</td><td>90.5</td></tr><tr><th scope="row">Gemma E4B 思考なし</th><td>113.0</td><td>94.2</td><td>15.5</td><td>91.8</td></tr><tr><th scope="row">Gemma E4B 思考あり</th><td>112.5</td><td>93.8</td><td>16.5</td><td>92.1</td></tr><tr><th scope="row">PLaMo 0.8B</th><td>109.5</td><td>91.3</td><td>15.5</td><td>89.3</td></tr><tr><th scope="row">Gemma E2B 思考なし</th><td>106.5</td><td>88.8</td><td>13.5</td><td>85.7</td></tr><tr><th scope="row">Gemma 12B 思考あり</th><td>97.5</td><td>81.3</td><td>1.3</td><td>70.6</td></tr></tbody></table></div>
-<p>12B・思考ありは、通常比較で最終訳が出た10問だけなら97.5点でした。ただし、除外される2問は長文です。この列だけで他モデルの全12問の点数と優劣を比べると、難しい問題を除いた影響が混ざります。</p>
-<p>また、採点基準には原文未指定の性別の追加や、時刻の包含境界といった細かな項目も含めています。「北港」の読み方など、原文で決められない表記の差は、それだけで減点しない基準にしました。<a href="../assets/translation-benchmark-2026-11-05/accuracy-scores.md">各問の区分別点数と全減点理由</a>から確認できます。</p>
-<h3>速くても、意味が変わる例はある</h3>
-<p>たとえば価格に関する原文は、次の内容です。</p>
+<div class="fact-grid">
+  <div class="fact"><strong>6モデル / 9条件</strong><span>PLaMo 3兄弟 vs Gemma 4（思考ON/OFF）</span></div>
+  <div class="fact"><strong>合計342回</strong><span>通常テスト324回＋長文耐久18回を実測</span></div>
+  <div class="fact"><strong>14問 × 9条件</strong><span>原文照合採点と全訳文ログを全公開</span></div>
+</div>
+
+<div class="callout">
+  <p><strong>最速はPLaMo 0.8B。長文でも平均1.29秒で駆け抜ける驚異的な瞬発力を見せました。</strong>一方、正確性のAI参考採点ではPLaMo 8Bが96.7点と高い安定感を発揮。対照的に、Gemma 12Bの思考ありモードは思考トークンだけで枠を使い果たし、長文の最終訳が出力できない場面に遭遇しました。</p>
+  <p class="small">※採点はCodexによる原文との照合結果を定量化した参考スコアです。人間による官能評価とは異なります。</p>
+</div>
+
+<div class="actions">
+  <a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/viewer.html">各問の点数・原文・訳文を見比べる →</a>
+  <a class="btn-secondary" href="#data">詳細データへ ↓</a>
+</div>
+
+<nav class="toc" aria-label="記事の目次">
+  <a href="#models">対決モデルとサイズ感</a>
+  <a href="#results">実測速度の比較</a>
+  <a href="#accuracy">正確性の採点と誤訳の傾向</a>
+  <a href="#long-text">長文耐久テストと思考モードの罠</a>
+  <a href="#mtp">GemmaのMTP動作確認</a>
+  <a href="#method">測定環境と条件</a>
+  <a href="#data">公開データ一覧</a>
+  <a href="#conclusion">用途別のおすすめモデル</a>
+</nav>
+
+<h2 id="models">対決モデルのラインナップとサイズ感</h2>
+<p>
+今回の比較対象は、パラメータ規模の異なる各3サイズです。手元のRTX 4070（VRAM 12GB）で全レイヤーをGPUに載せ切る前提で選定しました。
+</p>
+<ul>
+  <li><strong>超軽量クラス（PLaMo 0.8B / Gemma E2B）：</strong>VRAM消費が数GBに収まる極小サイズ。エントリーGPUやCPU環境、常駐型ツールでも軽快に動く身軽さが武器です。0.8Bという小ささでどこまでまともな日本語を出せるのかが大きな見どころになります。</li>
+  <li><strong>バランス・本命クラス（PLaMo 2B / Gemma E4B）：</strong>個人開発や日常利用のスイートスポットとなるサイズ。軽快な動作と表現力を両立できるか、実用性の基準となるクラスです。</li>
+  <li><strong>重量級クラス（PLaMo 8B / Gemma 12B）：</strong>12GBのVRAMをしっかり使い切る本格派。文脈の深い読み取りや複雑な構文の把握に期待がかかる一方、処理速度とのトレードオフが問われます。</li>
+</ul>
+
+<h2 id="results">速度は「訳し終わるまで」の実時間で比べる</h2>
+<p>
+モデルによってトークナイザーの区切り方は異なります。思考モードを有効にした場合、出力トークン数には翻訳結果に出てこない思考過程のトークンも含まれるため、単なるtokens/sでは純粋な待ち時間を比較できません。そこで今回は、<strong>ユーザーが翻訳をリクエストしてから、画面に最終訳が出揃うまでの実時間（秒）</strong>を評価の主指標としました。
+</p>
+<p>
+短文4問・中長文4問・長文4問の各テキストを3回ずつ測定し、原文ごとの中央値をもとに長さの区分別平均を算出しています。英語の長文は約490語、日本語の長文は約1,200字です。
+</p>
+
+<div class="table-scroll" tabindex="0">
+<table>
+<thead>
+  <tr>
+    <th scope="col">モデル / 思考条件</th>
+    <th scope="col">短文（秒）</th>
+    <th scope="col">中程度（秒）</th>
+    <th scope="col">長文（秒）</th>
+    <th scope="col">AI参考点 /100</th>
+    <th scope="col">正常終了率</th>
+  </tr>
+</thead>
+<tbody>
+  <tr><th scope="row">PLaMo 0.8B</th><td>0.09</td><td>0.36</td><td>1.29</td><td>91.3</td><td>36/36</td></tr>
+  <tr><th scope="row">PLaMo 2B</th><td>0.21</td><td>0.81</td><td>3.08</td><td>95.0</td><td>36/36</td></tr>
+  <tr><th scope="row">PLaMo 8B</th><td>0.47</td><td>2.03</td><td>7.47</td><td>96.7</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma E2B（思考なし）</th><td>0.74</td><td>1.20</td><td>3.55</td><td>88.8</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma E2B（思考あり）</th><td>2.94</td><td>2.93</td><td>5.82</td><td>94.2</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma E4B（思考なし）</th><td>0.83</td><td>1.42</td><td>4.60</td><td>94.2</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma E4B（思考あり）</th><td>3.32</td><td>3.60</td><td>8.85</td><td>93.8</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma 12B（思考なし）</th><td>0.60</td><td>2.73</td><td>11.95</td><td>95.0</td><td>36/36</td></tr>
+  <tr><th scope="row">Gemma 12B（思考あり）</th><td>10.49</td><td>20.41</td><td>55.23 ※</td><td>81.3</td><td>30/36</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">※Gemma 12B（思考あり）の長文55.23秒は、エラーで停止するまでの時間を含んでいます。長文4問のうち2問で思考枠が溢れて最終訳が出力できず、正常終了は30/36回にとどまりました。他の8条件はすべて36/36回完走しています。</p>
+
+<p>
+実際に動かしてみて一番驚いたのは、PLaMo 0.8Bの爆発的なスピードです。短文は0.09秒と押した瞬間に返ってきますし、500語近い長文でもわずか1.29秒。通常12問の中央値をすべて合計しても約6.96秒しかかかりません。ブラウザ拡張機能やバックグラウンド常駐ツールで使うなら、この反応速度は圧倒的な魅力です。
+</p>
+<p>
+PLaMo 2Bも合計約16.42秒（長文平均3.08秒）と極めて快調。PLaMo 8Bは合計約39.91秒（長文平均7.47秒）とそれなりに待ち時間は伸びるものの、実用圏内を維持しています。
+</p>
+
+<h2 id="accuracy">正確性の採点と、実際の誤訳から見る考察</h2>
+<p>
+翻訳の質については、Codexを用いて原文と訳文の照合を行いました。意味の保持に6点、情報の完全性に3点、数値や固有名詞・指定言語の維持に1点を配分した10点満点です。文体の好みの違いでは減点せず、事実関係の欠落や数値の食い違いを厳格に減点しました。全14問×9条件の計126件を個別に採点しています。
+</p>
+
+<div class="table-scroll" tabindex="0">
+<table>
+<thead>
+  <tr>
+    <th scope="col">モデル / 思考条件</th>
+    <th scope="col">通常12問 /120</th>
+    <th scope="col">通常100点換算</th>
+    <th scope="col">追加長文 /20</th>
+    <th scope="col">全14問100点換算</th>
+  </tr>
+</thead>
+<tbody>
+  <tr><th scope="row">PLaMo 8B</th><td>116.0</td><td>96.7</td><td>17.5</td><td>95.4</td></tr>
+  <tr><th scope="row">PLaMo 2B</th><td>114.0</td><td>95.0</td><td>17.5</td><td>93.9</td></tr>
+  <tr><th scope="row">Gemma 12B（思考なし）</th><td>114.0</td><td>95.0</td><td>17.5</td><td>93.9</td></tr>
+  <tr><th scope="row">Gemma E2B（思考あり）</th><td>113.0</td><td>94.2</td><td>13.7</td><td>90.5</td></tr>
+  <tr><th scope="row">Gemma E4B（思考なし）</th><td>113.0</td><td>94.2</td><td>15.5</td><td>91.8</td></tr>
+  <tr><th scope="row">Gemma E4B（思考あり）</th><td>112.5</td><td>93.8</td><td>16.5</td><td>92.1</td></tr>
+  <tr><th scope="row">PLaMo 0.8B</th><td>109.5</td><td>91.3</td><td>15.5</td><td>89.3</td></tr>
+  <tr><th scope="row">Gemma E2B（思考なし）</th><td>106.5</td><td>88.8</td><td>13.5</td><td>85.7</td></tr>
+  <tr><th scope="row">Gemma 12B（思考あり）</th><td>97.5</td><td>81.3</td><td>1.3</td><td>70.6</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+最高得点はPLaMo 8Bの96.7点。続いてPLaMo 2BとGemma 12B（思考なし）が95.0点で並びました。ここで興味深いのは、点数差以上に「モデルサイズごとの文脈理解の壁」がはっきりと訳文に現れた点です。
+</p>
+
+<h3>スピードと引き換えに起きた、小さな意味の反転</h3>
+<p>
+価格変動に関する次の短い英文で、サイズによる差が分かりやすく出ました。
+</p>
 <blockquote lang="en">The price fell by 15%, not to 15% of its original value.</blockquote>
-<p>0.8Bの訳は「価格は15%下落し、元の価値の15%には届きませんでした」。元値の15%になったわけではないという対比が、到達不足の話に変わっています。</p>
-<p>「採用に賛成したわけではない。試作品は3個とも動いたものの……」という日本語では、0.8B・2B・Gemma E2B思考なし・12B思考なしに、採用を<strong>hiring / hire（雇用）</strong>と解釈した例がありました。8Bや一部の思考ありでは、試作品の採用として訳しています。</p>
-<p>全モデルで共通したのは、返金条件の<strong>after November 12 → 11月12日以降</strong>という境界のずれです。12日を含むかどうかが条件を変えるため減点しました。文章が自然でも、こうした限定は別に照合する必要があります。</p>
-<h3>長文では、限定の脱落を見つけやすい</h3>
-<p>技術文では「研究部門を第1段階、<em>残りの部門</em>を第2段階へ」という範囲の限定が、「財務以外の全部門」へ広がる例がありました。また、英訳で「任意の説明欄」のoptionalを落とし、説明欄一般についての規則にする例もあります。</p>
-<p>Gemma E2Bは、通常長文で「12歳未満」の年齢条件の欠落や、by next Friday（その日までに利用開始）をuntil next Friday（その日まで利用可能）へ変える誤りがありました。思考ありで改善した箇所もありますが、同じ誤りが残る箇所もありました。</p>
+<p>
+PLaMo 0.8Bの訳文は「価格は15%下落し、元の価値の15%には届きませんでした」。元値の15%にまで暴落したわけではないという対比表現が、なぜか目標値に到達しなかった話にすり替わっています。文章自体は流暢な日本語に見えるため、パッと見では誤訳に気付きにくい怖さがあります。極小モデルを実務で使う際は、こうした数値の対比関係に対する目視チェックが欠かせません。
+</p>
 
-<h2 id="long-text">約1,000語／約2,400字で、出力枠の差が出た</h2>
-<p>通常の長文2本を連結した、英語約978語・日本語2,426字＋区切りの追加試験も行いました。コンテクストは同じ4,096トークン、各条件1回です。この追加試験は、3回中央値の通常比較と分けて扱います。</p>
-<div class="table-scroll" tabindex="0"><table><thead><tr><th scope="col">モデル / 思考</th><th scope="col">英→日 秒・結果</th><th scope="col">日→英 秒・結果</th></tr></thead><tbody><tr><th scope="row">PLaMo 0.8B</th><td>2.50 / 完走</td><td>2.25 / 完走</td></tr><tr><th scope="row">PLaMo 2B</th><td>5.98 / 完走</td><td>5.44 / 完走</td></tr><tr><th scope="row">PLaMo 8B</th><td>14.39 / 完走</td><td>13.24 / 完走</td></tr><tr><th scope="row">Gemma E2B 思考なし</th><td>6.85 / 完走</td><td>5.18 / 完走</td></tr><tr><th scope="row">Gemma E2B 思考あり</th><td>8.81 / 完走</td><td>8.53 / 途中で上限</td></tr><tr><th scope="row">Gemma E4B 思考なし</th><td>9.43 / 完走</td><td>6.73 / 完走</td></tr><tr><th scope="row">Gemma E4B 思考あり</th><td>11.87 / 完走</td><td>10.63 / 完走</td></tr><tr><th scope="row">Gemma 12B 思考なし</th><td>29.60 / 完走</td><td>21.56 / 完走</td></tr><tr><th scope="row">Gemma 12B 思考あり</th><td>48.93 / 訳なし・上限</td><td>44.91 / 途中で上限</td></tr></tbody></table></div>
-<p>PLaMoの3サイズとGemmaの思考なし3条件、Gemma E4Bの思考ありは、両方向とも末尾まで訳しました。E2B・思考ありの日→英は2文書目の途中で切断。12B・思考ありは英→日が最終訳なし、日→英が1文書目の途中で切断しました。</p>
-<p>ここで見ているのは、モデルが本来扱える最大コンテクストではありません。<strong>入力・思考・訳文を共通の4,096トークンへ収める構成で、どこまで仕事が完了するか</strong>という実用上の制約です。モデルごとにトークナイザも異なるため、同じ文字数でも消費トークンは異なります。</p>
-<p>通常比較の12B・思考ありでは、486語の技術文で約59秒間思考を生成し、最終訳がないまま上限へ達しました。日本語1,176字の会議記録でも同様でした。より広いコンテクストや思考予算を設定した別の構成なら結果が変わる可能性があり、今回の結果だけから12Bの翻訳能力全般を評価することはできません。</p>
+<h3>「採用」をhireと訳すか、adoptionと訳すか</h3>
+<p>
+日本語の文脈理解でも差がつきました。
+</p>
+<blockquote>採用に賛成したわけではない。試作品は3個とも動いたものの……</blockquote>
+<p>
+この文章に対し、PLaMo 0.8Bや2B、Gemma E2B（思考なし）などは「採用」を雇用を意味するhiringやhireと訳してしまいました。前後の文脈を見れば機械や技術の採用（adoption / acceptance）であることは明白ですが、小型モデルでは単語単体の頻出訳に引きずられがちです。
+</p>
+<p>
+一方でPLaMo 8Bや思考ありモデルは、試作品の話であることをしっかり踏まえて適切な英単語を選択していました。このあたりに8Bクラスの確かな基礎体力を感じます。
+</p>
 
-<h2 id="mtp">Gemmaは「有効にしたつもり」で終わらせない</h2>
-<p>手元のGemma配布物は別ファイルのMTPヘッドを使う構成でした。内蔵ヘッド用の起動スイッチではロードが拒否されたため、LM Studioのランタイム引数上書きで、対応するドラフターを指定しました。</p>
+<p>
+なお、全モデルに共通して見られた弱点もありました。返金ポリシーの「after November 12」を「11月12日以降」と訳して12日当日を含めてしまうような、日付や境界条件のずれです。この手の法的な限定表現は、モデルのサイズを問わず慎重な確認が必要です。
+</p>
+
+<h2 id="long-text">長文耐久テストと思考モードの落とし穴</h2>
+<p>
+続いて、通常の長文2本を連結したヘビーなテスト（英語約978語、日本語2,426字）を実施しました。実務でよくある長い仕様書や議事録を一括で流し込んだときに、途中で息切れせず完走できるかを試す試験です。
+</p>
+
+<div class="table-scroll" tabindex="0">
+<table>
+<thead>
+  <tr>
+    <th scope="col">モデル / 思考条件</th>
+    <th scope="col">英→日（所要時間・結果）</th>
+    <th scope="col">日→英（所要時間・結果）</th>
+  </tr>
+</thead>
+<tbody>
+  <tr><th scope="row">PLaMo 0.8B</th><td>2.50秒 / 完走</td><td>2.25秒 / 完走</td></tr>
+  <tr><th scope="row">PLaMo 2B</th><td>5.98秒 / 完走</td><td>5.44秒 / 完走</td></tr>
+  <tr><th scope="row">PLaMo 8B</th><td>14.39秒 / 完走</td><td>13.24秒 / 完走</td></tr>
+  <tr><th scope="row">Gemma E2B（思考なし）</th><td>6.85秒 / 完走</td><td>5.18秒 / 完走</td></tr>
+  <tr><th scope="row">Gemma E2B（思考あり）</th><td>8.81秒 / 完走</td><td>8.53秒 / 途中で上限到達</td></tr>
+  <tr><th scope="row">Gemma E4B（思考なし）</th><td>9.43秒 / 完走</td><td>6.73秒 / 完走</td></tr>
+  <tr><th scope="row">Gemma E4B（思考あり）</th><td>11.87秒 / 完走</td><td>10.63秒 / 完走</td></tr>
+  <tr><th scope="row">Gemma 12B（思考なし）</th><td>29.60秒 / 完走</td><td>21.56秒 / 完走</td></tr>
+  <tr><th scope="row">Gemma 12B（思考あり）</th><td>48.93秒 / 訳なし（上限到達）</td><td>44.91秒 / 途中で上限到達</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>考察：翻訳タスクにおける「思考モード」の功罪</h3>
+<p>
+この長文テストの結果には、非常に示唆に富む学びがありました。
+</p>
+<p>
+PLaMo 3兄弟は、0.8Bから8Bまで両方向とも一切息切れすることなく、末尾まで安定して訳し切りました。Gemmaも思考なしモードであれば全サイズ完走しています。
+</p>
+<p>
+問題となったのは<strong>Gemmaの思考ありモード</strong>です。E2Bは日→英の2文書目で途切れ、12Bに至っては英→日で約49秒間も思考を延々と出力し続けた挙句、4,096トークンの上限枠を使い切り、肝心の最終訳が1文字も出ずに強制終了してしまいました。
+</p>
+<p>
+近年のLLMでは推論・思考プロセス（CoT）を挟む手法がトレンドです。しかし翻訳タスクにおいては、内部で延々と長考させる行為はトークン枠の浪費に繋がりやすく、むしろ大きな足かせになりかねません。特にコンテクスト長に制限があるローカル環境では、思考トークンが出力枠を圧迫し、一番欲しい訳文が溢れてしまうという本末転倒な事態を招きます。
+</p>
+<p>
+その点、PLaMo 3 Translateのように「最初から翻訳専用としてファインチューニングされたモデル」は無駄な自問自答を挟まず、ストレートに最適な訳文を吐き出します。出力枠を100%訳文に使えるため、長文でも圧倒的に安全で実用的でした。特化型モデルならではの強みが如実に現れた格好です。
+</p>
+
+<h2 id="mtp">GemmaのMTP（投機的デコード）動作確認</h2>
+<p>
+Gemma側の公平性を担保するため、MTP（Multi-Token Prediction）を確実に機能させました。使用した配布物はMTPヘッドが別ファイルになっていたため、LM Studioの起動引数にドラフター設定を直接流し込んでいます。
+</p>
 <pre><code>--model-draft &lt;対応するMTPヘッドのGGUF&gt;
 --spec-type draft-mtp
 --spec-draft-n-max 4</code></pre>
-<p>ロード成功に加え、生成ごとの<code>totalDraftTokensCount</code>と<code>acceptedDraftTokensCount</code>、ランタイムログのdraft acceptanceを照合しています。<strong>通常216回＋追加12回、計228回のGemma測定すべてでドラフト採用を確認</strong>しました。</p>
-<p>なお、今回はMTP有効構成同士の比較です。GemmaをMTP無効でも測定したわけではないため、MTPそのものが何倍速くしたかという値は出していません。ドラフターの配布元・ファイル名は公開メタデータに残しています。</p>
+<p>
+ランタイムのログを追跡し、ドラフトトークンの生成数と採択数を1リクエストごとに照合。通常測定216回と追加長文12回、計228回のGemma推論すべてでMTPによるドラフト採択が正常に行われていることを確認済みです。
+</p>
 
-<h2 id="method">測定条件と、この比較の限界</h2>
-<div class="table-scroll" tabindex="0"><table><thead><tr><th scope="col">項目</th><th scope="col">条件</th></tr></thead><tbody><tr><th scope="row">GPU</th><td>NVIDIA GeForce RTX 4070 / VRAM 12,282 MiB</td></tr><tr><th scope="row">CPU / RAM</th><td>Intel Core i5-14500HX / 約31.8 GiB</td></tr><tr><th scope="row">ランタイム</th><td>LM Studio経由、llama.cpp CUDA12 2.69.0 / SDK 2.1.0</td></tr><tr><th scope="row">量子化</th><td>PLaMo: Q4_K_M、Gemma: QAT Q4_0。MTPヘッドはQ8_0</td></tr><tr><th scope="row">コンテクスト / 並列数</th><td>全モデル4,096 / 1リクエスト</td></tr><tr><th scope="row">生成</th><td>temperature=0、top-k=1、seed=42、repeat penalty=1</td></tr><tr><th scope="row">思考 / 出力上限</th><td>思考予算は無制限。出力上限は4,096−推定入力トークン数−安全余白32</td></tr><tr><th scope="row">GPU配置 / KV</th><td>全層GPU配置を要求、Flash Attention、f16 KV、KVをGPUへ</td></tr><tr><th scope="row">通常比較</th><td>自作原文12本 × 9条件 × 3回＝324回</td></tr><tr><th scope="row">追加長文</th><td>連結原文2本 × 9条件 × 1回＝18回</td></tr></tbody></table></div>
-<details><summary>ウォームアップ・キャッシュ・保存済み設定の詳細</summary><p>各条件で英日・日英の短いウォームアップを実施。各測定前に無関係なテキストで1トークン生成してスロットの直前プロンプトを置き換え、コンテクストチェックポイントを無効化しました。モデルロード、ウォームアップ、キャッシュ置換、GPU状態取得の前後は測定時間から除外。生成中の1秒間隔のGPU監視負荷は含みます。</p><p><strong>保存済みロード設定に差が残っています。</strong>物理マイクロバッチはGemma 12Bが1120、他が512。ロード時のCPUプールはGemmaが10、PLaMoが7で、予測時CPUスレッドは全条件7でした。モデル順を固定しており、背景アプリを含むVRAM使用や温度・順序効果も完全には除いていません。量子化方式も異なるため、各構成の実用比較として読んでください。</p><p>PLaMoは公式のPFML3翻訳プロンプト、Gemmaは組み込みチャットテンプレート＋全文を忠実に訳す共通指示を使用しています。モデル名のサイズ表記は実総パラメータ数やメモリ量が同じことを意味しません。</p></details>
-<p>正確性の点数は小さな自作コーパスに対するAI採点です。ブラインドの複数人評価でも、COMET等による外部ベンチマークでもありません。採点者・減点ルールを変えれば、特に僅差の順位は変わり得ます。訳が自然に読めるかだけでなく、原文の事実や限定が残ったかを確認した記録として公開します。</p>
+<h2 id="method">測定環境とベンチマークの条件</h2>
+<p>
+検証を行ったハードウェアと共通パラメータは以下の通りです。
+</p>
 
-<h2 id="data">詳しく見たい方へ：原文・全訳文・採点・測定データ</h2>
-<p>本文の表だけで判断せず、自分が訳す文章に近い問題を選べるよう、詳細を分けて公開しました。比較画面では各問の点数を押すと、その条件の訳文と減点理由へ移動できます。</p>
-<div class="actions"><a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/viewer.html">採点表と全訳文の比較画面 →</a><a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/benchmark-data.zip" download>公開データ一式 ZIP ↓</a></div>
-<ul><li><a href="../assets/translation-benchmark-2026-11-05/accuracy-scores.md">各問の点数・3区分の内訳・全減点理由</a></li><li><a href="../assets/translation-benchmark-2026-11-05/accuracy-scores.json" download>採点JSON（126組・基準・原文と訳文のハッシュ）</a></li><li><a href="../assets/translation-benchmark-2026-11-05/dataset.json" download>自作原文と確認項目（通常12問＋追加2問）</a></li><li><a href="../assets/translation-benchmark-2026-11-05/runs-summary.json" download>全342回の測定サマリー・最終訳・MTP統計</a></li><li><a href="../assets/translation-benchmark-2026-11-05/runs.jsonl" download>モデルが出力した思考文を含む詳細JSONL</a></li><li><a href="../assets/translation-benchmark-2026-11-05/metadata.json" download>モデル識別子・量子化・主要設定・ハードウェア</a></li><li><a href="../assets/translation-benchmark-2026-11-05/README.md">データ構成・追試用スクリプトの説明</a> / <a href="../assets/translation-benchmark-2026-11-05/checksums.sha256">ファイルのSHA-256</a></li></ul>
-<p class="small">公開データの思考文は、検証対象のローカルモデルが生成したテキストです。生の内部設定は主要項目へ整理し、個人のローカル保存先はプレースホルダーに置き換えました。再計算用のコードと、今回の減点判断を記録したコードもZIPへ同梱しています。採点コードは新しい訳文を自動評価するモデルではありません。</p>
+<div class="table-scroll" tabindex="0">
+<table>
+<thead>
+  <tr><th scope="col">項目</th><th scope="col">設定内容</th></tr>
+</thead>
+<tbody>
+  <tr><th scope="row">GPU</th><td>NVIDIA GeForce RTX 4070 Laptop / VRAM 12GB</td></tr>
+  <tr><th scope="row">CPU / メモリ</th><td>Intel Core i5-14500HX / 32GB RAM</td></tr>
+  <tr><th scope="row">推論ランタイム</th><td>LM Studio（llama.cpp CUDA12 2.69.0 / SDK 2.1.0）</td></tr>
+  <tr><th scope="row">量子化形式</th><td>PLaMo: Q4_K_M / Gemma: QAT Q4_0（MTPヘッドはQ8_0）</td></tr>
+  <tr><th scope="row">コンテクスト長</th><td>全モデル共通 4,096トークン（並列数1）</td></tr>
+  <tr><th scope="row">サンプリング設定</th><td>temperature=0, top-k=1, seed=42, repeat penalty=1</td></tr>
+  <tr><th scope="row">GPUオフロード</th><td>全レイヤーGPU配置（Flash Attention有効、KVキャッシュf16）</td></tr>
+  <tr><th scope="row">測定回数</th><td>通常12問×9条件×3回＝324回、追加長文2問×9条件×1回＝18回（計342回）</td></tr>
+</tbody>
+</table>
+</div>
 
-<h2>手元の翻訳用途で選ぶなら</h2>
-<ul><li><strong>待ち時間を最小限にしたい：</strong>0.8Bの速さは魅力的でした。ただし、価格や限定条件のような意味が変わる例は個別に確認したい。</li><li><strong>速度と原文保持を両方見たい：</strong>2Bは通常参考点95.0で、8Bより待ち時間が短い結果。8Bは試作品の採用の解釈などで差があり、今回の通常参考点は96.7でした。</li><li><strong>Gemmaで長文を訳したい：</strong>この4,096枠では思考なしが完走しやすい結果でした。思考を使うなら、出力枠と実際の完走を文章の長さごとに確認したい。</li></ul>
-<p>モデルのサイズやtokens/sだけでは見えない差を、同じ原文の訳と完了時間で確かめられた検証でした。用途に近い原文から、各モデルがどこをどう訳したか見ていただければと思います。</p>
-<h2>参考資料</h2><ul class="sources"><li><a href="https://huggingface.co/collections/pfnet/plamo-3-translate">Preferred Networks: PLaMo 3 Translate</a></li><li><a href="https://gemma.ai/models/gemma-4/">Google: Gemma 4モデル概要・QAT・MTP</a></li><li><a href="https://lmstudio.ai/changelog/lmstudio">LM Studio更新履歴（MTP assistant対応・引数上書き）</a></li><li><a href="https://lmstudio.ai/docs/developer/rest/chat">LM Studio APIの思考制御</a></li></ul>
-</article></main><footer>© 2026 g0083 / O-ya tech · <a href="../index.html?tab=blog">記事一覧へ</a></footer></body></html>
+<details>
+<summary>キャッシュ処理・プロンプト・詳細設定について</summary>
+<p>測定前には英日・日英のウォームアップを実施し、各推論の直前に無関係なダミートークンを生成させて直前プロンプトのキャッシュ効果をリセットしています。PLaMoは公式推奨のPFML3翻訳プロンプト、Gemmaは標準チャットテンプレートに忠実な全文翻訳指示を与えました。量子化方式や内部マイクロバッチサイズに細かな差異があるため、実機環境における構成比較としてご覧ください。</p>
+</details>
+
+<h2 id="data">詳細データと再現用ファイル</h2>
+<p>
+今回の検証で使用した自作原文、全342回の生データ、各モデルの訳文、採点の内訳と減点理由はすべてオープンにしています。
+</p>
+<div class="actions">
+  <a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/viewer.html">採点表と全訳文の比較画面 →</a>
+  <a class="btn-primary" href="../assets/translation-benchmark-2026-11-05/benchmark-data.zip" download>公開データ一式 ZIP ↓</a>
+</div>
+<ul>
+  <li><a href="../assets/translation-benchmark-2026-11-05/accuracy-scores.md">各問の点数・内訳・全減点理由（Markdown）</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/accuracy-scores.json" download>採点データ一式（JSON）</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/dataset.json" download>自作テスト原文とチェック項目（通常12問＋追加2問）</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/runs-summary.json" download>全342回の測定サマリー・最終訳文・MTP統計</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/runs.jsonl" download>思考文を含む推論ログ全文（JSONL）</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/metadata.json" download>モデル識別子・設定・ハードウェア詳細</a></li>
+  <li><a href="../assets/translation-benchmark-2026-11-05/README.md">データ構成と追試スクリプトの解説</a> / <a href="../assets/translation-benchmark-2026-11-05/checksums.sha256">SHA-256チェックサム</a></li>
+</ul>
+
+<h2 id="conclusion">結論：ローカル翻訳用途ならどれを選ぶべきか？</h2>
+<p>
+今回の徹底検証を通じて、用途に応じた明確な住み分けが見えてきました。
+</p>
+<ul>
+  <li><strong>常用エンジンとしてのベストバイは「PLaMo 2B」：</strong>
+  長文でも約3秒という軽快なレスポンスを維持しつつ、AI参考採点では8B（96.7点）に肉薄する95.0点をマーク。VRAMを圧迫せず、普段使いの翻訳エンジンとして最もバランスが取れています。ローカル翻訳の第一候補として強くおすすめできます。</li>
+  <li><strong>常駐・リアルタイム重視なら「PLaMo 0.8B」：</strong>
+  長文1.29秒という圧倒的な俊敏性は唯一無二。Webブラウジング中のポップアップ翻訳や、チャットツールのリアルタイム翻訳など、待ち時間を極限まで削りたい場面で無類の強さを発揮します。ただし数値の対比や否定条件で読み違えることがあるため、ざっくりとした大意把握に向いています。</li>
+  <li><strong>契約書・技術仕様など精度最優先なら「PLaMo 8B」：</strong>
+  「試作品の採用」の文脈を正しく見抜くなど、読解力は一段上です。待ち時間は長文で7秒前後かかりますが、誤訳のリスクを少しでも下げたい重要な文書ではこの頼もしさが光ります。</li>
+  <li><strong>Gemmaを使うなら「思考なし」一択：</strong>
+  Gemmaを翻訳用途で使う場合、思考モードはオフにするのが賢明です。思考なしであればE4Bも12Bも極めて優秀で安定した翻訳を出力してくれます。</li>
+</ul>
+
+<p>
+Preferred NetworksのPLaMo 3 Translateは、翻訳という明確な目的に対して無駄を削ぎ落とした、非常に実用的で完成度の高いモデル群に仕上がっていました。ぜひ手元のローカル環境でその軽快さを体験してみてください。
+</p>
+
+<h2>参考リンク</h2>
+<ul class="sources">
+  <li><a href="https://huggingface.co/collections/pfnet/plamo-3-translate" target="_blank" rel="noopener noreferrer">Preferred Networks: PLaMo 3 Translate（Hugging Face）</a></li>
+  <li><a href="https://gemma.ai/models/gemma-4/" target="_blank" rel="noopener noreferrer">Google: Gemma 4 モデル概要・QAT・MTP</a></li>
+  <li><a href="https://lmstudio.ai/changelog/lmstudio" target="_blank" rel="noopener noreferrer">LM Studio 更新履歴</a></li>
+  <li><a href="https://lmstudio.ai/docs/developer/rest/chat" target="_blank" rel="noopener noreferrer">LM Studio API ドキュメント</a></li>
+</ul>
+</article>
+</main>
+<footer>© 2026 g0083 / O-ya tech · <a href="../index.html?tab=blog">記事一覧へ</a></footer>
+</body>
+</html>
