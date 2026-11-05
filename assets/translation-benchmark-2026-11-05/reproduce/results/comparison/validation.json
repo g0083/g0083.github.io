@@ -1,0 +1,11 @@
+{
+  "mainRuns": 324,
+  "conditions": 9,
+  "context": 4096,
+  "gemmaMtpVerifiedRuns": 216,
+  "reasoningModesVerified": true,
+  "reviewQuotesVerified": 36,
+  "stressRuns": 18,
+  "stressSuccessful": 15,
+  "reportDataAndJavascriptVerified": true
+}

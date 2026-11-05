@@ -1,0 +1,48 @@
+{
+  "measurement": {
+    "mainRuns": 324,
+    "conditions": 9,
+    "context": 4096,
+    "gemmaMtpVerifiedRuns": 216,
+    "reasoningModesVerified": true,
+    "reviewQuotesVerified": 36,
+    "stressRuns": 18,
+    "stressSuccessful": 15,
+    "reportDataAndJavascriptVerified": true
+  },
+  "grading": {
+    "scoredCells": 126,
+    "questions": 14,
+    "conditions": 9,
+    "sourceAndOutputHashesVerified": true,
+    "componentsAndTotalsVerified": true,
+    "standardRepetitionEqualityVerified": true,
+    "interactiveScoreSelectionsVerified": 126,
+    "assessor": "Codex AI review; not independent human validation"
+  },
+  "tailReview": {
+    "method": "Codexが全18件の終了理由と訳文末尾を確認。完了とした15件は2文書目の恒久案未採決・会議記録終了まで到達。途中の全要点の正確性を人間が採点したものではない。",
+    "complete": 15,
+    "incomplete": [
+      {
+        "condition": "gemma-e2b-think-on",
+        "caseId": "JA-XL",
+        "status": "途中で切断",
+        "detail": "2文書目の補助金計算の途中で出力上限に到達。"
+      },
+      {
+        "condition": "gemma-12b-think-on",
+        "caseId": "EN-XL",
+        "status": "最終訳なし",
+        "detail": "思考中に出力上限に到達。"
+      },
+      {
+        "condition": "gemma-12b-think-on",
+        "caseId": "JA-XL",
+        "status": "途中で切断",
+        "detail": "1文書目のバックアップ復元説明の途中で出力上限に到達。"
+      }
+    ]
+  },
+  "gemmaMtpActiveRuns": 228
+}

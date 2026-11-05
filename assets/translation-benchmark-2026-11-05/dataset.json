@@ -1,0 +1,196 @@
+{
+  "standard": [
+    {
+      "id": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "genre": "technical",
+      "text": "Do not restart the server until the backup has finished. Disabling notifications does not cancel scheduled jobs. Keep API_KEY and /var/data unchanged.",
+      "checks": [
+        "バックアップ完了前の再起動禁止",
+        "通知無効化でジョブは取消されない",
+        "API_KEYを保持",
+        "/var/dataを保持"
+      ]
+    },
+    {
+      "id": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "genre": "business",
+      "text": "The price fell by 15%, not to 15% of its original value. We can refund the shipping fee only if the package arrives after November 12; a late dispatch alone is not sufficient.",
+      "checks": [
+        "15%の値下げ・元値の15%ではない",
+        "返金対象は送料",
+        "11月12日より後の到着が条件",
+        "発送遅れだけでは不足"
+      ]
+    },
+    {
+      "id": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "genre": "business",
+      "text": "田中さんには、佐藤さんが承認するまで請求書を送らないよう伝えました。支払期限は11月18日ですが、入金確認が翌日になっても延滞扱いにはしません。",
+      "checks": [
+        "田中に送付待ちを伝えた",
+        "承認者は佐藤",
+        "支払期限11月18日",
+        "翌日の確認でも延滞にしない"
+      ]
+    },
+    {
+      "id": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "genre": "dialogue",
+      "text": "「悪くないね」と彼女は言ったが、採用に賛成したわけではない。試作品は3個とも動いたものの、量産品で同じ結果が出るとは限らない。",
+      "checks": [
+        "悪くないという控えめな評価",
+        "採用賛成ではない",
+        "3個とも動作",
+        "量産で同結果の保証はない"
+      ]
+    },
+    {
+      "id": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "genre": "technical",
+      "text": "Release note: Version 3.2 changes how the offline queue is displayed, but it does not change the order in which requests are executed. A grey icon means that the connection has not yet been checked; it does not necessarily mean that the device is offline. To retry a failed request, select Retry once. Repeated clicks may create duplicate requests on older servers.\n\nBefore upgrading, export settings.json and note the current value of retry_limit. The default changes from 5 to 3 for new installations only. Existing installations retain their current value, even when that value is 0. Do not replace a deliberately configured zero with the new default. If the upgrade fails, restore the exported file before starting the previous version. This procedure restores configuration, not data that was deleted before the upgrade.",
+      "checks": [
+        "表示変更のみ・実行順不変",
+        "灰色は未確認でオフライン確定ではない",
+        "Retry一度・旧サーバーで重複可能",
+        "既存値0も保持",
+        "復元は設定のみで削除済みデータは戻らない"
+      ]
+    },
+    {
+      "id": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "genre": "business",
+      "text": "取引先への回答案\n今回の見積額は税込み198,000円で、初回設定と2回の研修を含みます。月額保守料は含まれていません。契約書を今月中に受領した場合に限り、初年度の保守料を10%割り引きます。作業開始日が今月中である必要はありません。\n\n先方は「来週なら対応できる」と述べていますが、これは契約手続きについての発言であり、納品日の確約ではありません。営業担当者には、納品は部品の到着から最短でも5営業日後になると説明するよう依頼しました。部品はまだ発注していません。\n\nなお、旧システムのデータ移行は別料金です。移行しない場合でも、新システムの利用は可能です。先方から追加の質問がなければ、こちらから移行を必須条件として提示しないでください。",
+      "checks": [
+        "198000税込・保守除外",
+        "初回設定と研修2回",
+        "今月中契約受領のみ割引・作業日は不要",
+        "来週対応は契約のみ・部品未発注",
+        "移行別料金で必須ではない"
+      ]
+    },
+    {
+      "id": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "genre": "narrative",
+      "text": "Mara put the unopened letter beneath the blue cup, where Leo would find it after his shift. She had not promised to stay; she had only promised not to leave without saying goodbye. When he called that evening, she let the telephone ring twice before answering.\n\n\"So you finally made up your mind,\" he said.\n\"About the train,\" she replied. \"Not about us.\"\n\nThe ticket on the table was for Thursday, not tomorrow. Leo looked at the calendar and realised he had mistaken the date on the letter for the date of departure. Mara laughed, but there was no relief in it. Outside, the last bus was already pulling away. Neither of them mentioned the empty suitcase by the door.",
+      "checks": [
+        "未開封の手紙は青いカップの下",
+        "滞在を約束したのではなく別れを告げる約束",
+        "決めたのは列車で関係ではない",
+        "木曜・明日ではない",
+        "手紙の日付と出発日を取り違えた"
+      ]
+    },
+    {
+      "id": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "genre": "technical",
+      "text": "試験報告の読み方\nこの試験では、同じ端末を30分間使用した後に温度を測定しました。端末Aは42.1℃、端末Bは39.8℃でした。ただし、Bのほうが常に低温になると結論づけることはできません。室温は各試験で最大2℃異なり、試行回数もそれぞれ3回に限られているためです。\n\n消費電力は、画面の明るさを50%に固定した状態で比較しています。自動調光を有効にした場合の結果ではありません。また、記載した電力は端末全体の値であり、処理装置だけの値ではありません。\n\n改善率の計算ではAを基準とします。Bを基準に計算し直した数値を、同じ改善率として引用しないでください。この報告に記載のない耐久性や安全性については、今回の試験から判断できません。",
+      "checks": [
+        "30分後・42.1と39.8",
+        "室温差最大2℃・各3回",
+        "Bが常に低温とは結論不可",
+        "明るさ50%固定・全端末の電力",
+        "A基準・耐久性安全性は判断不能"
+      ]
+    },
+    {
+      "id": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "genre": "technical",
+      "text": "Migration plan for the North Harbor document service\n\nThe migration is scheduled for Saturday, November 21, from 01:00 to 04:00 UTC. These times are in UTC throughout this notice; local time must not be substituted without an explicit label. The maintenance window is a maximum allowance, not a promise that the service will be unavailable for three hours. Users will still be able to read previously published documents. Creating new documents and changing access permissions will be temporarily disabled. Download links generated before the maintenance window will continue to work until their original expiry time.\n\nBefore the window begins, the operations team must export the permission table and calculate a checksum for each export file. A successful export message alone is not sufficient evidence that the backup is usable. The team must restore one sample into the isolated test environment and compare both the record count and the access rules. Do not restore the sample into production. The test environment must not send notification emails, and its scheduled jobs must remain disabled even if the restoration process enables them automatically.\n\nThe first stage moves documents owned by the research department. The second stage moves documents owned by all other departments except finance. Finance documents will remain on the old system until the finance manager approves a separate validation report. Approval of the research stage does not imply approval of finance documents. Shared documents are classified by their owner, not by the department of the person who last edited them. A document that is shared with finance but owned by research therefore belongs in the first stage.\n\nDuring validation, compare 200 randomly selected documents with their originals. All document identifiers, creation dates, attachment names and permission entries must match. Whitespace differences inside plain text descriptions may be ignored, but differences inside source code attachments must not be ignored. If any permission entry grants broader access than the original, stop the migration immediately. Missing optional descriptions should be recorded for later correction; they do not, by themselves, require a rollback. This distinction does not permit the team to ignore missing attachments.\n\nRollback remains available until the first new document is created on the replacement system. After that event, restoring the old database without reconciling new writes could lose user data. If a serious fault is discovered after new writes begin, switch to read-only mode and contact the incident coordinator instead of immediately restoring the database. The coordinator, not the vendor, decides whether reconciliation is required. Record that decision in the incident log.\n\nFinally, send a completion notice only after the owner of each migrated department has confirmed access. Do not claim that finance has moved if its documents are still on the old system. Keep the original backups for 14 days, then delete them only after the retention officer gives written approval. Fourteen days is a minimum retention period, not an automatic deletion deadline. End of migration plan.",
+      "checks": [
+        "UTC日時・最大枠・閲覧可能で作成権限変更不可",
+        "復元テストは隔離環境のみ・通知とジョブ無効",
+        "財務は別承認・所有者で段階分類",
+        "広すぎる権限で即停止・任意説明欠落だけではロールバック不要",
+        "新規書込後は読取専用と調整・決定者は調整責任者",
+        "14日は最小保持・書面承認後のみ削除・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "genre": "technical",
+      "text": "北港文書サービス移行計画\n\n移行作業は11月21日土曜日の01:00から04:00 UTCまでを予定しています。本通知の時刻はすべてUTCで表記し、明示せずに現地時刻へ置き換えてはいけません。この3時間は作業に使える最大の枠であり、サービスが必ず3時間停止するという意味ではありません。公開済み文書の閲覧は引き続き可能です。新規文書の作成とアクセス権限の変更は一時的に停止します。作業前に発行されたダウンロードリンクは、元の有効期限まで利用できます。\n\n作業開始前に、運用担当は権限表を出力し、各出力ファイルのチェックサムを計算してください。出力に成功したというメッセージだけでは、バックアップが復元可能だとは判断できません。隔離した試験環境へサンプルを1件復元し、件数とアクセス規則の両方を照合する必要があります。本番環境へサンプルを復元してはいけません。試験環境から通知メールを送信しないでください。復元処理によって定期ジョブが自動的に有効化されても、ジョブは無効に戻しておく必要があります。\n\n第1段階では研究部門が所有する文書を移行します。第2段階では財務部門を除く残りの部門の文書を移行します。財務部門の文書は、財務責任者が別の検証報告を承認するまで旧システムに残します。研究部門についての承認は、財務文書の承認を意味しません。共有文書は最後に編集した人の所属ではなく、所有者によって分類します。したがって、財務部門に共有されていても研究部門が所有する文書は第1段階の対象です。\n\n検証時は無作為に選んだ200件の文書を原本と比較してください。識別子、作成日、添付ファイル名、権限の各項目が一致する必要があります。説明欄の平文における空白の違いは無視して構いませんが、ソースコード添付内の空白の違いは無視してはいけません。原本より広いアクセスを認める権限が1件でも見つかった場合は、直ちに移行を停止してください。任意の説明欄が空の場合は後日修正するため記録しますが、それだけでロールバックする必要はありません。添付ファイルの欠落まで無視してよいという意味ではありません。\n\n新システムで最初の新規文書が作成されるまではロールバックできます。それ以降に新規書き込みを照合せず旧データベースを復元すると、利用者のデータを失うおそれがあります。新規書き込み開始後に重大な障害が判明した場合は、すぐに復元せず、読み取り専用へ切り替えて障害対応責任者に連絡してください。照合の要否を判断するのは業者ではなく、障害対応責任者です。その判断を障害記録に残してください。\n\n最後に、移行した各部門の所有者がアクセスを確認してから完了通知を出します。財務文書が旧システムに残っている場合、財務部門まで移行済みだと記載してはいけません。元のバックアップは14日間保持し、その後も保存管理責任者の書面による承認を得てから削除します。14日は最短の保持期間であり、自動削除の期限ではありません。以上が移行計画です。",
+      "checks": [
+        "UTC日時・最大枠・閲覧可と作成権限変更停止",
+        "隔離復元・通知とジョブ無効",
+        "財務別承認・所有者基準",
+        "200件・コード空白保持・広い権限即停止",
+        "新規書込後は単純復元不可・責任者判断",
+        "14日最小・書面承認削除・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "genre": "business-narrative",
+      "text": "Notes from the community library meeting\n\nWhen the library committee met on Tuesday, nobody objected to extending the evening opening hours. That did not mean that everyone supported the proposal as written. Nora, who manages the volunteers, said she could cover two additional evenings in December but could not promise the same arrangement in January. The chair asked the secretary to record this as a temporary offer, not as a permanent staffing commitment. Three volunteers had offered help; only two had completed the required training.\n\nThe proposed budget was 480,000 yen, including tax. It covered lighting, cleaning and the temporary security contract, but did not include the purchase of new computers. A grant would reimburse up to 60% of eligible costs, subject to a ceiling of 240,000 yen. The treasurer pointed out that multiplying the whole budget by 60% would give the wrong reimbursement amount because of that ceiling. The grant had been applied for but had not yet been awarded. No one should tell residents that the extended hours were already fully funded.\n\nThere was also a disagreement about the phrase \"open to everyone\" in the draft notice. Visitors would not need a library card to enter the reading room, but borrowing books would still require registration. Children under twelve would need an accompanying adult after 19:00. This restriction concerned evening visits only and did not change the existing rules for daytime visits. The committee rejected a suggestion to describe all visitors under eighteen as children, because it would incorrectly extend the restriction to older students.\n\nHalfway through the discussion, Ken read an email from the building manager. \"We can make the entrance available by next Friday,\" it said. Ken initially took this to mean that the renovation would be finished by then. Nora noticed the next sentence: painting would continue in the west corridor for another week, and that corridor would remain closed. Only the entrance and the route to the reading room would be available. The manager had promised access to part of the building, not completion of the whole renovation.\n\nThe committee agreed to run a trial on December 8 and 15, provided the safety inspection was completed by December 5. If the inspection was delayed, both trial dates would be cancelled rather than automatically moved to the following week. People who had booked study desks would be notified individually. General visitors would see the announcement on the library website. Printing a cancellation notice was not a substitute for contacting those with reservations.\n\nAs they left, the chair thanked Nora for \"saving the plan.\" She smiled and said, \"Let's see whether we've saved two evenings first.\" Her remark was cautious, not a rejection of the idea. The secretary added a final note: no permanent change to opening hours had been approved, and the trial results would be reviewed before any decision about January. The meeting ended without a vote on the permanent proposal. End of meeting notes.",
+      "checks": [
+        "全員が原案支持ではない・一時的人員で3人中訓練済2人",
+        "480000税込・PC除外・60%上限240000・助成未決定",
+        "入室カード不要だが貸出登録必要・12歳未満19時以降同伴",
+        "金曜は入口等のみ・西通路は翌週も閉鎖",
+        "12月5日検査条件で8日15日・遅れれば双方中止で自動延期なし",
+        "予約者個別連絡・恒久案は未承認で採決なし・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "genre": "business-narrative",
+      "text": "地域図書館の会議記録\n\n火曜日の会議では、夜間の開館時間を延ばすという考え自体に反対する人はいませんでした。ただし、提示された案に全員がそのまま賛成したわけではありません。ボランティアを担当する野村さんは、12月なら2日分の夜間対応を増やせるものの、1月にも同じ体制を維持できるとは約束できないと話しました。議長は、これを恒久的な人員確保ではなく、一時的な申し出として記録するよう求めました。協力を申し出た3人のうち、必要な研修を終えているのは2人だけです。\n\n予算案は税込み480,000円です。照明、清掃、臨時の警備契約を含みますが、新しいコンピューターの購入費は含みません。補助金は対象経費の最大60%を補填するものの、上限は240,000円です。会計担当者は、予算全額に60%を掛けるだけでは上限を超え、補填額を誤ると指摘しました。補助金は申請済みですが、交付はまだ決定していません。延長開館の財源がすべて確保されたと住民へ説明してはいけません。\n\n案内文の「どなたでも利用できます」という表現についても意見が分かれました。閲覧室に入るだけなら利用カードは不要ですが、本を借りる場合は引き続き登録が必要です。19:00以降に来館する12歳未満の子どもには成人の同伴を求めます。この制限は夜間だけのもので、昼間の既存ルールは変更しません。18歳未満をすべて子どもと表記する案は、年長の学生にも誤って制限を広げるため採用しませんでした。\n\n話し合いの途中で、建物管理者からのメールが紹介されました。「来週金曜日までに入口を利用できるようにします」と書かれています。最初は改修全体が終わるという意味に受け取られましたが、次の文には、西側廊下の塗装はさらに1週間続き、その間は閉鎖するとありました。使えるのは入口と閲覧室への経路だけです。管理者が約束したのは建物の一部へのアクセスであり、改修全体の完了ではありません。\n\n委員会は、12月5日までに安全検査が完了することを条件に、12月8日と15日の試行を行うことで合意しました。検査が遅れた場合は両日とも中止し、自動的に翌週へ延期することはありません。学習席を予約した人には個別に連絡します。一般の来館者にはウェブサイトで告知します。中止の紙を掲示するだけでは、予約者への連絡の代わりにはなりません。\n\n帰り際、議長は野村さんに「計画を救ってくれましたね」と礼を述べました。野村さんは笑い、「まずは2晩を救えたかどうか、見てみましょう」と答えました。これは慎重な発言であり、考えそのものを拒否したわけではありません。書記は、恒久的な開館時間の変更は承認されておらず、1月について判断する前に試行結果を検討すると追記しました。恒久案についての採決を行わないまま、会議は終了しました。以上が会議記録です。",
+      "checks": [
+        "原案全員賛成ではない・12月2日暫定・3人中訓練済2人",
+        "480000税込・PC除外・60%上限240000・交付未決定",
+        "入室と貸出区別・12歳未満19時以降成人同伴",
+        "入口と経路のみ・西側翌週も閉鎖",
+        "12月5日検査条件・8日15日両方中止で自動延期なし",
+        "予約者個別連絡・恒久変更未承認で採決なし・末尾まで翻訳"
+      ]
+    }
+  ],
+  "stress": [
+    {
+      "id": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "genre": "mixed-document",
+      "text": "Migration plan for the North Harbor document service\n\nThe migration is scheduled for Saturday, November 21, from 01:00 to 04:00 UTC. These times are in UTC throughout this notice; local time must not be substituted without an explicit label. The maintenance window is a maximum allowance, not a promise that the service will be unavailable for three hours. Users will still be able to read previously published documents. Creating new documents and changing access permissions will be temporarily disabled. Download links generated before the maintenance window will continue to work until their original expiry time.\n\nBefore the window begins, the operations team must export the permission table and calculate a checksum for each export file. A successful export message alone is not sufficient evidence that the backup is usable. The team must restore one sample into the isolated test environment and compare both the record count and the access rules. Do not restore the sample into production. The test environment must not send notification emails, and its scheduled jobs must remain disabled even if the restoration process enables them automatically.\n\nThe first stage moves documents owned by the research department. The second stage moves documents owned by all other departments except finance. Finance documents will remain on the old system until the finance manager approves a separate validation report. Approval of the research stage does not imply approval of finance documents. Shared documents are classified by their owner, not by the department of the person who last edited them. A document that is shared with finance but owned by research therefore belongs in the first stage.\n\nDuring validation, compare 200 randomly selected documents with their originals. All document identifiers, creation dates, attachment names and permission entries must match. Whitespace differences inside plain text descriptions may be ignored, but differences inside source code attachments must not be ignored. If any permission entry grants broader access than the original, stop the migration immediately. Missing optional descriptions should be recorded for later correction; they do not, by themselves, require a rollback. This distinction does not permit the team to ignore missing attachments.\n\nRollback remains available until the first new document is created on the replacement system. After that event, restoring the old database without reconciling new writes could lose user data. If a serious fault is discovered after new writes begin, switch to read-only mode and contact the incident coordinator instead of immediately restoring the database. The coordinator, not the vendor, decides whether reconciliation is required. Record that decision in the incident log.\n\nFinally, send a completion notice only after the owner of each migrated department has confirmed access. Do not claim that finance has moved if its documents are still on the old system. Keep the original backups for 14 days, then delete them only after the retention officer gives written approval. Fourteen days is a minimum retention period, not an automatic deletion deadline. End of migration plan.\n\n---\n\nNotes from the community library meeting\n\nWhen the library committee met on Tuesday, nobody objected to extending the evening opening hours. That did not mean that everyone supported the proposal as written. Nora, who manages the volunteers, said she could cover two additional evenings in December but could not promise the same arrangement in January. The chair asked the secretary to record this as a temporary offer, not as a permanent staffing commitment. Three volunteers had offered help; only two had completed the required training.\n\nThe proposed budget was 480,000 yen, including tax. It covered lighting, cleaning and the temporary security contract, but did not include the purchase of new computers. A grant would reimburse up to 60% of eligible costs, subject to a ceiling of 240,000 yen. The treasurer pointed out that multiplying the whole budget by 60% would give the wrong reimbursement amount because of that ceiling. The grant had been applied for but had not yet been awarded. No one should tell residents that the extended hours were already fully funded.\n\nThere was also a disagreement about the phrase \"open to everyone\" in the draft notice. Visitors would not need a library card to enter the reading room, but borrowing books would still require registration. Children under twelve would need an accompanying adult after 19:00. This restriction concerned evening visits only and did not change the existing rules for daytime visits. The committee rejected a suggestion to describe all visitors under eighteen as children, because it would incorrectly extend the restriction to older students.\n\nHalfway through the discussion, Ken read an email from the building manager. \"We can make the entrance available by next Friday,\" it said. Ken initially took this to mean that the renovation would be finished by then. Nora noticed the next sentence: painting would continue in the west corridor for another week, and that corridor would remain closed. Only the entrance and the route to the reading room would be available. The manager had promised access to part of the building, not completion of the whole renovation.\n\nThe committee agreed to run a trial on December 8 and 15, provided the safety inspection was completed by December 5. If the inspection was delayed, both trial dates would be cancelled rather than automatically moved to the following week. People who had booked study desks would be notified individually. General visitors would see the announcement on the library website. Printing a cancellation notice was not a substitute for contacting those with reservations.\n\nAs they left, the chair thanked Nora for \"saving the plan.\" She smiled and said, \"Let's see whether we've saved two evenings first.\" Her remark was cautious, not a rejection of the idea. The secretary added a final note: no permanent change to opening hours had been approved, and the trial results would be reviewed before any decision about January. The meeting ended without a vote on the permanent proposal. End of meeting notes.",
+      "checks": [
+        "2文書の全段落を末尾まで翻訳",
+        "否定・数値・例外条件を保持"
+      ]
+    },
+    {
+      "id": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "genre": "mixed-document",
+      "text": "北港文書サービス移行計画\n\n移行作業は11月21日土曜日の01:00から04:00 UTCまでを予定しています。本通知の時刻はすべてUTCで表記し、明示せずに現地時刻へ置き換えてはいけません。この3時間は作業に使える最大の枠であり、サービスが必ず3時間停止するという意味ではありません。公開済み文書の閲覧は引き続き可能です。新規文書の作成とアクセス権限の変更は一時的に停止します。作業前に発行されたダウンロードリンクは、元の有効期限まで利用できます。\n\n作業開始前に、運用担当は権限表を出力し、各出力ファイルのチェックサムを計算してください。出力に成功したというメッセージだけでは、バックアップが復元可能だとは判断できません。隔離した試験環境へサンプルを1件復元し、件数とアクセス規則の両方を照合する必要があります。本番環境へサンプルを復元してはいけません。試験環境から通知メールを送信しないでください。復元処理によって定期ジョブが自動的に有効化されても、ジョブは無効に戻しておく必要があります。\n\n第1段階では研究部門が所有する文書を移行します。第2段階では財務部門を除く残りの部門の文書を移行します。財務部門の文書は、財務責任者が別の検証報告を承認するまで旧システムに残します。研究部門についての承認は、財務文書の承認を意味しません。共有文書は最後に編集した人の所属ではなく、所有者によって分類します。したがって、財務部門に共有されていても研究部門が所有する文書は第1段階の対象です。\n\n検証時は無作為に選んだ200件の文書を原本と比較してください。識別子、作成日、添付ファイル名、権限の各項目が一致する必要があります。説明欄の平文における空白の違いは無視して構いませんが、ソースコード添付内の空白の違いは無視してはいけません。原本より広いアクセスを認める権限が1件でも見つかった場合は、直ちに移行を停止してください。任意の説明欄が空の場合は後日修正するため記録しますが、それだけでロールバックする必要はありません。添付ファイルの欠落まで無視してよいという意味ではありません。\n\n新システムで最初の新規文書が作成されるまではロールバックできます。それ以降に新規書き込みを照合せず旧データベースを復元すると、利用者のデータを失うおそれがあります。新規書き込み開始後に重大な障害が判明した場合は、すぐに復元せず、読み取り専用へ切り替えて障害対応責任者に連絡してください。照合の要否を判断するのは業者ではなく、障害対応責任者です。その判断を障害記録に残してください。\n\n最後に、移行した各部門の所有者がアクセスを確認してから完了通知を出します。財務文書が旧システムに残っている場合、財務部門まで移行済みだと記載してはいけません。元のバックアップは14日間保持し、その後も保存管理責任者の書面による承認を得てから削除します。14日は最短の保持期間であり、自動削除の期限ではありません。以上が移行計画です。\n\n---\n\n地域図書館の会議記録\n\n火曜日の会議では、夜間の開館時間を延ばすという考え自体に反対する人はいませんでした。ただし、提示された案に全員がそのまま賛成したわけではありません。ボランティアを担当する野村さんは、12月なら2日分の夜間対応を増やせるものの、1月にも同じ体制を維持できるとは約束できないと話しました。議長は、これを恒久的な人員確保ではなく、一時的な申し出として記録するよう求めました。協力を申し出た3人のうち、必要な研修を終えているのは2人だけです。\n\n予算案は税込み480,000円です。照明、清掃、臨時の警備契約を含みますが、新しいコンピューターの購入費は含みません。補助金は対象経費の最大60%を補填するものの、上限は240,000円です。会計担当者は、予算全額に60%を掛けるだけでは上限を超え、補填額を誤ると指摘しました。補助金は申請済みですが、交付はまだ決定していません。延長開館の財源がすべて確保されたと住民へ説明してはいけません。\n\n案内文の「どなたでも利用できます」という表現についても意見が分かれました。閲覧室に入るだけなら利用カードは不要ですが、本を借りる場合は引き続き登録が必要です。19:00以降に来館する12歳未満の子どもには成人の同伴を求めます。この制限は夜間だけのもので、昼間の既存ルールは変更しません。18歳未満をすべて子どもと表記する案は、年長の学生にも誤って制限を広げるため採用しませんでした。\n\n話し合いの途中で、建物管理者からのメールが紹介されました。「来週金曜日までに入口を利用できるようにします」と書かれています。最初は改修全体が終わるという意味に受け取られましたが、次の文には、西側廊下の塗装はさらに1週間続き、その間は閉鎖するとありました。使えるのは入口と閲覧室への経路だけです。管理者が約束したのは建物の一部へのアクセスであり、改修全体の完了ではありません。\n\n委員会は、12月5日までに安全検査が完了することを条件に、12月8日と15日の試行を行うことで合意しました。検査が遅れた場合は両日とも中止し、自動的に翌週へ延期することはありません。学習席を予約した人には個別に連絡します。一般の来館者にはウェブサイトで告知します。中止の紙を掲示するだけでは、予約者への連絡の代わりにはなりません。\n\n帰り際、議長は野村さんに「計画を救ってくれましたね」と礼を述べました。野村さんは笑い、「まずは2晩を救えたかどうか、見てみましょう」と答えました。これは慎重な発言であり、考えそのものを拒否したわけではありません。書記は、恒久的な開館時間の変更は承認されておらず、1月について判断する前に試行結果を検討すると追記しました。恒久案についての採決を行わないまま、会議は終了しました。以上が会議記録です。",
+      "checks": [
+        "2文書の全段落を末尾まで翻訳",
+        "否定・数値・例外条件を保持"
+      ]
+    }
+  ]
+}
