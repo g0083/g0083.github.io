@@ -1,0 +1,304 @@
+{
+  "method": "Codexによる初回訳文の原文照合。人間の独立採点・COMET等ではない。列挙した誤りは観察例であり、誤り数を全般的正確率として扱わない。速度の繰り返し3回を品質サンプル3件として水増ししない。",
+  "reviewed": [
+    "plamo-0.8b",
+    "plamo-2b",
+    "plamo-8b",
+    "gemma-e2b-think-off",
+    "gemma-e2b-think-on",
+    "gemma-e4b-think-off",
+    "gemma-e4b-think-on",
+    "gemma-12b-think-off",
+    "gemma-12b-think-on"
+  ],
+  "observations": [
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "not to 15% of its original value",
+      "output": "元の価値の15%には届きませんでした",
+      "issue": "元値の15%になったわけではない、という対比を到達不足に変えている。"
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "afterは12日を含まない。以降は12日を含むため返金条件が変わる。"
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-S2",
+      "severity": "major",
+      "source": "採用に賛成したわけではない。試作品は3個とも",
+      "output": "wasn’t in favor of hiring them",
+      "issue": "試作品の採用を人材の雇用と解釈。"
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-M2",
+      "severity": "minor",
+      "source": "there was no relief in it",
+      "output": "それで安心することはなかった",
+      "issue": "笑いに安堵がないという描写を、笑った結果安心しないという因果に変えている。"
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-S2",
+      "severity": "major",
+      "source": "採用に賛成したわけではない。試作品は3個とも",
+      "output": "approved of the hire",
+      "issue": "試作品の採用を雇用と解釈。"
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-S2",
+      "severity": "major",
+      "source": "採用に賛成したわけではない。試作品は3個とも",
+      "output": "in favor of hiring it",
+      "issue": "試作品の採用を雇用と解釈。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-L2",
+      "severity": "major",
+      "source": "Children under twelve would need an accompanying adult after 19:00",
+      "output": "19:00以降の子供は、同伴する大人が必要",
+      "issue": "12歳未満という年齢条件を落としている。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-L2",
+      "severity": "minor",
+      "source": "the announcement",
+      "output": "このประกาศ",
+      "issue": "日本語訳にタイ文字が混入。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-L2",
+      "severity": "major",
+      "source": "来週金曜日までに入口を利用できるようにします",
+      "output": "allow access to the entrance until next Friday",
+      "issue": "by（その日までに利用開始）をuntil（その日まで利用可能）へ反転。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-L1",
+      "severity": "minor",
+      "source": "北港",
+      "output": "Kitamigawa",
+      "issue": "読み方未指定なので英訳表記には幅があるが、Kitamigawaは北港に対応せず名前を変えている。"
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "思考ありでも境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-L2",
+      "severity": "major",
+      "source": "Children under twelve would need an accompanying adult after 19:00",
+      "output": "19:00以降の子供は、同伴する大人を必要とする",
+      "issue": "思考ありでも12歳未満の年齢条件が欠落。"
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-L2",
+      "severity": "major",
+      "source": "来週金曜日までに入口を利用できるようにします",
+      "output": "make the entrance usable until next Friday",
+      "issue": "思考ありでも期限byを利用終了untilに変えてしまう。"
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-L1",
+      "severity": "minor",
+      "source": "北港",
+      "output": "Kitamigawa",
+      "issue": "思考ありでも原文の名前に対応しない表記になる。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-L1",
+      "severity": "minor",
+      "source": "北港",
+      "output": "Kitami",
+      "issue": "北港を別の地名である北見に相当する表記へ変えている。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-M2",
+      "severity": "minor",
+      "source": "Mara",
+      "output": "マー",
+      "issue": "人名末尾の音が欠落している。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-L2",
+      "severity": "minor",
+      "source": "an accompanying adult",
+      "output": "保護者の同伴",
+      "issue": "成人の同伴という条件を保護者の同伴へ狭めている。"
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "思考ありでも返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-M2",
+      "severity": "major",
+      "source": "mistaken the date on the letter for the date of departure",
+      "output": "手紙の日に出発日を間違えていた",
+      "issue": "手紙の日付を出発日と取り違えたという関係が、手紙の日に出発日を間違えたという時間関係に変わっている。"
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-L1",
+      "severity": "minor",
+      "source": "北港",
+      "output": "Kitport",
+      "issue": "読み方未指定の名前を独自の混成表記に変えており、固有名表記の確認が必要。"
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-L1",
+      "severity": "major",
+      "source": "all other departments except finance",
+      "output": "財務部門を除くすべての部門",
+      "issue": "第1段階の研究部門を除く残りの部門というotherが欠落し、第2段階に研究部門も含む表現になっている。"
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-L1",
+      "severity": "major",
+      "source": "財務部門を除く残りの部門",
+      "output": "all departments except the finance department",
+      "issue": "残りの部門の限定を落とし、研究部門まで第2段階に含む範囲へ変えている。"
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-L1",
+      "severity": "major",
+      "source": "財務部門を除く残りの部門",
+      "output": "all departments except the finance department",
+      "issue": "思考ありでも残りの部門という限定が欠落。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-L1",
+      "severity": "major",
+      "source": "財務部門を除く残りの部門",
+      "output": "all departments except the Finance Department",
+      "issue": "残りの部門という限定が欠落。"
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-L1",
+      "severity": "major",
+      "source": "財務部門を除く残りの部門",
+      "output": "all departments except Finance",
+      "issue": "思考ありでも残りの部門という限定が欠落。"
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-L1",
+      "severity": "major",
+      "source": "all other departments except finance",
+      "output": "財務部門を除くすべての部門",
+      "issue": "otherが欠落し、第1段階の研究部門も第2段階に含む表現へ拡張。"
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-L1",
+      "severity": "major",
+      "source": "all other departments except finance",
+      "output": "財務部門を除くすべての部門",
+      "issue": "思考ありでもotherという範囲限定が欠落。"
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "12Bでも返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-S2",
+      "severity": "major",
+      "source": "採用に賛成したわけではない。試作品は3個とも",
+      "output": "agree to the hiring",
+      "issue": "12Bの思考なしでも試作品の採用を雇用と解釈。"
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-S2",
+      "severity": "major",
+      "source": "after November 12",
+      "output": "11月12日以降",
+      "issue": "12Bの思考ありでも返金条件の境界日を含めてしまう。"
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-L1",
+      "severity": "incomplete",
+      "source": "486語の移行計画全文",
+      "output": "",
+      "issue": "初回は思考10972字を生成して出力上限へ到達。最終訳がなく、翻訳成功として扱えない。"
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-L2",
+      "severity": "incomplete",
+      "source": "1176字の会議記録全文",
+      "output": "",
+      "issue": "初回は思考12284字を生成して出力上限へ到達。最終訳がなく、翻訳成功として扱えない。"
+    }
+  ]
+}

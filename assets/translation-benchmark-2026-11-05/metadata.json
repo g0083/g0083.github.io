@@ -1,0 +1,251 @@
+{
+  "date": "2026-11-05",
+  "timezone": "Asia/Tokyo",
+  "hardware": {
+    "cpu": {
+      "Name": "Intel(R) Core(TM) i5-14500HX",
+      "NumberOfCores": 14,
+      "NumberOfLogicalProcessors": 20
+    },
+    "ramGiB": 31.8,
+    "gpu": "NVIDIA GeForce RTX 4070, 12282 MiB, 621.01",
+    "runtime": "llama.cpp CUDA12 2.69.0"
+  },
+  "software": {
+    "node": "22.22.1",
+    "lmstudioSdk": "2.1.0",
+    "runtime": "llama.cpp CUDA12 2.69.0"
+  },
+  "models": [
+    {
+      "type": "llm",
+      "modelKey": "plamo-3-translate-8b",
+      "format": "gguf",
+      "displayName": "Plamo 3 Translate 8B",
+      "publisher": "pfnet",
+      "path": "pfnet/plamo-3-translate-8b-GGUF/plamo-3-translate-8b-Q4_K_M.gguf",
+      "sizeBytes": 5280435168,
+      "indexedModelIdentifier": "pfnet/plamo-3-translate-8b-GGUF/plamo-3-translate-8b-Q4_K_M.gguf",
+      "deviceIdentifier": null,
+      "paramsString": "8.5B",
+      "architecture": "plamo3",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits": 4
+      },
+      "vision": false,
+      "trainedForToolUse": false,
+      "maxContextLength": 262144
+    },
+    {
+      "type": "llm",
+      "modelKey": "plamo-3-translate-2b",
+      "format": "gguf",
+      "displayName": "Plamo 3 Translate 2B",
+      "publisher": "pfnet",
+      "path": "pfnet/plamo-3-translate-2b-GGUF/plamo-3-translate-2b-Q4_K_M.gguf",
+      "sizeBytes": 1807192480,
+      "indexedModelIdentifier": "pfnet/plamo-3-translate-2b-GGUF/plamo-3-translate-2b-Q4_K_M.gguf",
+      "deviceIdentifier": null,
+      "paramsString": "2.9B",
+      "architecture": "plamo3",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits": 4
+      },
+      "vision": false,
+      "trainedForToolUse": false,
+      "maxContextLength": 262144
+    },
+    {
+      "type": "llm",
+      "modelKey": "plamo-3-translate-0.8b",
+      "format": "gguf",
+      "displayName": "Plamo 3 Translate 0.8B",
+      "publisher": "pfnet",
+      "path": "pfnet/plamo-3-translate-0.8b-GGUF/plamo-3-translate-0.8b-Q4_K_M.gguf",
+      "sizeBytes": 573116288,
+      "indexedModelIdentifier": "pfnet/plamo-3-translate-0.8b-GGUF/plamo-3-translate-0.8b-Q4_K_M.gguf",
+      "deviceIdentifier": null,
+      "paramsString": "890M",
+      "architecture": "plamo3",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits": 4
+      },
+      "vision": false,
+      "trainedForToolUse": false,
+      "maxContextLength": 262144
+    },
+    {
+      "type": "llm",
+      "modelKey": "gemma-4-e2b-it-qat",
+      "format": "gguf",
+      "displayName": "Gemma 4 E2B Instruct QAT",
+      "publisher": "lmstudio-community",
+      "path": "lmstudio-community/gemma-4-E2B-it-QAT-GGUF/gemma-4-E2B-it-QAT-Q4_0.gguf",
+      "sizeBytes": 4336348704,
+      "indexedModelIdentifier": "lmstudio-community/gemma-4-E2B-it-QAT-GGUF/gemma-4-E2B-it-QAT-Q4_0.gguf",
+      "deviceIdentifier": null,
+      "paramsString": "4.6B",
+      "architecture": "gemma4",
+      "quantization": {
+        "name": "Q4_0",
+        "bits": 4
+      },
+      "vision": true,
+      "trainedForToolUse": true,
+      "maxContextLength": 131072
+    },
+    {
+      "type": "llm",
+      "modelKey": "gemma-4-e4b-it-qat",
+      "format": "gguf",
+      "displayName": "Gemma 4 E4B Instruct QAT",
+      "publisher": "lmstudio-community",
+      "path": "lmstudio-community/gemma-4-E4B-it-QAT-GGUF/gemma-4-E4B-it-QAT-Q4_0.gguf",
+      "sizeBytes": 6146492960,
+      "indexedModelIdentifier": "lmstudio-community/gemma-4-E4B-it-QAT-GGUF/gemma-4-E4B-it-QAT-Q4_0.gguf",
+      "deviceIdentifier": null,
+      "paramsString": "7.5B",
+      "architecture": "gemma4",
+      "quantization": {
+        "name": "Q4_0",
+        "bits": 4
+      },
+      "vision": true,
+      "trainedForToolUse": true,
+      "maxContextLength": 131072
+    },
+    {
+      "type": "llm",
+      "modelKey": "google/gemma-4-12b-qat",
+      "format": "gguf",
+      "displayName": "Gemma 4 12B QAT",
+      "publisher": "google",
+      "path": "google/gemma-4-12b-qat",
+      "sizeBytes": 7151066820,
+      "indexedModelIdentifier": "google/gemma-4-12b-qat",
+      "deviceIdentifier": null,
+      "paramsString": "12B",
+      "architecture": "gemma4",
+      "quantization": {
+        "name": "Q4_0",
+        "bits": 4
+      },
+      "variants": [
+        "google/gemma-4-12b-qat@q4_0"
+      ],
+      "selectedVariant": "google/gemma-4-12b-qat@q4_0",
+      "vision": true,
+      "trainedForToolUse": true,
+      "maxContextLength": 262144
+    }
+  ],
+  "protocol": {
+    "created": "2026-11-05T08:05:40.739Z",
+    "contextLength": 4096,
+    "repetitions": 3,
+    "temperature": 0,
+    "seed": 42,
+    "reasoningBudget": false,
+    "contextOverflowPolicy": "stopAtLimit",
+    "maxTokens": "4096 minus measured prompt tokens minus 32 reserve; same total context for all",
+    "cachePolicy": "Before EVERY warmup/measured translation: raw completion of unrelated cache-reset text with 1 output token replaces active slot; no conversation history; context checkpoints disabled.",
+    "warmup": "one translation in each direction for each condition; excluded",
+    "models": [
+      {
+        "id": "plamo-0.8b",
+        "key": "plamo-3-translate-0.8b"
+      },
+      {
+        "id": "plamo-2b",
+        "key": "plamo-3-translate-2b"
+      },
+      {
+        "id": "plamo-8b",
+        "key": "plamo-3-translate-8b"
+      },
+      {
+        "id": "gemma-e2b",
+        "key": "gemma-4-e2b-it-qat",
+        "draft": "[MODEL_ROOT]/amaranus/Gemma-4-E2B-it-qat-assistant-MTP-Q8_0-GGUF/gemma-4-E2B-it-qat-assistant-MTP-Q8_0.gguf"
+      },
+      {
+        "id": "gemma-e4b",
+        "key": "gemma-4-e4b-it-qat",
+        "draft": "[MODEL_ROOT]/unsloth/gemma-4-E4B-it-GGUF/mtp-gemma-4-E4B-it-Q8_0.gguf"
+      },
+      {
+        "id": "gemma-12b",
+        "key": "google/gemma-4-12b-qat",
+        "draft": "[MODEL_ROOT]/yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF/gemma-4-12B-it-MTP-Q8_0.gguf"
+      }
+    ],
+    "notes": [
+      "Synthetic original corpus, 12 texts, 4 short/4 medium/4 long. Not a standardized external translation benchmark.",
+      "Quality assessed separately from timing; context/output exhaustion is a failure, never silently truncated input.",
+      "All Gemma runs use external assistant head via --spec-type draft-mtp.",
+      "All models use one slot, full requested GPU offload, Flash Attention, f16 KV; record actual GPU data and runtime logs.",
+      "Model order fixed; text order deterministically rotated/reversed per repetition. Results are within this session, not thermal-order-controlled."
+    ]
+  },
+  "resolvedLoadSettings": {
+    "plamo-0.8b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 512,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    },
+    "plamo-2b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 512,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    },
+    "plamo-8b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 512,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    },
+    "gemma-e2b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 512,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    },
+    "gemma-e4b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 512,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    },
+    "gemma-12b": {
+      "contextLength": 4096,
+      "evalBatchSize": 2048,
+      "physicalBatchSize": 1120,
+      "parallel": 1,
+      "flashAttention": true,
+      "offloadKVCacheToGpu": true
+    }
+  },
+  "notes": [
+    "No model weights are included.",
+    "Personal filesystem locations are replaced by [MODEL_ROOT]; API credentials and process identifiers are not part of this export.",
+    "runs.jsonl includes text emitted by the tested local models as reasoning; it is NOT the benchmark author or grader's private reasoning.",
+    "342 timed trials: 324 standard plus 18 extra-long. 126 quality judgments: 14 distinct inputs times 9 conditions.",
+    "Raw stop times on truncated runs are not successful translation completion times.",
+    "CPU thread pools and physical microbatch settings differ as reported in the article."
+  ]
+}

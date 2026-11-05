@@ -1,0 +1,10 @@
+{
+  "scoredCells": 126,
+  "questions": 14,
+  "conditions": 9,
+  "sourceAndOutputHashesVerified": true,
+  "componentsAndTotalsVerified": true,
+  "standardRepetitionEqualityVerified": true,
+  "interactiveScoreSelectionsVerified": 126,
+  "assessor": "Codex AI review; not independent human validation"
+}

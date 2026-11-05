@@ -1,0 +1,5262 @@
+{
+  "rubric": {
+    "version": "accuracy-10-v1",
+    "assessor": "Codexによる原文対照のAI参考採点。モデル名を知った状態での単独採点。独立した人間採点・自動翻訳評価モデルのスコアではない。",
+    "dimensions": {
+      "meaning": {
+        "max": 6,
+        "description": "事実・否定・因果・人物関係・条件の意味保持。主要な解釈変更2点、局所的な条件変更1点、微細な意味差0.5点を減点。"
+      },
+      "completeness": {
+        "max": 3,
+        "description": "原文の情報の網羅と余計な情報の抑制。重要な独立情報の脱落1点、補足・明示対比・限定の脱落0.5点。意味変化として減点した同じ欠落を再度減点しない。"
+      },
+      "entities": {
+        "max": 1,
+        "description": "数字・識別子・明らかな固有名・指定言語の保持。1種類の問題につき0.5点、上限1点。同種の反復は問内1回。未指定の性別の追加も問内0.5点。"
+      }
+    },
+    "rules": [
+      "文体・敬体常体・不自然さだけでは減点しない。意味が変わった場合のみ対象。",
+      "EN-M1のRetry onceのボタン名／回数の区切りは原文の引用記号が曖昧なので減点しない。",
+      "北港の読みは指定がないためHokkou/Beigang/North Port/Kitport/Kitakoの差だけでは減点しない。Kitami/Kitamigawaの明らかな別名化は減点。",
+      "19時の包含境界は微細差として0.5点。11月12日全体を返金対象へ含める境界変更は1点。EN-L2の事前の概略チェックでは19時以降と表記したが、本採点では原文after 19:00の厳密な境界を優先して全モデルを同じ基準で評価した。",
+      "初回の最終訳のみ採点し、思考文を訳として数えない。通常比較は3回の最終訳一致を照合し、同じ訳を3問に水増ししない。",
+      "最終訳なしは0点。部分訳は訳出済み範囲に対する3区分の得点に訳出範囲比を乗じる。",
+      "追加長文の範囲比は12内容段落を単位に、全文1、半分0.5、未訳0で確認。E2B思考ありJA-XLは7.5/12、12B思考ありJA-XLは1.5/12。",
+      "各問は小数1桁。合計は表示した各問の点数を加算。100点換算は合計/満点×100であり、正答率・確率ではない。",
+      "短文・中程度・通常長文を各4問、英日・日英を各6問として等重み集計。追加2問は通常12問と別集計し、全14問の参考値も併記。",
+      "10点は本基準による原文照合で減点を確認しなかったという意味で、無誤訳の保証ではない。小差は採点者や採点基準で逆転し得る。"
+    ]
+  },
+  "labels": {
+    "plamo-0.8b": "PLaMo 0.8B",
+    "plamo-2b": "PLaMo 2B",
+    "plamo-8b": "PLaMo 8B",
+    "gemma-e2b-think-off": "Gemma E2B 思考なし",
+    "gemma-e2b-think-on": "Gemma E2B 思考あり",
+    "gemma-e4b-think-off": "Gemma E4B 思考なし",
+    "gemma-e4b-think-on": "Gemma E4B 思考あり",
+    "gemma-12b-think-off": "Gemma 12B 思考なし",
+    "gemma-12b-think-on": "Gemma 12B 思考あり"
+  },
+  "questions": [
+    {
+      "id": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "genre": "technical",
+      "checks": [
+        "バックアップ完了前の再起動禁止",
+        "通知無効化でジョブは取消されない",
+        "API_KEYを保持",
+        "/var/dataを保持"
+      ]
+    },
+    {
+      "id": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "genre": "business",
+      "checks": [
+        "15%の値下げ・元値の15%ではない",
+        "返金対象は送料",
+        "11月12日より後の到着が条件",
+        "発送遅れだけでは不足"
+      ]
+    },
+    {
+      "id": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "genre": "business",
+      "checks": [
+        "田中に送付待ちを伝えた",
+        "承認者は佐藤",
+        "支払期限11月18日",
+        "翌日の確認でも延滞にしない"
+      ]
+    },
+    {
+      "id": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "genre": "dialogue",
+      "checks": [
+        "悪くないという控えめな評価",
+        "採用賛成ではない",
+        "3個とも動作",
+        "量産で同結果の保証はない"
+      ]
+    },
+    {
+      "id": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "genre": "technical",
+      "checks": [
+        "表示変更のみ・実行順不変",
+        "灰色は未確認でオフライン確定ではない",
+        "Retry一度・旧サーバーで重複可能",
+        "既存値0も保持",
+        "復元は設定のみで削除済みデータは戻らない"
+      ]
+    },
+    {
+      "id": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "genre": "business",
+      "checks": [
+        "198000税込・保守除外",
+        "初回設定と研修2回",
+        "今月中契約受領のみ割引・作業日は不要",
+        "来週対応は契約のみ・部品未発注",
+        "移行別料金で必須ではない"
+      ]
+    },
+    {
+      "id": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "genre": "narrative",
+      "checks": [
+        "未開封の手紙は青いカップの下",
+        "滞在を約束したのではなく別れを告げる約束",
+        "決めたのは列車で関係ではない",
+        "木曜・明日ではない",
+        "手紙の日付と出発日を取り違えた"
+      ]
+    },
+    {
+      "id": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "genre": "technical",
+      "checks": [
+        "30分後・42.1と39.8",
+        "室温差最大2℃・各3回",
+        "Bが常に低温とは結論不可",
+        "明るさ50%固定・全端末の電力",
+        "A基準・耐久性安全性は判断不能"
+      ]
+    },
+    {
+      "id": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "genre": "technical",
+      "checks": [
+        "UTC日時・最大枠・閲覧可能で作成権限変更不可",
+        "復元テストは隔離環境のみ・通知とジョブ無効",
+        "財務は別承認・所有者で段階分類",
+        "広すぎる権限で即停止・任意説明欠落だけではロールバック不要",
+        "新規書込後は読取専用と調整・決定者は調整責任者",
+        "14日は最小保持・書面承認後のみ削除・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "genre": "technical",
+      "checks": [
+        "UTC日時・最大枠・閲覧可と作成権限変更停止",
+        "隔離復元・通知とジョブ無効",
+        "財務別承認・所有者基準",
+        "200件・コード空白保持・広い権限即停止",
+        "新規書込後は単純復元不可・責任者判断",
+        "14日最小・書面承認削除・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "genre": "business-narrative",
+      "checks": [
+        "全員が原案支持ではない・一時的人員で3人中訓練済2人",
+        "480000税込・PC除外・60%上限240000・助成未決定",
+        "入室カード不要だが貸出登録必要・12歳未満19時以降同伴",
+        "金曜は入口等のみ・西通路は翌週も閉鎖",
+        "12月5日検査条件で8日15日・遅れれば双方中止で自動延期なし",
+        "予約者個別連絡・恒久案は未承認で採決なし・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "genre": "business-narrative",
+      "checks": [
+        "原案全員賛成ではない・12月2日暫定・3人中訓練済2人",
+        "480000税込・PC除外・60%上限240000・交付未決定",
+        "入室と貸出区別・12歳未満19時以降成人同伴",
+        "入口と経路のみ・西側翌週も閉鎖",
+        "12月5日検査条件・8日15日両方中止で自動延期なし",
+        "予約者個別連絡・恒久変更未承認で採決なし・末尾まで翻訳"
+      ]
+    },
+    {
+      "id": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "genre": "mixed-document",
+      "checks": [
+        "2文書の全段落を末尾まで翻訳",
+        "否定・数値・例外条件を保持"
+      ]
+    },
+    {
+      "id": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "genre": "mixed-document",
+      "checks": [
+        "2文書の全段落を末尾まで翻訳",
+        "否定・数値・例外条件を保持"
+      ]
+    }
+  ],
+  "conditions": [
+    "plamo-0.8b",
+    "plamo-2b",
+    "plamo-8b",
+    "gemma-e2b-think-off",
+    "gemma-e2b-think-on",
+    "gemma-e4b-think-off",
+    "gemma-e4b-think-on",
+    "gemma-12b-think-off",
+    "gemma-12b-think-on"
+  ],
+  "scores": [
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 95,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "64a2ccfcfd85651b33c55697e6f30663ca6225fd836361333e8161a8320787ad",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 100,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "8bcc718cc55cbc6de4b06a87a55ad924177ab2a72e40c748aa0a0d357689d3a3",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 95,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "64a2ccfcfd85651b33c55697e6f30663ca6225fd836361333e8161a8320787ad",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 92,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "a0b15a93eac30ace355a736b13b55d5fee5a27d9ca8d941b3113b2c36d8c4eb0",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 93,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "6cee9c3de0fd0b6f118afe450ac9b576467699d204682a4c70c7ed937bc7e560",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 92,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "a0b15a93eac30ace355a736b13b55d5fee5a27d9ca8d941b3113b2c36d8c4eb0",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 98,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "702507fb3922fb3bdf7c2cb2bf2dbf581f426df6d0557599d8a214d556ae2657",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 94,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "95b027838eb5900a19f7e8d0ee9c095700f7c6b38538be434f96c3709539b66c",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-S1",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 94,
+      "sourceSha256": "5495eb1c76dcaff169ab910499b30e9038ba9d8692772964676b74008ba77443",
+      "translationSha256": "95b027838eb5900a19f7e8d0ee9c095700f7c6b38538be434f96c3709539b66c",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 3,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 3,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 77,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "de2789b351759ffd41089f545a4d94e3f5ab6cbb017a10511a337784f68ac1ba",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        },
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "元値の15%になったわけではない、という対比を15%に届かなかったという到達不足に変えた。",
+          "quote": "元の価値の15%には届きませんでした"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。 元値の15%になったわけではない、という対比を15%に届かなかったという到達不足に変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 89,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "29ab0271e1b3ec12ef748367f28d674737e9e26936f6f0cb2d2142713c4f1ad5",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 85,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "61840c071f8fa90adcace4b791efa73256a9ad3e8894fc84469489c9c009fede",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 82,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "f9b7da6b0d705780aa0229fa7ed0818212a30279494de20edd72e46605f27a37",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 75,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "7dc3378717da9abb6ab71437367bd7b9dc55c880639d6cc7082c3af372a22ee2",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 81,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "fa4f89ed489f9cc5c53e8a0276715616d1c684f05c7be16e90e7b0f7993f0375",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 86,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "bc4fe955c8785823c0106957332666233046311d2dcb0953a50cb2b888e580df",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 89,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "a4e87a96fc3cdd89baea09429ab83a7e921092145bccd7e52edda0e0303a77d2",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-S2",
+      "direction": "en-ja",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 85,
+      "sourceSha256": "b7d03fd563032469726db9ff8230f4392115799a7901eaa21574804869c2a653",
+      "translationSha256": "ce5679f597abb3cf6c331fb58ad9bfa4f967fc4b780248661f554999d161e7c6",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+          "quote": "11月12日以降"
+        }
+      ],
+      "reason": "after November 12を11月12日以降とし、12日当日を返金対象に含めた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 191,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "9bbbc50402a8de02b934c2da7a0fdd962fa7cda4aea0d0b47544e9ccb24f8995",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 197,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "8f2d95eb178c33f8eb747fe902043b0c375a4ca49e97ec4bda61a702c3a85068",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 199,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "2345d929539a9b944437a0e960fabd9c52e56d22c391a79f7cdafe92c42c9212",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 200,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "a613737c3a71293d7204bedc957748b49c6a3609981e359be4b557174c0c1ded",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 203,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "9310734d80096e39e10ca74fefe75e88dddddaf6e4dcc3171fb61bb9a3e2cf2d",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 199,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "3b79acc05f5158c64ba6a07174c56609ee538e184505d3c5b16635c7cd064b7f",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 202,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "d43dd4588b0fd0041c4877f055164b663e5c0272e6f57dae2d839443d20760b1",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 217,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "d886fb1309909116364e669edc0e32d332dcc3b4a187f7f71d519493da4e6337",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-S1",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 206,
+      "sourceSha256": "184c39dedc1ed5e954c6cab08d8eaf4a2e3bd8cba89c720adbdcc5715f37e23a",
+      "translationSha256": "6a2a6c99c4613e9e8c1316fdc737c69d5f15a36e5f60d151aa0c60e14dec7584",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+          "quote": "Mr."
+        }
+      ],
+      "reason": "原文が指定していない田中・佐藤の性別をMr.で確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 155,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "f34cc01652ff06179f8b05a1a05a7adee35198319c88511e18c3e5a0752cf0a1",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+          "quote": "hir"
+        }
+      ],
+      "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 178,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "da56bf4e164b53884f0903e3890c4ffd5b86fda97faae117ac9a0815e0f4c114",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+          "quote": "hir"
+        }
+      ],
+      "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 161,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "6175c8cd48a9d650df418eef564921d0326bd870a648f1a088c22440ec07dbdf",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 181,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "79d4ffb491c1d213f4df0d41d247e70ad2d2c671be56338e119728898c69aa1e",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+          "quote": "hir"
+        }
+      ],
+      "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 177,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "324a7ca778df18de14828efc60d73ed608bd12884cf2b2b607098eec04977bd8",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 193,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "25f7310adfc8762d9d909598724e5564b1c83077d34e07408c4b546837281642",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 187,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "3f50f3f54edc4aac3b859631d1873ac5004b7b7fb64e445ecd75e8f48f3edd14",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 188,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "80e9dd7d81f00f4244532eb09dcfc68e3c31c5608128ba9c734d9cc31f5912ad",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+          "quote": "hir"
+        }
+      ],
+      "reason": "後続の試作品の文脈で「採用」を雇用・採用人事として訳した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-S2",
+      "direction": "ja-en",
+      "length": "short",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 180,
+      "sourceSha256": "58c54441f060b1d0908928439c230cfc6f90b905a2fe60efac4a8b3596ff2fc9",
+      "translationSha256": "543bc8b5fe06be6b9a09cf804952fde76f0dcd632e97239b3028673494d703c5",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 467,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "f34bcae3dadd4415799fdc759c75523ea203a91bea628053eefe81ae6c94cb26",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 475,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "71fba84ddddd7fec26dbcb32c1f260f2591382412bdd9fc839a9fba43ece0109",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 479,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "7ab9a12d86aa485c98942c5a0dbf320d34f67253c1e40aa7a50aed1a930f8d84",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 461,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "5ffb58aac966242084c95eb80a6f038bf11fde1f913cb73e6020866cf45d5ad1",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 465,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "9e552308883078ef8a2390d17a85407655abdc681be58c7a5175179fbaf85e48",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 463,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "c74682f9b8f817f6c93e52e1526f024d02610d9be2a2ec4620a27f7a1790d595",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 456,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "439d2f3aa753cc0814c010928eb8393036b0aa18d2d520b56acbb56e6f7cb3e7",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 463,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "de9e0355bb7572ceb0f1d7948a66f9f098da42a5617858d14500f344a7203d17",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-M1",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 463,
+      "sourceSha256": "d88e50a445289a6fd9806ce0582ff4a6d02af49f73f147b963d814371a288930",
+      "translationSha256": "7d0c2c3464b11f3f2cc47b4981f74cfbebce9c118ee41930c3a68ce5f1184c9c",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 903,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "f578acfb6ec022043da63d62bd3162cd5007b2228a56c0c0d5f21886b983e173",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 845,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "d6be2e0dfe40ba7cf4603c8448eb05ab89404d30b2e4190e97774e9cc659a2de",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 856,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "c94a01c69f96db94f452a9a28e1f25df1526d8100fa5b327bbe30a0c1303e418",
+      "deductions": [
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "今月中の契約受領「の場合に限り」の明示的な限定onlyが弱まった。",
+          "quote": ""
+        }
+      ],
+      "reason": "今月中の契約受領「の場合に限り」の明示的な限定onlyが弱まった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 920,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "f33f2df514c42444c64d544b1dd11dac8c8179b30b546fd6c6b324ea6c580bca",
+      "deductions": [
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "今月中の契約受領「の場合に限り」の明示的な限定onlyが弱まった。",
+          "quote": ""
+        }
+      ],
+      "reason": "今月中の契約受領「の場合に限り」の明示的な限定onlyが弱まった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 919,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "a9b77929e6a36e8eedaa2b5e1afada9faafc0832ce17b1ed2279ff229dd5ee5d",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 909,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "8cddb38048b89d4e9b48c86f81f5e0feca7604bfcdf483831de7f89914d08a95",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 900,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "43f7bbb5e013529cfbb885fddad1da7b5866a332d2088bffb13d789fb3696c3d",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 984,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "8f17a2ae20492b57ffa57bef260d3a4e6ea457611e826c6adefbc9e3b618c3af",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-M1",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 945,
+      "sourceSha256": "819a1ce7e7411c4b9276c73c114ffc739bd6b6cef966270fe1817d27c446354a",
+      "translationSha256": "0229e9dc25e40675fc0ad1b9ed77aff7680867c911a196fa90b85cc522da0f38",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 326,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "347330cfaad0c6c8d6b1b0f5e13b8e2979dee0050d03f2bd0e00774fa343e8c3",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "笑いに安堵が感じられないという描写を、笑っても安心できなかったという因果に寄せた。",
+          "quote": "それで安心することはなかった"
+        }
+      ],
+      "reason": "笑いに安堵が感じられないという描写を、笑っても安心できなかったという因果に寄せた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 324,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "99fbc3ad7706c1feb7afc9eb18a7ecf9486f4a585aa87b4a5c022b515f44fd31",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 325,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "57189f29c95d6627aa902b2790726e11853b0ff282cfabf340dee1bd462ea2ee",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 328,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "ed2f0670f4f593329fb81cd5fdc72a5a11229b8624d66175c1f952b82193bb98",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+          "quote": ""
+        }
+      ],
+      "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 330,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "bebb266d54afe7c06ab910001c5c3c79c461480e898a624ae1e9d9429a14349d",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 326,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "d6cb871c1e2bb0210dbc0222e61677a4c044b182af34519a0f4925913bd398a8",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "Maraの名前をマーとし、語末の音を落とした。",
+          "quote": "マーは"
+        }
+      ],
+      "reason": "Maraの名前をマーとし、語末の音を落とした。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 3,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 3,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 324,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "74efa6391ae28bbb091fbf6b2e95718cc15ee953346f364550c64770e88dd2f6",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "見つける対象が手紙である関係節を、青いカップを見つける構文に付け替えた。",
+          "quote": "見つけるであろう青いカップ"
+        },
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "手紙の日付を出発日と取り違えたことを、手紙の日に出発日を間違えたという時間関係に変えた。",
+          "quote": "手紙の日に出発日を間違えていた"
+        }
+      ],
+      "reason": "見つける対象が手紙である関係節を、青いカップを見つける構文に付け替えた。 手紙の日付を出発日と取り違えたことを、手紙の日に出発日を間違えたという時間関係に変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 331,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "ce68e8646592f900dc2ad1bfddb2bf8e8228227dde7500c42985ed71fc89d066",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+          "quote": ""
+        }
+      ],
+      "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-M2",
+      "direction": "en-ja",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 328,
+      "sourceSha256": "a5f87b5fba5f9be22ff3f945f6512096048264a13b0a841fcec4d887478cfe8f",
+      "translationSha256": "9c6ef528a089346f9fb6f7f98fbd8be2b9aa6a697ae3c33ab03565db0b46c1af",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+          "quote": ""
+        }
+      ],
+      "reason": "バスが走り去りつつある進行中の描写を、すでに去った完了状態に寄せた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 822,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "ae90bdf4b152645ad57a14c5deabd19960c5e6a442395c01064144e5eb52b24a",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 848,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "f9b376ecff2eca0ae4dd39e201642d9cef4e20b66e252e343c558d4bc4ab8872",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 860,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "fd988e8f9085dec0dce65723e4d045366d2415b35f40662bd88d717e9501a2f5",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 800,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "9150ff6f4e4bb224d0d51365d8085a217e97a4d58678845666c34ec4be20a854",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 833,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "75750eab3a16eb1ca8ccd47704a7e0a7ba2e81ece44982c77b44ab3f20085489",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 824,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "f5dde27811fe1733d1f3262efed05210f382dca47db59afd314f32ee930a0acc",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 815,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "8155ee8bd3509f3939955b71426d03b200bafff93989ad6deac3271424388103",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 831,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "6703f4a69affd3388cb0b8a9837d7723cb0378bb6181becebf2220511a6215af",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-M2",
+      "direction": "ja-en",
+      "length": "medium",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 836,
+      "sourceSha256": "4d76393729f2b1de2f6ae7633a15a65fbf968cb542800fd994ff0aba6b708782",
+      "translationSha256": "86d62706e7607b49c9937b8330620654cae64902f026bff149f458a789565297",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1558,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "b0b1cebdbbfaba2ab96efa2137d30e6469c27b44ae8723ccb94b3d71e4094a5f",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": "財務部門を除くすべての部門"
+        }
+      ],
+      "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1538,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "d5ea65c950ea548cd8ffe28bc7cbcc937107ba46dcf3a206d862c703d748c89f",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1563,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "8899e45d9d6f2c1ebecd725792eb7fa9daf6f9b8cf301327435a8d50df4e68c5",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1499,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "44f5ebe10c12f515ec50ee9ee07fb8dfedddbb803c5d52acce7a245a70993b29",
+      "deductions": [
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "判断者がベンダーではないという明示的な対比を省いた。",
+          "quote": ""
+        }
+      ],
+      "reason": "判断者がベンダーではないという明示的な対比を省いた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1448,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "4d0414824fc9527b7df5f6f7a8f8fc02fb6865154ee98757d2dc988c47cb81ff",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1517,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "13b6aae590231a0b174a69693b8d0886b347e64b8efd3f9c55547cc0363db521",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": "財務部門を除くすべての部門"
+        }
+      ],
+      "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1522,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "51ce973c36f787dd2f3f075586d31a83ce98350dff9895efcfcf0a12541d348a",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": "財務部門を除くすべての部門"
+        }
+      ],
+      "reason": "第2段階のall other departmentsからotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1524,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "b7884daec098ab45e4acc10814678978f351aaf546047dae3a8a9c3d7539970a",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-L1",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 0,
+      "max": 10,
+      "components": {
+        "meaning": 0,
+        "completeness": 0,
+        "entities": 0
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 0,
+      "coverageNote": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "stopReason": "maxPredictedTokensReached",
+      "translationCharacters": 0,
+      "sourceSha256": "cff9bfb320d91c0702a9680e96437266eb8c1ca9f2b3efdc2803c9f3704dd53c",
+      "translationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deductions": [],
+      "reason": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3362,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "6f9771100d64088ff12a2ae4cf22199d078f39dce0aff6751b6c1999e763c2d0",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "財務部門が移行済みだと記載しないという禁止を、財務部門への通知内容の禁止に変えた。",
+          "quote": "do not state to the Finance Division"
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。 財務部門が移行済みだと記載しないという禁止を、財務部門への通知内容の禁止に変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3513,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "74504e31b7c123890bb46275cb0780f1b309c30fe4dc13ae69ffd77b9d0788f5",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。",
+          "quote": ""
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3450,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "cdefdcd229bfac55bddab058e4c5dcc7ad57477c0938ef6de22076d3a7c9e585",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。",
+          "quote": ""
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般についてロールバック不要とした。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7.5,
+      "max": 10,
+      "components": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 4,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3390,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "75ae3a0f6ac89377845c23b626a178bca97254a210916d3186a82aa4c577a4d0",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "財務部門が移行済みという主張を禁じる箇所で、財務部門への移行という異なる移行先を作った。",
+          "quote": "migrated to the finance department"
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "北港をKitamigawaという原文に対応しない名称へ変えた。",
+          "quote": "Kitamigawa"
+        }
+      ],
+      "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。 財務部門が移行済みという主張を禁じる箇所で、財務部門への移行という異なる移行先を作った。 北港をKitamigawaという原文に対応しない名称へ変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3448,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "38567575327682ba0afbae89d0a067d11b5a211fe4afa0cc26e18630d1534996",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "北港をKitamigawaという原文に対応しない名称へ変えた。",
+          "quote": "Kitamigawa"
+        }
+      ],
+      "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。 北港をKitamigawaという原文に対応しない名称へ変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 2.5,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 2.5,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3486,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "3af28738130c7d597f20dc9707fda56aede6ecd1660f51f6d4b3a0511fc703b1",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "北港をKitami（北見に相当）へ変え、港を保持しなかった。",
+          "quote": "Kitami"
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "財務承認用の「別の」検証報告であるという限定を省いた。",
+          "quote": "a verification report"
+        }
+      ],
+      "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。 北港をKitami（北見に相当）へ変え、港を保持しなかった。 財務承認用の「別の」検証報告であるという限定を省いた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3507,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "715a5d2b7488692d7cd439f9ed8ab441a21e02bc227bfc1ffafc4e82c59bb366",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "財務承認用の「別の」検証報告であるという限定を省いた。",
+          "quote": "a verification report"
+        }
+      ],
+      "reason": "残りの部門という限定を落とし、第2段階を財務以外の全部門へ広げた。 財務承認用の「別の」検証報告であるという限定を省いた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3467,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "3e52225d6e5f83c00fe259f95e9801671e0c13db953c9860525b9446e6a80a2e",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "UTCを現地時刻に置き換える際の明示表示を、明示指示・許可の必要性に寄せた。",
+          "quote": "explicit instruction"
+        }
+      ],
+      "reason": "UTCを現地時刻に置き換える際の明示表示を、明示指示・許可の必要性に寄せた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-L1",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 10,
+      "max": 10,
+      "components": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3424,
+      "sourceSha256": "a8ee9681ffa758476a208f8a48fe8834681ee6a390a2e461e91ab924fb64cb3a",
+      "translationSha256": "75dd33ae7927b843c5ab9bff2ec3974b7058d93ce549459865ec2d999ae2d8ac",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1292,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "117d7396b6378ebeb47c312adf897e0a1a72bfeae85ed3ee0f639f555e02a3cf",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1266,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "8522987d9c7b60519bf4066a52f92c37086afcacd861fd61c489049a5a8f2132",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 1308,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "d94d0563aebd9adcec4de26d2288f8318bca48201c7278cc4154be118a8d1aa2",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 2,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 2,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1328,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "d33d9df9d3249b77937c87cba78af8141e6612871f4df2e5431678fb0dac91fa",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 1,
+          "reason": "同伴が必要なのは12歳未満という年齢条件を落とした。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "1月について決定する前に試行結果を検討する順序を、結果検討後に決定を見直すという表現へ変えた。",
+          "quote": "決定も試験結果がレビューされた後に見直される"
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "日本語訳の中にタイ語表記が混入した。",
+          "quote": "ประกาศ"
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。 同伴が必要なのは12歳未満という年齢条件を落とした。 1月について決定する前に試行結果を検討する順序を、結果検討後に決定を見直すという表現へ変えた。 日本語訳の中にタイ語表記が混入した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 2,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 2,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1310,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "9e8d8ee98ae22303494f406cfadee164cc0e0001f11fe9917d716bd7313728a8",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 1,
+          "reason": "同伴が必要なのは12歳未満という年齢条件を落とした。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。 同伴が必要なのは12歳未満という年齢条件を落とした。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1317,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "e5add4a481216e42bc8c00d44fb1157f6bac82d333382b37bd837e12cad69b04",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "同伴する成人という条件を保護者に限定した。",
+          "quote": "保護者の同伴"
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。 同伴する成人という条件を保護者に限定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1323,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "0f0322a813f8c9e1b1880ef09124c6e99c61ca605d9f50722b1e69bf728c5d9a",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1342,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "dbf54c05a6bb4243921acb8027ec9abff49e071db929ecadcb74179f00f2c966",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-L2",
+      "direction": "en-ja",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 1322,
+      "sourceSha256": "111663fbe592fb9821e82275c8d7b62d9e8250970794e394158a67e42869cd0c",
+      "translationSha256": "956250862054f319560ef05d32d779dc67c128bb07c7dd5b652b734c5034699d",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": "19時以降"
+        }
+      ],
+      "reason": "after 19:00を19時以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3115,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "40c9f13369b771b086f28731202f823064860b8f8c813baab00f45f728b6efcf",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3002,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "1ec7285c7dcea9bcb189b30aee85f2bd00e7fcd6b39d978246287d659544310f",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 3168,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "946f96bd54d6e6782c1517e20066f85a4ae847489f96ac70f49ca6713e53a167",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3207,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "76c5ac50ee75256ff5d5f3f2a11c4fa8ca7612f91a9d87ace4987b0af388b376",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "金曜までに利用開始できるbyを、金曜まで利用可能というuntilへ反転した。",
+          "quote": "until next Friday"
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。 金曜までに利用開始できるbyを、金曜まで利用可能というuntilへ反転した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3251,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "c2a5b94828a8fd72451224ce75d0df3ac588a615daabd1b6f979cf559520b805",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "金曜までに利用開始できるbyを、金曜まで利用可能というuntilへ反転した。",
+          "quote": "until next Friday"
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。 金曜までに利用開始できるbyを、金曜まで利用可能というuntilへ反転した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3212,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "18247f713b62b7fb751c96c9488214a746255801ec32ab49b2918c799b61f008",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3225,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "21f1a259d0f89f2e96ade94bd621c91a2c56ce2c830661d04d682a86e0f5e5cc",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 3274,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "c68bd686b941d3d841bc9d1c3d605b300cdbc0ffb6ae77d723eb689c8baf0641",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "19:00以降（当該時刻を含む）をafter 19:00 / after 7 PMとし、厳密な境界を変えた。 原文にない野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-L2",
+      "direction": "ja-en",
+      "length": "long",
+      "suite": "standard",
+      "rep": 1,
+      "score": 0,
+      "max": 10,
+      "components": {
+        "meaning": 0,
+        "completeness": 0,
+        "entities": 0
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 0,
+      "coverageNote": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "stopReason": "maxPredictedTokensReached",
+      "translationCharacters": 0,
+      "sourceSha256": "9ed5898d77c5b844031b866ad3766028c47650fdf3f920aff8aab39e794c1afe",
+      "translationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deductions": [],
+      "reason": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "repeatOutputIdentical": true
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 2873,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "dfea47d25977dd5f70dfa96d28f2b7ed33ba8f9682c25e2d9d8b1c28aae3253a",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。 第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 2713,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "321c4c1686a69a5c67ed6d74cbb7c9141c3b78321d28c8c4ad53bd814eac0c66",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 2821,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "20be4e8fa702f4ca2b24db19b23c9835d4c6a34f320af41a9b18d93cce035177",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 2795,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "50bb7412e0924c1e39f3e4e3cad9f2ff42cd392e1ea5f1f9ccfe66f43203b64d",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "判断者がベンダーではないという明示的な対比を省いた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。 判断者がベンダーではないという明示的な対比を省いた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 9,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 2798,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "626096e75fdaf0be8d96366e01ce5ea07f5092545f0eb193787fb4418c724b69",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "判断者がベンダーではないという明示的な対比を省いた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。 判断者がベンダーではないという明示的な対比を省いた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 2861,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "8c0ba71a0bf1379875f1ba0041c08f75f01679b4b7565e4e76a6d60f02b07047",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。 第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8.5,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 2966,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "f320538ed8394bb84ad096be7e5691082bc6c1f14ba0359e3349403479aaccdd",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。 第2段階のotherを落とし、研究部門も含む範囲へ広げた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 9.5,
+      "max": 10,
+      "components": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 5.5,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 2929,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "eea86ad6eb4982b9ae7024114cf619257e50b6543c53404e46a6f46273906d3e",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        }
+      ],
+      "reason": "after 19:00を19:00以降とし、厳密な時刻境界の包含を変えた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "EN-XL",
+      "direction": "en-ja",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 0,
+      "max": 10,
+      "components": {
+        "meaning": 0,
+        "completeness": 0,
+        "entities": 0
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 0,
+      "coverageNote": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "stopReason": "maxPredictedTokensReached",
+      "translationCharacters": 0,
+      "sourceSha256": "ea06837ff97faffd58f5baefb51c92ba81f5d841398262e512c12a39dfd4e031",
+      "translationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deductions": [],
+      "reason": "最終訳なし。思考文は翻訳出力として加点しない。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "plamo-0.8b",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 3.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 6461,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "7edbcd67f4f719789c54ff58aea54d94ff1094ab2d156eb934afc05ef4322f6f",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "財務移行済みという一般的な誤記禁止を、財務部門への通知内容の禁止に変えた。",
+          "quote": "do not state to the Finance Division"
+        },
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。 財務移行済みという一般的な誤記禁止を、財務部門への通知内容の禁止に変えた。 19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "plamo-2b",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 6588,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "b8730d7b262f6c31b63dc7b8417e0379da80e2ca90f23ad9708d31db3f5e915a",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。 19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "plamo-8b",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "stopStringFound",
+      "translationCharacters": 6591,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "df5e577a6d6e53b607d0ee3b0dff92b978e2a1912ba03a9589ffafa0b4cfc5f0",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        }
+      ],
+      "reason": "任意の説明欄という限定optionalを落とし、説明欄一般にロールバック不要とした。 19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 4.5,
+      "max": 10,
+      "components": {
+        "meaning": 2.5,
+        "completeness": 2,
+        "entities": 0
+      },
+      "availableTextSubtotal": {
+        "meaning": 2.5,
+        "completeness": 2,
+        "entities": 0
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 6553,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "c58a5e76cbc1499e3962a5e44dcc4584db3dce976040e6dd652614070cd23bf6",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、研究部門も第2段階へ含めた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 1,
+          "reason": "任意説明欄の欠落だけではロールバック不要という独立した例外規則を省いた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "北港をKitamigawaへ変えた。",
+          "quote": "Kitamigawa"
+        },
+        {
+          "category": "meaning",
+          "points": 2,
+          "reason": "金曜までに利用開始するbyをuntilへ反転した。",
+          "quote": "until next Friday"
+        }
+      ],
+      "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。 残りの部門という限定を落とし、研究部門も第2段階へ含めた。 任意説明欄の欠落だけではロールバック不要という独立した例外規則を省いた。 北港をKitamigawaへ変えた。 金曜までに利用開始するbyをuntilへ反転した。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 4.7,
+      "max": 10,
+      "components": {
+        "meaning": 3.125,
+        "completeness": 1.25,
+        "entities": 0.3125
+      },
+      "availableTextSubtotal": {
+        "meaning": 5,
+        "completeness": 2,
+        "entities": 0.5
+      },
+      "coverageFraction": 0.625,
+      "coverageNote": "移行計画6段落＋会議記録1段落＋次段落の約半分を訳出。補助金計算の途中で切断。",
+      "stopReason": "maxPredictedTokensReached",
+      "translationCharacters": 4325,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "6270aad7bc67453d248d37ad2580df7b6d5cced9985f89a0cc4c4935c48a3f45",
+      "deductions": [
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、研究部門も第2段階へ含めた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 1,
+          "reason": "任意説明欄の欠落だけではロールバック不要という独立した例外規則を省いた。",
+          "quote": ""
+        }
+      ],
+      "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。 残りの部門という限定を落とし、研究部門も第2段階へ含めた。 任意説明欄の欠落だけではロールバック不要という独立した例外規則を省いた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 7,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 2.5,
+        "entities": 0
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 2.5,
+        "entities": 0
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 6742,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "cdaebf74bb97348e9be1e06d13b23dbdad3c3b7bb59519dfa00a24ac10763342",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、研究部門も第2段階へ含めた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "北港をKitamiへ変えた。",
+          "quote": "Kitami"
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "財務用に別の検証報告が必要であるという限定を省いた。",
+          "quote": "a verification report"
+        }
+      ],
+      "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。 残りの部門という限定を落とし、研究部門も第2段階へ含めた。 北港をKitamiへ変えた。 財務用に別の検証報告が必要であるという限定を省いた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 2.5,
+        "entities": 1
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 6753,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "f86772b6b5db995f9dbf8144c978269b33e7ab49c0e60bd1ef72d77ad0dbe719",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "残りの部門という限定を落とし、研究部門も第2段階へ含めた。",
+          "quote": ""
+        },
+        {
+          "category": "completeness",
+          "points": 0.5,
+          "reason": "財務用に別の検証報告が必要であるという限定を省いた。",
+          "quote": "a verification report"
+        }
+      ],
+      "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 残りの部門という限定を落とし、研究部門も第2段階へ含めた。 財務用に別の検証報告が必要であるという限定を省いた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 8,
+      "max": 10,
+      "components": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "availableTextSubtotal": {
+        "meaning": 4.5,
+        "completeness": 3,
+        "entities": 0.5
+      },
+      "coverageFraction": 1,
+      "coverageNote": "原文末尾まで訳出。",
+      "stopReason": "eosFound",
+      "translationCharacters": 6664,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "d7491a65d7a41b0ded11effed68ce286bf7a6f57cad89ddd81fc4696fafdf4f6",
+      "deductions": [
+        {
+          "category": "meaning",
+          "points": 0.5,
+          "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。",
+          "quote": ""
+        },
+        {
+          "category": "entities",
+          "points": 0.5,
+          "reason": "原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。",
+          "quote": ""
+        },
+        {
+          "category": "meaning",
+          "points": 1,
+          "reason": "財務部門が移行済みと述べる禁止を、財務部門を移行先とする文へ変えた。",
+          "quote": "migrated to the Finance Department"
+        }
+      ],
+      "reason": "19:00以降をafter 19:00 / after 7 PMとし、厳密な時刻境界の包含を変えた。 原文未指定の野村さん等の性別をMr./Ms./he/sheで確定した。 財務部門が移行済みと述べる禁止を、財務部門を移行先とする文へ変えた。",
+      "repeatOutputIdentical": null
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "caseId": "JA-XL",
+      "direction": "ja-en",
+      "length": "long-stress",
+      "suite": "stress",
+      "rep": 1,
+      "score": 1.3,
+      "max": 10,
+      "components": {
+        "meaning": 0.75,
+        "completeness": 0.375,
+        "entities": 0.125
+      },
+      "availableTextSubtotal": {
+        "meaning": 6,
+        "completeness": 3,
+        "entities": 1
+      },
+      "coverageFraction": 0.125,
+      "coverageNote": "移行計画の第1段落＋第2段落の約半分を訳出。隔離試験環境への復元説明の途中で切断。",
+      "stopReason": "maxPredictedTokensReached",
+      "translationCharacters": 924,
+      "sourceSha256": "3521a45f4498d1d89f02677aa132a39ca4b95ff69a5caa7a21cb5e37c7aa5ac2",
+      "translationSha256": "3e65ec6184687a2e471abe3411b79b428510ecfbd735b3c8d94d801789e74405",
+      "deductions": [],
+      "reason": "確認項目と全文を原文照合し、本採点基準での減点は確認しなかった。",
+      "repeatOutputIdentical": null
+    }
+  ],
+  "summary": [
+    {
+      "condition": "plamo-0.8b",
+      "label": "PLaMo 0.8B",
+      "standard": {
+        "n": 12,
+        "points": 109.5,
+        "max": 120,
+        "scaled100": 91.3
+      },
+      "stress": {
+        "n": 2,
+        "points": 15.5,
+        "max": 20,
+        "scaled100": 77.5
+      },
+      "all": {
+        "n": 14,
+        "points": 125,
+        "max": 140,
+        "scaled100": 89.3
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 55,
+          "max": 60,
+          "scaled100": 91.7
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 54.5,
+          "max": 60,
+          "scaled100": 90.8
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 34.5,
+          "max": 40,
+          "scaled100": 86.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39.5,
+          "max": 40,
+          "scaled100": 98.8
+        },
+        "long": {
+          "n": 4,
+          "points": 35.5,
+          "max": 40,
+          "scaled100": 88.8
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 109.5,
+        "max": 120,
+        "scaled100": 91.3
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "plamo-2b",
+      "label": "PLaMo 2B",
+      "standard": {
+        "n": 12,
+        "points": 114,
+        "max": 120,
+        "scaled100": 95
+      },
+      "stress": {
+        "n": 2,
+        "points": 17.5,
+        "max": 20,
+        "scaled100": 87.5
+      },
+      "all": {
+        "n": 14,
+        "points": 131.5,
+        "max": 140,
+        "scaled100": 93.9
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 58.5,
+          "max": 60,
+          "scaled100": 97.5
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 55.5,
+          "max": 60,
+          "scaled100": 92.5
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 36.5,
+          "max": 40,
+          "scaled100": 91.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 40,
+          "max": 40,
+          "scaled100": 100
+        },
+        "long": {
+          "n": 4,
+          "points": 37.5,
+          "max": 40,
+          "scaled100": 93.8
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 114,
+        "max": 120,
+        "scaled100": 95
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "plamo-8b",
+      "label": "PLaMo 8B",
+      "standard": {
+        "n": 12,
+        "points": 116,
+        "max": 120,
+        "scaled100": 96.7
+      },
+      "stress": {
+        "n": 2,
+        "points": 17.5,
+        "max": 20,
+        "scaled100": 87.5
+      },
+      "all": {
+        "n": 14,
+        "points": 133.5,
+        "max": 140,
+        "scaled100": 95.4
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 58.5,
+          "max": 60,
+          "scaled100": 97.5
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 57.5,
+          "max": 60,
+          "scaled100": 95.8
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 38.5,
+          "max": 40,
+          "scaled100": 96.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39.5,
+          "max": 40,
+          "scaled100": 98.8
+        },
+        "long": {
+          "n": 4,
+          "points": 38,
+          "max": 40,
+          "scaled100": 95
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 116,
+        "max": 120,
+        "scaled100": 96.7
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-e2b-think-off",
+      "label": "Gemma E2B 思考なし",
+      "standard": {
+        "n": 12,
+        "points": 106.5,
+        "max": 120,
+        "scaled100": 88.8
+      },
+      "stress": {
+        "n": 2,
+        "points": 13.5,
+        "max": 20,
+        "scaled100": 67.5
+      },
+      "all": {
+        "n": 14,
+        "points": 120,
+        "max": 140,
+        "scaled100": 85.7
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 55,
+          "max": 60,
+          "scaled100": 91.7
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 51.5,
+          "max": 60,
+          "scaled100": 85.8
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 36.5,
+          "max": 40,
+          "scaled100": 91.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39,
+          "max": 40,
+          "scaled100": 97.5
+        },
+        "long": {
+          "n": 4,
+          "points": 31,
+          "max": 40,
+          "scaled100": 77.5
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 106.5,
+        "max": 120,
+        "scaled100": 88.8
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-e2b-think-on",
+      "label": "Gemma E2B 思考あり",
+      "standard": {
+        "n": 12,
+        "points": 113,
+        "max": 120,
+        "scaled100": 94.2
+      },
+      "stress": {
+        "n": 2,
+        "points": 13.7,
+        "max": 20,
+        "scaled100": 68.5
+      },
+      "all": {
+        "n": 14,
+        "points": 126.7,
+        "max": 140,
+        "scaled100": 90.5
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 57.5,
+          "max": 60,
+          "scaled100": 95.8
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 55.5,
+          "max": 60,
+          "scaled100": 92.5
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 39,
+          "max": 40,
+          "scaled100": 97.5
+        },
+        "medium": {
+          "n": 4,
+          "points": 40,
+          "max": 40,
+          "scaled100": 100
+        },
+        "long": {
+          "n": 4,
+          "points": 34,
+          "max": 40,
+          "scaled100": 85
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 113,
+        "max": 120,
+        "scaled100": 94.2
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-e4b-think-off",
+      "label": "Gemma E4B 思考なし",
+      "standard": {
+        "n": 12,
+        "points": 113,
+        "max": 120,
+        "scaled100": 94.2
+      },
+      "stress": {
+        "n": 2,
+        "points": 15.5,
+        "max": 20,
+        "scaled100": 77.5
+      },
+      "all": {
+        "n": 14,
+        "points": 128.5,
+        "max": 140,
+        "scaled100": 91.8
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 56.5,
+          "max": 60,
+          "scaled100": 94.2
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 56.5,
+          "max": 60,
+          "scaled100": 94.2
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 38.5,
+          "max": 40,
+          "scaled100": 96.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39.5,
+          "max": 40,
+          "scaled100": 98.8
+        },
+        "long": {
+          "n": 4,
+          "points": 35,
+          "max": 40,
+          "scaled100": 87.5
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 113,
+        "max": 120,
+        "scaled100": 94.2
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-e4b-think-on",
+      "label": "Gemma E4B 思考あり",
+      "standard": {
+        "n": 12,
+        "points": 112.5,
+        "max": 120,
+        "scaled100": 93.8
+      },
+      "stress": {
+        "n": 2,
+        "points": 16.5,
+        "max": 20,
+        "scaled100": 82.5
+      },
+      "all": {
+        "n": 14,
+        "points": 129,
+        "max": 140,
+        "scaled100": 92.1
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 54.5,
+          "max": 60,
+          "scaled100": 90.8
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 58,
+          "max": 60,
+          "scaled100": 96.7
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 39,
+          "max": 40,
+          "scaled100": 97.5
+        },
+        "medium": {
+          "n": 4,
+          "points": 37,
+          "max": 40,
+          "scaled100": 92.5
+        },
+        "long": {
+          "n": 4,
+          "points": 36.5,
+          "max": 40,
+          "scaled100": 91.3
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 112.5,
+        "max": 120,
+        "scaled100": 93.8
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-12b-think-off",
+      "label": "Gemma 12B 思考なし",
+      "standard": {
+        "n": 12,
+        "points": 114,
+        "max": 120,
+        "scaled100": 95
+      },
+      "stress": {
+        "n": 2,
+        "points": 17.5,
+        "max": 20,
+        "scaled100": 87.5
+      },
+      "all": {
+        "n": 14,
+        "points": 131.5,
+        "max": 140,
+        "scaled100": 93.9
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 58,
+          "max": 60,
+          "scaled100": 96.7
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 56,
+          "max": 60,
+          "scaled100": 93.3
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 36.5,
+          "max": 40,
+          "scaled100": 91.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39.5,
+          "max": 40,
+          "scaled100": 98.8
+        },
+        "long": {
+          "n": 4,
+          "points": 38,
+          "max": 40,
+          "scaled100": 95
+        }
+      },
+      "answeredOnly": {
+        "n": 12,
+        "points": 114,
+        "max": 120,
+        "scaled100": 95
+      },
+      "noFinalTranslation": 0
+    },
+    {
+      "condition": "gemma-12b-think-on",
+      "label": "Gemma 12B 思考あり",
+      "standard": {
+        "n": 12,
+        "points": 97.5,
+        "max": 120,
+        "scaled100": 81.3
+      },
+      "stress": {
+        "n": 2,
+        "points": 1.3,
+        "max": 20,
+        "scaled100": 6.5
+      },
+      "all": {
+        "n": 14,
+        "points": 98.8,
+        "max": 140,
+        "scaled100": 70.6
+      },
+      "byDirection": {
+        "en-ja": {
+          "n": 6,
+          "points": 48,
+          "max": 60,
+          "scaled100": 80
+        },
+        "ja-en": {
+          "n": 6,
+          "points": 49.5,
+          "max": 60,
+          "scaled100": 82.5
+        }
+      },
+      "byLength": {
+        "short": {
+          "n": 4,
+          "points": 38.5,
+          "max": 40,
+          "scaled100": 96.3
+        },
+        "medium": {
+          "n": 4,
+          "points": 39.5,
+          "max": 40,
+          "scaled100": 98.8
+        },
+        "long": {
+          "n": 4,
+          "points": 19.5,
+          "max": 40,
+          "scaled100": 48.8
+        }
+      },
+      "answeredOnly": {
+        "n": 10,
+        "points": 97.5,
+        "max": 100,
+        "scaled100": 97.5
+      },
+      "noFinalTranslation": 2
+    }
+  ]
+}
