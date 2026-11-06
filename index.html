@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">7</span>
+                <span class="tab-badge">8</span>
             </button>
         </div>
 
@@ -103,6 +103,11 @@
                             <a href="posts/slm-trend-why-009b-ime.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【考察】なぜ私は0.09Bにこだわったのか？――あえて18MBで作る日本語入力モデル</span>
                                 <span class="text-en">【Architecture】Why 0.09B? Designing an 18MB Edge SLM for Japanese IME</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/dora-vs-lora-slm-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？</span>
+                                <span class="text-en">【Architecture】Why 0.09B Edge SLMs Needed DoRA Instead of LoRA</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -353,6 +358,29 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: DoRA vs LoRA on 0.09B SLM -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="DoRA vs LoRA on 0.09B SLM Article" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">PEFT / Edge AI</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？ 〜18MBでタイポ補正と日本語変換を両立させた重み分解PEFTの実践〜</h3>
+                        <p class="text-jp">7B以上のLLMでは定番のLoRAが、0.09B（18.7MB）の極小言語モデルではなぜ破綻したのか。重みの大きさと方向を分解するDoRA（Weight-Decomposed LoRA）によるブレークスルーと実測データを考察します。</p>
+                        <p class="text-en">Why did standard LoRA fail on a 0.09B (18.7MB) edge SLM, and how did DoRA (Weight-Decomposed LoRA) achieve both 92.7% Japanese conversion and 78% typo correction? A deep dive into weight-space PEFT dynamics.</p>
+                        <a href="posts/dora-vs-lora-slm-zerocon.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: What if 2015 Local LLM LFM3-1.7B -->
                 <article class="card">
                     <div class="card-image-wrapper">
