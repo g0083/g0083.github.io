@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？ 〜18MBでタイポ補正と日本語変換を両立させた重み分解PEFTの実践〜 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？">
+    <meta property="og:description" content="7B以上のLLMでは定番のLoRAが、0.09B（18.7MB）の極小言語モデルではなぜ破綻したのか。重みの大きさと方向を分解するDoRA（Weight-Decomposed LoRA）によるブレークスルーと実測データを考察します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/dora-vs-lora-slm-zerocon.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-warning {
+            background: rgba(239, 68, 68, 0.08);
+            border-left: 4px solid #ef4444;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">PEFT / Edge AI</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？ 〜18MBでタイポ補正と日本語変換を両立させた重み分解PEFTの実践〜</span>
+                    <span class="text-en">Why 0.09B Edge SLMs Needed DoRA Instead of LoRA: Weight-Decomposed PEFT in 18MB</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-06">2026.11.06</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: ZeroConvert-IME</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <p>
+                    7Bや14B、さらには70Bクラスの大規模言語モデル（LLM）において、LoRA（Low-Rank Adaptation）は追加学習のデファクトスタンダードとして定着した。少ないVRAMで効率よく指示追従やタスク特化を行える恩恵は計り知れない。
+                </p>
+                <p>
+                    ところが、筆者が開発する日本語入力エンジン「<strong><a href="https://github.com/g0083/ZeroConvert-IME" target="_blank">ZeroConvert-IME</a></strong>」のように、パラメータ数がわずか0.09B（90M、モデルサイズ約18.7 MiB）という極小エッジモデル（SLM）を相手にすると、この常識は完全に崩壊する。LoRAを適用した瞬間、モデルは日本語の構文破綻を起こすか、学習させたいタスクを無視する極端なアンダーフィッティングに直面した。
+                </p>
+                <p>
+                    この壁を突破し、18MBの容量据え置きで通常変換精度92.7%とタイポ補正率78%を同時に達成させた鍵が、重み行列の大きさと方向を分解して最適化する<strong>DoRA（Weight-Decomposed Low-Rank Adaptation）</strong>だった。
+                </p>
+
+                <h2>1. 極小モデル特有の「パラメータ冗長性の消失」</h2>
+                <p>
+                    LoRAがなぜ数十億パラメータのモデルでうまく機能するのか。その前提には、重み空間に広大な冗長性（過剰パラメータ化）が存在するという事実がある。
+                </p>
+                <p>
+                    7B以上のモデルでは、タスク特化のための固有次元（Intrinsic Dimension）がごく小さくても、元の表現空間を傷つけずに低ランクの差分行列を行列積として滑り込ませることができる。基底が無数にあるため、多少の重みベクトルの歪みは他のアテンションヘッドやMLPブロックが容易に吸収してくれる。
+                </p>
+                <p>
+                    対照的に、0.09Bの極小モデルには無駄なパラメータが1つも残っていない。全ての層とヘッドが、形態素の境界判定、読みの音韻変換、助詞の連接確率をギリギリの容量で分担している。
+                </p>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">0.09BモデルでLoRAを回した際に直面した二者択一</div>
+                    <p>
+                        <strong>ランク r を小さく（r=4〜8）設定した場合：</strong> 基本的な日本語文脈は保たれるものの、キーボードの物理配列（QWERTY）に基づくタイポ補正ルールが全く学習されない。事前学習の強いバイアスに押し戻される。
+                    </p>
+                    <p>
+                        <strong>ランク r を大きく（r=16〜32）あるいは学習率を上げた場合：</strong> タイポ補正を覚えた途端に助詞（「が」「を」「に」）の脱落や未知の漢字への暴走変換が多発し、パープレキシティ（困惑度）が急激に悪化する。
+                    </p>
+                </div>
+
+                <h2>2. 数理から見るLoRAのボトルネック：結合された大きさと方向</h2>
+                <p>
+                    従来のLoRAでは、事前学習済みの重み $W_0 \in \mathbb{R}^{d \times k}$ に対し、低ランク行列 $B \in \mathbb{R}^{d \times r}$ と $A \in \mathbb{R}^{r \times k}$ を用いて更新を行う。
+                </p>
+                <pre><code>W = W_0 + ΔW = W_0 + (α / r) * B * A</code></pre>
+                <p>
+                    この定式化における根本的な問題は、差分 $\Delta W$ が重みの<strong>「大きさ（Magnitude / ノルム）」</strong>と<strong>「方向（Direction / 特徴ベクトルの回転）」</strong>の両方を同時に変化させてしまう点にある。
+                </p>
+                <p>
+                    重みの大きさ（ノルム）は、その層が出力する活性化値のスケールや、後続のレイヤー正規化（LayerNorm / RMSNorm）に渡る情報量を支配している。一方、方向は「どの特徴を重視するか」というパターン表現を担っている。
+                </p>
+                <p>
+                    LoRAの勾配更新では、タイポ補正のような新しいパターン（方向）を学習しようとすると、必然的に全体の重みノルムまで引きずられて変動してしまう。冗長性のない極小モデルでは、このノルムの微小な乱れが層を伝播するうちに累積し、基本言語能力の崩壊を引き起こす。
+                </p>
+
+                <h2>3. DoRAによる重み空間の幾何学的分解</h2>
+                <p>
+                    この問題を解決するために導入されたのがDoRAである。DoRAでは、重み行列 $W$ の各列（または行）を明示的にスカラーの大きさ $m$ と、単位長に正規化された方向行列 $V$ に分解する。
+                </p>
+                <pre><code>W = m * (V / ||V||_F)
+ここで V = W_0 + (α / r) * B * A</code></pre>
+                <p>
+                    学習時には、大きさベクトル $m$（パラメータ数 $1 \times d$）を個別に訓練可能なスカラーとして保持し、低ランク積 $BA$ は正規化された空間の中で「純粋な方向の回転」のみを担当する。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>手法</th>
+                            <th>大きさ（Magnitude）の制御</th>
+                            <th>方向（Direction）の表現力</th>
+                            <th>0.09Bでの安定性</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Full Fine-Tuning</strong></td>
+                            <td>自由に変形（勾配で直に更新）</td>
+                            <td>最高（全自由度）</td>
+                            <td>過学習と忘却のリスク大</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LoRA</strong></td>
+                            <td>方向更新と不可分に連動</td>
+                            <td>制約大（ノルム変動が足を引っ張る）</td>
+                            <td>低（表現力不足か崩壊）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DoRA</strong></td>
+                            <td>スカラー $m$ で明示的に独立制御</td>
+                            <td>高（正規化空間内で方向のみ調整）</td>
+                            <td>極めて高い（フルチューンに近い挙動）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    方向行列 $V$ が常にフロベニウスノルムで正規化されているため、$BA$ の更新がどれだけ大きく動いても、出力のスケールが暴走することはない。大きさ $m$ のみが層ごとの必要性に応じて微調整される。
+                </p>
+
+                <h2>4. ZeroConvert-IMEにおける実測比較データ</h2>
+                <p>
+                    筆者の開発環境（RTX 4070 12GB）において、ZeroCon Model Nano v4（90M）をベースに同一データセット（常用変換コーパス＋QWERTY近傍打鍵ノイズ付きタイポデータ50万件）でLoRAとDoRAの収束挙動を比較検証した。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>学習構成</th>
+                            <th>通常文変換正解率</th>
+                            <th>タイポ自動補正率</th>
+                            <th>展開後モデルサイズ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ベースモデル（無学習）</td>
+                            <td>92.8%</td>
+                            <td>12.4%（偶然一致のみ）</td>
+                            <td>18.7 MiB</td>
+                        </tr>
+                        <tr>
+                            <td>LoRA (r=8, α=16)</td>
+                            <td>88.1% (▼4.7%)</td>
+                            <td>61.2%</td>
+                            <td>18.7 MiB (重み統合後)</td>
+                        </tr>
+                        <tr>
+                            <td>LoRA (r=16, α=32)</td>
+                            <td>84.3% (▼8.5%)</td>
+                            <td>69.8%</td>
+                            <td>18.7 MiB (重み統合後)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DoRA (r=8, α=16)</strong></td>
+                            <td><strong>92.7% (維持)</strong></td>
+                            <td><strong>78.0% (実質86.7%)</strong></td>
+                            <td><strong>18.7 MiB (重み統合後)</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    結果は歴然だった。LoRAではタイポ補正率を引き上げようとすると通常文の変換精度が90%を割り込み、実用的なIMEとして使い物にならなくなった。
+                </p>
+                <p>
+                    DoRAでは、通常文の精度低下をわずか0.1%以内に抑え込みながら、タイポ補正率を78.0%（文脈上妥当な第二候補を含めた実質補正率は86.7%）まで引き上げることに成功した。推論時には $W = m \cdot (W_0 + \Delta W) / \|W_0 + \Delta W\|$ を事前計算して単一の重みテンソルへ統合（Merge）できるため、実行時のオーバーヘッドやメモリ増加は文字通りゼロである。
+                </p>
+
+                <h2>5. Target-Corrected蒸留とのシナジー</h2>
+                <p>
+                    DoRAの真価は、教師モデルからの知識蒸留（Distillation）と組み合わせた際にさらに発揮される。
+                </p>
+                <p>
+                    極小モデルでタイポ補正を学習させる場合、誤打鍵された入力シーケンス（例：「ｋおんいちわ」）から正解トークン（「こんにちは」）を予測させるターゲット補正損失（Target-Corrected Loss）を適用する。このとき、教師モデル（大型LLM）が出力する確率分布のソフトターゲットを生徒モデル（0.09B）へ注入するが、教師側の語彙空間の広大さが生徒にとってノイズになりやすい。
+                </p>
+                <p>
+                    DoRAの正規化された方向空間は、この蒸留ノイズに対する頑健な緩衝材として機能する。重みの大きさを乱さずに、必要なアテンションマップの偏り（キーボードの近傍キーへの注目）だけを正確に焼き付けることができた。
+                </p>
+
+                <h2>まとめ：エッジSLM開発におけるPEFTの鉄則</h2>
+                <p>
+                    今回の実践を通じて得られた結論は明快だ。
+                </p>
+                <ul>
+                    <li><strong>パラメータに余裕がある7B以上のモデル：</strong> 従来のLoRAで十分に機能する。</li>
+                    <li><strong>1B未満、特に100M以下の極小エッジモデル：</strong> LoRAではなく最初からDoRAを選択すべきである。</li>
+                </ul>
+                <p>
+                    リソース制約の厳しいオンデバイス環境では、モデルサイズを増やす解決策は許されない。限られた18MBという極小空間の中でいかに表現力を引き出すかという探求において、幾何学的に大きさと方向を分離するアプローチは、今後エッジAIの必須技術になっていくだろう。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    極小モデルでのDoRA実践レポートが参考になりましたら、ぜひXなどでご意見・ご感想をお寄せください。
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91%E3%81%AA%E3%81%9C0.09B%E3%81%AE%E6%A5%B5%E5%B0%8F%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AB%E3%81%AF%E3%80%8CDoRA%E3%80%8D%E3%81%8C%E5%BF%85%E8%A6%81%E3%81%A0%E3%81%A3%E3%81%9F%E3%81%AE%E3%81%8B%EF%BC%9F%20%EF%BD%9E18MB%E3%81%A7%E3%82%BF%E3%82%A4%E3%83%8ポ%E8%A3%9C%E6%AD%A3%E3%81%A8%E6%97%A5%E6%9C%AC%E8%AA%9E%E5%A4%89%E6%8F%9B%E3%82%92%E4%B8%A1%E7%AB%8B%E3%81%95%E3%81%9B%E3%81%9F%E9%87%8D%E3%81%BF%E5%88%86%E8%A7%A3PEFT%E3%81%AE%E5%AE%9F%E8%B7%B5%EF%BD%9E&url=https://g0083.github.io/posts/dora-vs-lora-slm-zerocon.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
