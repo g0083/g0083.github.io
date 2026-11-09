@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】なぜ「GPUなし・完全オフライン」の現場に0.09B極小モデル×WebAssemblyが刺さるのか？ 〜VRAM 0MB・ブラウザ完結型SLM推論が拓くプライバシー最前線〜 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】なぜ「GPUなし・完全オフライン」の現場に0.09B極小モデル×WebAssemblyが刺さるのか？">
+    <meta property="og:description" content="GTX 1080等の旧世代GPUや医療現場でのローカルLLM運用が注目される今、真の課題は「GPUすら積まれていない実務現場への導入」にある。VRAM 0MB・メモリ35MBで動く0.09B極小SLMとWebAssemblyによる完全オフライン推論の可能性を考察します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/wasm-edge-slm-offline-privacy.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+
+        .spec-table th,
+        .spec-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .spec-table th {
+            background: rgba(80, 200, 120, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .spec-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.2rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .share-box {
+            margin-top: 4rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo" style="text-decoration: none; color: inherit;">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="https://github.com/g0083" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">GitHub</a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">X(twitter)</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="article-container">
+            <a href="../index.html" class="nav-back">← プロジェクト一覧へ戻る</a>
+
+            <div class="article-header">
+                <div class="article-category">Edge AI / WebAssembly</div>
+                <h1 class="article-title">【考察】なぜ「GPUなし・完全オフライン」の現場に0.09B極小モデル×WebAssemblyが刺さるのか？ 〜VRAM 0MB・ブラウザ完結型SLM推論が拓くプライバシー最前線〜</h1>
+                <div class="article-meta">
+                    <span>公開日: 2026年11月9日</span>
+                    <span>著者: g0083</span>
+                    <span>関連: ZeroConvert-IME / Markdown TeX Viewer</span>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <h2>1. 「GTX 1080でローカルLLM」の議論から見えてくる現実</h2>
+                <p>
+                    近日のテックコミュニティでは、旧世代のグラフィックボード（GTX 1080 8GB等）を引っ張り出してローカルLLMを動かす試みや、地域クリニックの院長が患者のプライバシー保護のために完全自作のオンプレミスLLMシステムを構築した実例が大きな注目を集めている。
+                </p>
+                <p>
+                    外部クラウドAPIへのデータ送信が法制度や機密保持規程で禁じられている医療・法務・製造設計などの現場では、「手元で完結するローカル推論」への渇望が極めて強い。しかし、こうした話題を目にするたびに痛感させられる現場の決定的なギャップがある。
+                </p>
+                <div class="callout">
+                    <div class="callout-title">現場のシビアな現実</div>
+                    <p style="margin: 0;">
+                        クリニックの受付端末、行政機関の業務用PC、あるいは病院内の回診用タブレットには、RTX 4090はおろかGTX 1080すら搭載されていない。多くの環境はIntel内蔵GPUかCeleron/Core i3、あるいはメモリ8GB程度のシンクライアントである。
+                    </p>
+                </div>
+                <p>
+                    「ローカルAIを動かすにはVRAMが最低8GB〜16GB必要」「OllamaやDockerをインストールしてローカルデーモンを常駐させる」という前提そのものが、最もプライバシーを必要とする現場の8割以上において導入の絶対的障壁になっているのだ。
+                </p>
+
+                <h2>2. 3つの推論アプローチの比較：現場に届くアーキテクチャはどれか？</h2>
+                <p>
+                    実務現場におけるAI支援の導入方式を「クラウドLLM」「ローカル7Bクラス」「WebAssembly × 0.09B SLM」の3層で比較してみると、その差は明白になる。
+                </p>
+
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>クラウドLLM (API)</th>
+                            <th>ローカル7B (Ollama等)</th>
+                            <th>極小SLM (0.09B) × Wasm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>必要GPU / VRAM</strong></td>
+                            <td>不要 (0MB)</td>
+                            <td>必須 (6GB〜12GB)</td>
+                            <td><strong>完全不要 (VRAM 0MB)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>実行環境メモリ</strong></td>
+                            <td>数十MB (ブラウザ)</td>
+                            <td>8GB〜16GB (VRAM＋RAM)</td>
+                            <td><strong>約35MB (Wasmヒープ)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>外部ネットワーク通信</strong></td>
+                            <td>常時必須 (通信遅延あり)</td>
+                            <td>不要 (完全ローカル)</td>
+                            <td><strong>完全ゼロ (Air-gapped動作)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>打鍵・推論レイテンシ</strong></td>
+                            <td>200〜800ms</td>
+                            <td>50〜150ms</td>
+                            <td><strong>約8.4ms (リアルタイム追従)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>導入ハードル</strong></td>
+                            <td>API従量課金・機密漏洩リスク</td>
+                            <td>GPU購入・環境構築・常駐負荷</td>
+                            <td><strong>ブラウザURLを開くだけ</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    一般会話や長文要約をこなす7Bクラスの汎用モデルを手元で動かそうとすれば、ハードウェア増設とドライバ管理のコストが跳ね上がる。しかし、「カルテや所見の入力時に専門用語やタイポをリアルタイム補正する」「契約書の定型句変換を行う」といった現場のコアタスクに絞るならば、そもそも巨大な汎用知能は必要ない。
+                </p>
+
+                <h2>3. 単一責任の極小知能：18MBモデルが果たす役割</h2>
+                <p>
+                    当プロジェクトで開発している <strong>ZeroConvert-IME</strong> は、パラメータ数わずか0.09B（量子化ウェイト約18.7 MiB）の日本語変換・タイポ補正特化型エッジモデルである。
+                </p>
+                <p>
+                    世の中のSLMトレンドが「0.5B〜14B」で競い合う中、あえて0.09B（18.7MB）という桁違いのサイズに押し込めた理由はまさにここにある。
+                </p>
+                <ul>
+                    <li><strong>CPU単体で8ms以下の高速推論：</strong> GPUアクセラレーションが一切効かない格安オフィスPCでも、キーボード打鍵の1文字ごとに推論が完了する。</li>
+                    <li><strong>常駐メモリ約35MB：</strong> メモリ8GBの端末で他の重い基幹業務ソフトが起動していても、まったく負荷にならない。</li>
+                    <li><strong>幾何学的PEFT（DoRA）による高い精度：</strong> 18MBのサイズ制限下でも、通常文の変換精度92.7%を維持しつつ、打鍵ミス（タイポ）補正率78.0%を達成。</li>
+                </ul>
+                <p>
+                    「何でもできるがGPUを食い尽くす大型モデル」ではなく、「特定の入力支援に特化してCPUの片隅で静かに確実に仕事をこなす極小知能」こそが、実務現場にとって最も安全で安価なパートナーとなる。
+                </p>
+
+                <h2>4. WebAssemblyが拓く「インストーラー不要」のセキュリティ</h2>
+                <p>
+                    0.09B極小モデルの強みを最大限に活かす鍵が、<strong>WebAssembly（Wasm）</strong> である。
+                </p>
+                <p>
+                    当サイトで公開しているもう一つのプロジェクト <strong>Markdown TeX Viewer</strong> や <strong>DarkModePDF</strong> では、Rust製のTypstコンパイラやPDF画像変換ロジックをWasm化し、サーバーを介さずブラウザ内部だけでドキュメント処理を完結させている。
+                </p>
+                <p>
+                    この「クライアントサイド完結」のパラダイムをエッジAIにそのまま持ち込むことができる。
+                </p>
+                <div class="callout">
+                    <div class="callout-title">Wasmサンドボックスの防御力</div>
+                    <p style="margin: 0;">
+                        管理権限（Admin）のない業務用端末では、新しいexeのインストールやPython環境の構築は情シス部門に拒否される。しかしWebAssemblyであれば、ブラウザの標準サンドボックス内で安全に隔離実行され、<code>fetch()</code> や外部ソケット通信を一切行わない「完全Air-gapped推論」がURLひとつで即座に実現する。
+                    </p>
+                </div>
+                <p>
+                    GitHub Trendingで <code>rig-core</code> や <code>wasm-agent</code>、<code>llm-wasm</code> のように「I/Oを剥ぎ取った純粋なRustロジックをWasmにコンパイルする」フレームワークが急浮上しているのも、同じ必然性に基づいている。AIの知能をサーバー側のクラウドに集約するのではなく、最も安全なクライアント末端へと「逃がす」動きが始まっているのだ。
+                </p>
+
+                <h2>まとめ：エッジAIの主戦場は「制約の中」にある</h2>
+                <p>
+                    「GTX 1080で動いた」「RTX 4090を何枚並べた」というハードウェアの熱狂は面白い。しかし、社会の基幹を支える病院、役所、学校、町工場といった現場のPCにはGPUはない。
+                </p>
+                <p>
+                    VRAM 0MB、メモリ数十MB、外部通信ゼロ。ブラウザを開いた瞬間にWasm上で立ち上がり、タイピングを快適にアシストする18MBの極小モデル。
+                </p>
+                <p>
+                    エッジSLMの真の価値は、巨大な知能の小型化ではなく、「これまでAIが足を踏み入れることのできなかった制約の現場に、安全に知能を届けること」にある。今後もこの思想を軸に、極小モデルとブラウザ完結型ツールの開発を進めていきたい。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    GPUレス環境やエッジSLM×Wasmのアーキテクチャ考察が参考になりましたら、ぜひXなどでご意見・ご感想をお寄せください。
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91%E3%81%AA%E3%81%9C%E3%80%8CGPU%E3%81%AA%E3%81%97%E3%83%BB%E5%AE%8C%E5%85%A8%E3%82%AA%E3%83%95%E3%83%A9%E3%82%A4%E3%83%B3%E3%80%8D%E3%81%AE%E7%8F%BE%E5%A0%B4%E3%81%AB0.09B%E6%A5%B5%E5%B0%8F%E3%83%A2%E3%83%87%E3%83%AB%C3%97WebAssembly%E3%81%8C%E5%88%BA%E3%81%95%E3%82%8B%E3%81%AE%E3%81%8B%EF%BC%9F%20%EF%BD%9EVRAM%200MB%E3%83%BB%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E5%AE%8C%E7%B5%90%E5%9E%8BSLM%E6%8E%A8%E8%AB%96%E3%81%8C%E6%8B%93%E3%81%8F%E3%83%97%E3%83%A9%E3%82%A4%E3%83%90%E3%82%B7%E3%83%BC%E6%9C%80%E5%89%8D%E7%B7%9A%EF%BD%9E&url=https://g0083.github.io/posts/wasm-edge-slm-offline-privacy.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
