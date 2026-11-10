@@ -90,8 +90,8 @@
                                 <span class="text-en">📝 Related Article</span>
                             </div>
                             <a href="posts/symple-audio-splitter-performance.html" class="related-link">
-                                <span class="text-jp">【開発記】書き出しを72倍速くした音声分割PWA――再エンコードしない分割と、表示範囲だけの波形生成</span>
-                                <span class="text-en">【DevLog】Making a Browser Audio Splitter 72× Faster</span>
+                                <span class="text-jp">【開発記】書き出しの16.9秒が消えた話――音声分割PWAから再エンコードを外すまで</span>
+                                <span class="text-en">【DevLog】The 16.9 Seconds That Disappeared: Removing Re-Encoding from an Audio Splitter</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -404,9 +404,9 @@
                                 <span class="text-en">Project: Symple Audio Splitter ↗</span>
                             </button>
                         </div>
-                        <h3>【開発記】書き出しを72倍速くした音声分割PWA――再エンコードしない分割と、表示範囲だけの波形生成</h3>
-                        <p class="text-jp">30分のm4aを10分割する書き出しが16.9秒から0.23秒に。AACサンプルとMP3フレームをそのまま切り出すコピー経路、コンテナ解析だけで即時表示する読み込み、表示範囲ぶんだけWorkerで作る波形まで、実測値つきで解説します。計測して撤回した改善も収録。</p>
-                        <p class="text-en">Exporting a 30-minute m4a into 10 parts went from 16.9 s to 0.23 s. A technical deep dive into frame-level copy exports, instant UI from container metadata, and view-scoped waveform generation—plus two optimizations that were measured and reverted.</p>
+                        <h3>【開発記】書き出しの16.9秒が消えた話――音声分割PWAから再エンコードを外すまで</h3>
+                        <p class="text-jp">30分のm4aを10分割するのに21秒待っていました。原因は書き出しのたびに走っていたAACエンコードです。コンテナ解析だけで画面を出す読み込み、表示範囲だけの波形生成、AACサンプルとMP3フレームをそのまま切り出すコピー経路を、実測値つきで書きます。計測して撤回した改善も収録。</p>
+                        <p class="text-en">Splitting a 30-minute m4a into 10 parts took 21 seconds; every export re-ran AAC encoding. Removing it brought export to 0.23 s. Covers instant UI from container metadata, view-scoped waveform generation, frame-level copy exports, and two optimizations that were measured and reverted.</p>
                         <a href="posts/symple-audio-splitter-performance.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
