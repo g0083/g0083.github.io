@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【開発記】書き出しを 72 倍速くした音声分割 PWA ― 再エンコードしない分割と表示範囲だけの波形生成 | O-ya tech</title>
-    <meta name="description" content="mp3 / m4a / wav をブラウザだけで分割する PWA「Symple Audio Splitter」の高速化記録。コンテナ解析だけで即時表示、表示範囲だけの波形生成、再エンコードを捨てた 3 本のコピー経路、そして撤回した高速化までを実測値つきでまとめます。">
+    <title>【開発記】書き出しの 16.9 秒が消えた話 ― 音声分割 PWA から再エンコードを外すまで | O-ya tech</title>
+    <meta name="description" content="30 分の m4a を 10 分割するのに 21 秒待っていたのを 0.23 秒にしました。原因は書き出しのたびに走っていた AAC エンコードです。コンテナ解析だけで画面を出す読み込み、表示範囲だけの波形生成、AAC サンプルと MP3 フレームをそのまま切り出すコピー経路を、実測値つきで書きます。">
     <link rel="canonical" href="https://g0083.github.io/posts/symple-audio-splitter-performance.html">
     <link rel="stylesheet" href="../style.css">
     <link rel="icon" href="../icon.png">
@@ -22,9 +22,8 @@
         rel="stylesheet">
 
     <!-- Open Graph / Meta -->
-    <meta property="og:title" content="【開発記】書き出しを 72 倍速くした音声分割 PWA">
-    <meta property="og:description" content="30 分の m4a を 10 分割する書き出しが 16.8 秒から 0.23 秒に。再エンコードを捨てた AAC サンプルコピー、MP3 フレーム切り出し、表示範囲だけの波形生成まで、ブラウザ内音声処理の高速化を実測値つきで解説します。">
-    <meta property="og:type" content="article">
+    <meta property="og:title" content="【開発記】書き出しの 16.9 秒が消えた話">
+    <meta property="og:description" content="30 分の音源を 10 分割するのに 21 秒待っていました。原因は書き出しのたびに走っていた AAC エンコードです。再エンコードを外したら 0.23 秒になりました。">
     <meta property="og:url" content="https://g0083.github.io/posts/symple-audio-splitter-performance.html">
     <meta property="og:image" content="https://g0083.github.io/symple-audio-splitter.png">
     <meta name="twitter:card" content="summary_large_image">
@@ -251,11 +250,6 @@
             box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
         }
 
-        .status-line {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
         @media (max-width: 640px) {
             .article-title {
                 font-size: 1.55rem;
@@ -302,8 +296,8 @@
             <div class="article-header">
                 <span class="article-category">Web Audio / Performance</span>
                 <h1 class="article-title">
-                    <span class="text-jp">【開発記】書き出しを 72 倍速くした音声分割 PWA ― 再エンコードしない分割と、表示範囲だけの波形生成</span>
-                    <span class="text-en">【DevLog】Making a Browser Audio Splitter 72× Faster: No-Reencode Splitting and View-Scoped Waveforms</span>
+                    <span class="text-jp">【開発記】書き出しの 16.9 秒が消えた話 ― 音声分割 PWA から再エンコードを外すまで</span>
+                    <span class="text-en">【DevLog】The 16.9 Seconds That Disappeared: Removing Re-Encoding from an Audio Splitter</span>
                 </h1>
                 <div class="article-meta">
                     <time datetime="2026-11-10">2026.11.10</time>
@@ -314,15 +308,17 @@
 
             <div class="article-content">
                 <section class="text-jp">
-                    <p>mp3 / m4a をブラウザだけで分割する PWA「<strong>Symple Audio Splitter</strong>」を作りました。ファイルはサーバーに送らず、分割も書き出しも端末内で完結します。</p>
-                    <p>最初の実装は素直でした。読み込み時に全部 PCM にデコードし、波形ピークを全編ぶん計算し、書き出すときは毎回 AAC / MP3 にエンコードし直す。機能は正しく動きますが、30 分の m4a を 10 分割すると<strong>全体で 21.5 秒</strong>かかり、そのうち 16.9 秒が書き出しでした。</p>
-                    <p>この記事は、そこから書き出しを <strong>16.9 秒 → 0.23 秒（約 72 倍）</strong>、体感を「待たされる」から「押した瞬間に終わる」へ変えるまでにやったことの記録です。速くするために<strong>機能を削るのではなく、やらなくていい処理をやめた</strong>のが主旨です。</p>
+                    <p>30 分の音源を 10 個に切るのに、21 秒待たされていました。</p>
+                    <p>うち 16.9 秒は書き出しです。中身は AAC へのエンコードし直しでした。切れ目を決めるだけの操作に、毎回エンコードが挟まっていました。</p>
+                    <p>その工程を丸ごと外したら、0.23 秒になりました。</p>
+                    <p>外せることに気づくまでが長かったです。</p>
 
                     <img class="hero-shot" src="../symple-audio-splitter.png" alt="Symple Audio Splitter の画面。波形と分割線、均等分割の設定、分割プレビューが並ぶ" loading="lazy">
-                    <p class="hero-caption">波形上のダブルクリックで分割線を追加、ドラッグで移動。プレビュー再生は元ファイルをそのまま <code>&lt;audio&gt;</code> に渡している。</p>
+                    <p class="hero-caption">波形上のダブルクリックで分割線を追加、ドラッグで移動できます。プレビュー再生は元ファイルをそのまま <code>&lt;audio&gt;</code> に渡しています。</p>
 
-                    <h2>1. まず測る — ステージごとの内訳を出す</h2>
-                    <p>高速化で最初にやるべきは、体感ではなく内訳の計測です。このプロジェクトでは <code>bench/</code> に Chrome を DevTools Protocol で操作する計測環境を置き、<strong>デコード / 波形ピーク / 書き出し / 合計</strong>を分けて記録しました。</p>
+                    <h2>測ったら、書き出しが 8 割だった</h2>
+                    <p>最初の実装は素直でした。読み込み時に全部 PCM にデコードし、波形ピークを全編ぶん計算し、書き出すたびに AAC か MP3 にエンコードし直していました。機能はすべて動いていました。ただ、遅かったです。</p>
+                    <p>自分は体感で判断すると外すので、まず計測環境を作りました。<code>bench/</code> に Chrome を DevTools Protocol で動かす仕組みを置いて、デコード、波形ピーク、書き出し、合計を分けて記録します。</p>
 
                     <pre><code>node bench/make-fixtures.mjs          # テスト音源を生成 (ffmpeg が必要)
 node bench/run.mjs --label before --format m4a --bitrate original --splits 9 --repeat 3</code></pre>
@@ -360,10 +356,11 @@ node bench/run.mjs --label before --format m4a --bitrate original --splits 9 --r
                         </tbody>
                     </table>
 
-                    <p>書き出しが全体の 78% を占めています。ここを削るのが最短です。同時に、デコードと波形ピークは「書き出しのために必要」と思い込んでいただけで、実は<strong>再エンコードしないなら不要</strong>だという構造的な問題も見えてきました。</p>
+                    <p>書き出しが 78% です。ここを削るのが最短でした。</p>
+                    <p>ただ表を見ていて、別のことも気になりました。デコードと波形ピークは「書き出しに必要だから」という理由で読み込み時に走らせていました。再エンコードしないなら、どちらも要りません。<strong>書き出しを速くする前に、書き出しを消せる</strong>という話です。</p>
 
-                    <h2>2. 読み込み: コンテナ解析だけで UI を出す</h2>
-                    <p>音声ファイルの長さ・サンプルレート・チャンネル数・ビットレートは、PCM にデコードしなくてもコンテナのメタデータから分かります。そこで <code>decodeAudioData</code> を待たず、数ミリ秒のヘッダ解析だけで画面を出すようにしました。</p>
+                    <h2>読み込みでは、まだデコードしない</h2>
+                    <p>長さもサンプルレートもチャンネル数も、PCM にしなくてもコンテナのメタデータから読めます。そこで <code>decodeAudioData</code> を待たず、ヘッダを数ミリ秒読んだだけで画面を出すようにしました。</p>
 
                     <table class="spec-table">
                         <thead>
@@ -392,16 +389,16 @@ node bench/run.mjs --label before --format m4a --bitrate original --splits 9 --r
                         </tbody>
                     </table>
 
-                    <p>再生は <code>AudioBuffer</code> ではなく <code>&lt;audio&gt;</code> + Blob URL にしました。ブラウザのメディアスタックがそのままデコードしてくれるので、アプリ側で PCM を持つ必要がありません。結果として、30 分 m4a は<strong>操作可能まで 0.08 秒</strong>（従来は 8〜10 秒ブロック）になりました。</p>
+                    <p>再生も <code>AudioBuffer</code> を使うのをやめ、<code>&lt;audio&gt;</code> に Blob URL を渡すだけにしました。ブラウザのメディアスタックが勝手にデコードしてくれるので、アプリ側で PCM を持つ必要がありません。30 分の m4a が<strong>0.08 秒で操作可能</strong>になります。以前はここで 8〜10 秒止まっていました。</p>
 
                     <div class="callout">
-                        <div class="callout-title">PCM デコードは「必要になった瞬間」だけ</div>
-                        <p style="margin: 0;">PCM を使うのは mp3 / m4a へ再エンコードする経路だけです。既定の「元のまま」では一度も呼ばれません。<code>AudioSource.loadPcm()</code> を遅延評価の Promise にしたので、同じファイルに対しては最初の 1 回だけデコードされます。</p>
+                        <div class="callout-title">PCM が要るのは、再エンコードするときだけ</div>
+                        <p style="margin: 0;">既定の「元のまま」では <code>loadPcm()</code> は一度も呼ばれません。遅延評価の Promise にしてあるので、同じファイルに対してデコードが走るのは最初の 1 回だけです。</p>
                     </div>
 
-                    <h2>3. 波形: 全編ではなく「見えている範囲」だけ作る</h2>
-                    <p>波形ピークは 1 ピクセルあたり 1 個あれば十分です。全体表示なら 1 ピークが数万サンプルを担当し、拡大すれば数百サンプルになります。つまり<strong>全編を同じ精度で計算するのは無駄</strong>です。</p>
-                    <p>そこで波形は表示範囲と解像度から必要なピーク間隔（256〜65536 サンプル、2 の冪）を決め、範囲の先頭フレームへシークしてデコードする方式に変えました。ズームやパンで足りない範囲だけを追加要求します。</p>
+                    <h2>波形も、見えている範囲しか作らない</h2>
+                    <p>波形ピークは 1 ピクセルに 1 個あれば足ります。全体表示なら 1 個が数万サンプルを持ち、拡大すれば数百サンプルです。全編を同じ精度で計算する理由がありません。</p>
+                    <p>表示範囲と解像度からピーク間隔を決めて（256〜65536 サンプル、2 の冪）、範囲の先頭フレームへシークしてデコードする形に変えました。ズームやパンで足りない範囲だけ追加で取りに行きます。</p>
 
                     <pre><code>// src/workers/peaks.worker.ts (抜粋)
 // 1 ピークが複数フレームにまたがる場合はフレームを間引く
@@ -410,56 +407,50 @@ const step = Math.max(1, Math.floor(bucket / Math.max(1, frameSamples)));
 // 間引き時は 1 フレームのピークを step フレーム分へ引き伸ばす
 const spanSamples = step > 1 ? step * frameSamples : 0;</code></pre>
 
-                    <p>デコードには WebCodecs の <code>AudioDecoder</code> を使い、100ms ごとに <code>range-partial</code> を返して波形を左から順に埋めます。30 分 m4a の全体波形は<strong>0.36 秒</strong>で描画され、拡大時は表示範囲の先頭からデコードするので一瞬で終わります。拡大時のピークは <code>decodeAudioData</code> の結果と一致すること（最大誤差 0.0007）も確認しました。</p>
+                    <p>デコードは WebCodecs の <code>AudioDecoder</code> で、100ms ごとに <code>range-partial</code> を返しながら波形を左から埋めていきます。30 分の m4a で全体波形まで 0.36 秒。拡大したときは表示範囲の先頭からデコードし直すので、待ちはほぼ感じません。</p>
+                    <p>拡大時のピークが <code>decodeAudioData</code> の結果と一致するかは確認しました。最大誤差 0.0007 です。</p>
 
-                    <h3>Worker には File を渡す</h3>
-                    <p>解析対象のバイト列はメインスレッドから送らず、<code>File</code> をそのまま Worker に渡して Worker 側で <code>arrayBuffer()</code> します。41MB のバイト列を構造化クローンで複製すると、コピーだけでメインスレッドが数百ミリ秒止まるためです。</p>
-                    <p>また Worker は<strong>波形用と RMS 用で 2 つに分けました</strong>。1 つに相乗りさせると、全編 RMS の計算中にズーム操作が待たされてしまいます。無音検出用の 10ms RMS はバックグラウンドで作り、分割や書き出しを始めたら <code>terminate()</code> で止めます。</p>
+                    <h3>41MB はコピーしない</h3>
+                    <p>解析対象のバイト列はメインスレッドから送りません。<code>File</code> をそのまま Worker に渡して、Worker 側で <code>arrayBuffer()</code> させます。41MB を構造化クローンで複製すると、それだけでメインスレッドが数百ミリ秒止まるからです。</p>
+                    <p>Worker も 2 つに分けました。波形用と RMS 用です。相乗りさせると、全編 RMS の計算中にズーム操作が待たされます。無音検出用の 10ms RMS は裏で作らせ、分割や書き出しを始めたら <code>terminate()</code> で切ります。</p>
 
-                    <h2>4. 書き出し: 再エンコードを捨てる</h2>
-                    <p>ここが最大の改善です。音声分割は「入力と同じ形式で、品質も元のまま」が既定なら、<strong>音声データを一切作り直さずに切れ目をコピーするだけ</strong>で成立します。</p>
+                    <h2>エンコードしなければ、書き出しは消える</h2>
+                    <p>同じ形式に戻すのに、なぜ毎回エンコードし直す必要があるのか？</p>
+                    <p>要りません。音声データを作り直さず、切れ目をコピーするだけで成立します。</p>
 
                     <table class="spec-table">
                         <thead>
                             <tr>
                                 <th>経路</th>
                                 <th>方式</th>
-                                <th class="num">10 分割の書き出し</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>m4a → m4a（元のまま）</td>
                                 <td>AAC サンプルをコピーして mp4-muxer で再構成</td>
-                                <td class="num">47 ms</td>
                             </tr>
                             <tr>
                                 <td>mp3 → mp3（元のまま）</td>
                                 <td>フレーム境界でバイト列を切り出す</td>
-                                <td class="num">28 ms</td>
                             </tr>
                             <tr>
                                 <td>wav → wav（元のまま）</td>
                                 <td>PCM をフレーム境界でコピー（ビット深度も維持）</td>
-                                <td class="num">67 ms</td>
                             </tr>
                             <tr>
                                 <td>m4a（ビットレート指定）</td>
                                 <td>WebCodecs AAC + mp4-muxer</td>
-                                <td class="num">1568 ms</td>
                             </tr>
                             <tr>
                                 <td>mp3（ビットレート指定）</td>
                                 <td>lamejs（Web Worker）</td>
-                                <td class="num">10653 ms</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <p class="status-line">3 分ステレオ 44.1kHz・10 分割・中央値。再エンコード経路はデコードを含まない書き出し時間。wav は 24bit PCM（47.6MB）で計測。</p>
-
-                    <h3>m4a: サンプルインデックスを作って切り出す</h3>
-                    <p>mp4 の <code>stbl</code> にはサンプルごとの位置と長さが入っています。<code>stco</code>（チャンクオフセット）、<code>stsc</code>（チャンク内のサンプル数）、<code>stsz</code>（サンプルサイズ）を展開すれば、<strong>各 AAC サンプルのバイトオフセット</strong>が求まります。あとは範囲に含まれるサンプルを <code>addAudioChunkRaw()</code> でそのまま muxer に渡すだけです。</p>
+                    <h3>m4a: サンプル表を読んで、切り出す</h3>
+                    <p>mp4 の <code>stbl</code> にはサンプルごとの位置と長さが入っています。<code>stco</code>（チャンクオフセット）、<code>stsc</code>（チャンク内のサンプル数）、<code>stsz</code>（サンプルサイズ）を展開すれば、各 AAC サンプルのバイトオフセットが出ます。あとは範囲に入るサンプルを <code>addAudioChunkRaw()</code> で muxer に渡すだけです。</p>
 
                     <pre><code>// src/audio/m4acopy.ts (抜粋)
 const { from, to } = sampleRange(index, startSec, endSec);
@@ -477,32 +468,36 @@ for (let i = from; i &lt; to; i++) {
   timestamp += duration;
 }</code></pre>
 
-                    <p>エンコードが無いので、10 分割でも <strong>47ms</strong>。30 分のファイルでも 232ms です。分割点はサンプル境界に丸め、隣接区間で同じ境界を共有するようにしたので、サンプルの重複も欠落もありません。</p>
+                    <p>エンコードが挟まらないので、10 分割でも 47ms です。30 分のファイルで 232ms。</p>
+                    <p>分割点はサンプル境界に丸めて、隣り合う区間で同じ境界を共有させています。サンプルが重複することも、欠けることもありません。</p>
 
-                    <h3>mp3: フレームを数えてバイト列を切る</h3>
-                    <p>mp3 はフレーム長がヘッダから決まります。全フレームのオフセットを一度インデックス化しておけば、指定時間に最も近いフレーム境界を求めて <code>subarray()</code> するだけです。<strong>7061ms → 28ms</strong> になりました。</p>
+                    <h3>mp3: フレームを数えて、バイト列を切る</h3>
+                    <p>mp3 はフレーム長がヘッダから決まります。全フレームのオフセットを一度インデックスにしておけば、指定時間にいちばん近いフレーム境界を探して <code>subarray()</code> するだけです。7061ms が 28ms になりました。</p>
 
                     <h3>wav: PCM をそのまま運ぶ</h3>
-                    <p>wav は <code>blockAlign</code> の倍数で切り、44 バイトのヘッダを付け直すだけです。元が 24bit なら 24bit のまま、32bit float なら float のまま出すので、<strong>ビット精度は元ファイルと完全に一致</strong>します。「分割したら微妙に音が変わった」が起きません。</p>
+                    <p>wav は <code>blockAlign</code> の倍数で切って、44 バイトのヘッダを付け直すだけです。元が 24bit なら 24bit のまま、32bit float なら float のまま出します。ビット精度は元ファイルと完全に一致します。</p>
+                    <p>「分割したら微妙に音が変わった」が起きないのは、地味ですが効いていると思います。</p>
 
-                    <h3>再エンコード時: エンコーダを使い回す</h3>
-                    <p>ビットレートを指定した場合だけエンコードします。ここでもセグメントごとに <code>AudioEncoder</code> を作り直すと初期化コストが積み上がるため、同じ設定で書き出す間は<strong>1 つのセッションを使い回す</strong>ようにしました。WebCodecs の AAC が使えない環境では ffmpeg.wasm にフォールバックします（初回のみ約 30MB の読み込み）。</p>
+                    <h3>どうしても再エンコードするとき</h3>
+                    <p>ビットレートを指定した場合だけエンコードします。ここでもセグメントごとに <code>AudioEncoder</code> を作り直すと初期化コストが積み上がるので、同じ設定で書き出す間は 1 つのセッションを使い回しました。WebCodecs の AAC が使えない環境向けに ffmpeg.wasm のフォールバックも残しています。初回だけ約 30MB 読み込みます。</p>
 
-                    <h2>5. 地味に効く: 同期ズレとの戦い</h2>
-                    <p>コピー経路を入れると、今度は<strong>波形と再生位置がずれる</strong>問題が出ます。AAC にはエンコーダ遅延（priming）、MP3 には Xing ヘッダフレームと LAME タグの encoder delay があり、デコード結果の先頭には実際の音声より前のサンプルが含まれます。</p>
+                    <h2>速くしたら、ズレた</h2>
+                    <p>コピー経路を入れた直後、波形と再生位置がずれました。</p>
+                    <p>AAC にはエンコーダ遅延（priming）があります。MP3 には Xing ヘッダフレームと LAME タグの encoder delay があり、デコード結果の先頭には実際の音声より前のサンプルが入ります。</p>
                     <ul>
                         <li><strong>m4a</strong>: <code>elst</code>（edit list）の <code>media_time</code> を読み、そのサンプル数を先頭で捨てる</li>
                         <li><strong>mp3</strong>: 先頭の Xing/Info フレーム数 + LAME タグの delay + デコーダ固有の遅延 529 サンプル</li>
                     </ul>
-                    <p>これを WebCodecs のデコード出力から差し引くことで、<code>decodeAudioData</code> で作った波形と一致するようになりました。高速化の話に見えて、実際はここが一番デバッグに時間を使いました。</p>
+                    <p>これを WebCodecs のデコード出力から差し引くと、<code>decodeAudioData</code> で作った波形と一致しました。</p>
+                    <p>高速化の記事なのに、いちばんデバッグに時間を使ったのはここです。</p>
 
-                    <h2>6. 結果</h2>
-                    <p>3 分ステレオ (44.1kHz) を 10 分割したときの書き出し時間です。</p>
+                    <h2>結果</h2>
+                    <p>3 分ステレオ (44.1kHz) を 10 分割したときの書き出し時間です。中央値、3 回の計測。</p>
 
                     <table class="spec-table">
                         <thead>
                             <tr>
-                                <th>条件</th>
+                                <th>経路</th>
                                 <th class="num">改善前</th>
                                 <th class="num">改善後</th>
                             </tr>
@@ -519,14 +514,25 @@ for (let i = from; i &lt; to; i++) {
                                 <td class="num"><strong>28 ms</strong></td>
                             </tr>
                             <tr>
+                                <td>wav → wav（元のまま）</td>
+                                <td class="num">—</td>
+                                <td class="num">67 ms</td>
+                            </tr>
+                            <tr>
                                 <td>m4a（192kbps 再エンコード）</td>
                                 <td class="num">1404 ms</td>
                                 <td class="num">1568 ms</td>
                             </tr>
+                            <tr>
+                                <td>mp3（192kbps 再エンコード）</td>
+                                <td class="num">—</td>
+                                <td class="num">10653 ms</td>
+                            </tr>
                         </tbody>
                     </table>
 
-                    <p>30 分ステレオ (44.1kHz) を 10 分割したときの全体です。</p>
+                    <p>wav だけ 24bit PCM（47.6MB）で測っています。改善前の値がないのは、当時 wav のコピー経路が存在せず、比較対象が別物になるためです。</p>
+                    <p>30 分ステレオを 10 分割したときの全体はこうです。</p>
 
                     <table class="spec-table">
                         <thead>
@@ -560,32 +566,32 @@ for (let i = from; i &lt; to; i++) {
                         </tbody>
                     </table>
 
-                    <p>再エンコードの 1568ms は改善前よりわずかに遅くなっています。これはエンコーダをセッションで使い回す代わりに、キュー制御と <code>AudioData</code> の組み立てを丁寧にやるようになったためです。書き出し経路の 99% は「元のまま」なので、全体としてはこちらを優先しました。</p>
+                    <p>再エンコードの 1568ms は、改善前の 1404ms より少し遅くなりました。エンコーダをセッションで使い回す代わりに、キュー制御と <code>AudioData</code> の組み立てを丁寧にやるようになったためです。</p>
+                    <p>書き出しの既定は「元のまま」なので、自分はこちらを優先しました。ただ、この判断は利用頻度の推測に依存しています。ビットレート指定が主流の使い方なら、逆の選択になります。</p>
 
                     <div class="callout">
                         <div class="callout-title">長いファイルでの体感</div>
-                        <p style="margin: 0;">30 分のファイルではデコードと波形計算が支配的になるため、合計は 21.5 秒 → 5.3 秒です。ただし既定の「元のまま」では PCM デコード自体が走らないので、実際に待つのは<strong>波形が出るまでの 0.36 秒だけ</strong>になります。</p>
+                        <p style="margin: 0;">30 分のファイルでは、合計は 21.5 秒 → 5.3 秒です。ただ、既定の「元のまま」では PCM デコード自体が走りません。この 5.3 秒を待つことは、実際にはありません。待つのは波形が出るまでだけです。</p>
                     </div>
 
-                    <h2>7. 試して撤回した高速化</h2>
-                    <p>速くするつもりが遅くなった例も残しておきます。計測していなければ、どちらも「良かれと思って」入れてしまっていたはずです。</p>
+                    <h2>速くしたつもりが、遅くなった案</h2>
+                    <p>撤回したものも残しておきます。計測していなければ、どちらも「良かれと思って」入れていたはずです。</p>
 
-                    <h3>波形ピーク計算の Worker 化（撤回）</h3>
-                    <p>ピーク計算を Worker に移せばメインスレッドが空くと考えましたが、30 分の音源ではチャンネル配列のコピーが数百 MB になり、<strong>438ms → 1652ms</strong> と逆効果でした。コピーせずに済む「表示範囲だけ計算する」方式に変えたことで、結果的に Worker 化の目的（UI を止めない）も達成しています。</p>
+                    <h3>ピーク計算だけ Worker に移す</h3>
+                    <p>メインスレッドが空くと考えました。30 分の音源ではチャンネル配列のコピーが数百 MB になり、438ms が 1652ms に増えました。</p>
+                    <p>ただ、この案が解こうとしていた問題（UI を止めない）は、あとから「表示範囲だけ計算する」方式に変えたときに一緒に解決しています。速さと応答性は別の軸なので、片方だけ追うと判断を誤ります。</p>
 
-                    <h3>Worker 内での AudioDecoder デコード（撤回）</h3>
-                    <p>Worker には <code>OfflineAudioContext</code> が無いため <code>decodeAudioData</code> は使えません。そこで <code>AudioDecoder</code> で MP4 サンプルを直接デコードし、ピークだけ返す方式を試しました。メインスレッドのブロックは<strong>397ms → 43ms</strong> に減りますが、デコード自体が遅く、30 分で <strong>487ms → 7283ms</strong> と大幅に悪化したため撤回しました。「UI が固まらない」と「速い」は別物で、今回は後者を優先しています。</p>
+                    <h3>Worker の中で AudioDecoder を使う</h3>
+                    <p>Worker には <code>OfflineAudioContext</code> が無いので <code>decodeAudioData</code> は使えません。そこで <code>AudioDecoder</code> で MP4 サンプルを直接デコードし、ピークだけ返す方式を試しました。</p>
+                    <p>メインスレッドのブロックは 397ms から 43ms に減ります。しかしデコード自体が遅く、30 分で 487ms が 7283ms になりました。15 倍遅いので、さすがに採れません。</p>
+                    <p>「UI が固まらない」と「速い」は別物です。今回は後者を取りました。</p>
 
-                    <h2>8. まとめ</h2>
-                    <p>今回の高速化は、アルゴリズムを賢くしたというより<strong>「やらなくていいことを見つけた」</strong>だけです。</p>
-                    <ul>
-                        <li>メタデータはコンテナから読めるので、PCM デコードを待たない</li>
-                        <li>波形は見えている範囲ぶんしか要らない</li>
-                        <li>同じ形式への分割は、エンコードし直す必要がない</li>
-                        <li>再生はブラウザのメディアスタックに任せれば、自前で PCM を持たなくていい</li>
-                    </ul>
-                    <p>ブラウザ内で完結する音声処理は、一見「WebAssembly で頑張る」話に見えますが、実際には<strong>コンテナ仕様を読んで、データを触らずに運ぶ</strong>ほうが桁違いに速いことが多いです。mp3 のフレーム長も mp4 のサンプルテーブルも、仕様書に書いてある通りに読めば十分でした。</p>
-                    <p>Symple Audio Splitter はブラウザで今すぐ使えます。ファイルはアップロードされず、インストールすればオフラインでも動きます。</p>
+                    <h2>おわり</h2>
+                    <p>今回やったのは、アルゴリズムを賢くすることではありませんでした。やらなくていい処理を探して、外しただけです。</p>
+                    <p>メタデータはコンテナから読めます。波形は見えている範囲ぶんしか要りません。同じ形式への分割はエンコードし直す必要がありません。再生はブラウザのメディアスタックに任せれば、自前で PCM を持つ必要もありません。</p>
+                    <p>ブラウザ内で完結する音声処理は、WebAssembly で気合を入れる話に見えます。自分も最初はそう思っていました。実際には、コンテナ仕様を読んでデータを触らずに運ぶほうが桁違いに速いことが多いです。mp3 のフレーム長も mp4 のサンプルテーブルも、仕様書に書いてある通りに読めば足りました。</p>
+                    <p>冒頭の 21 秒に戻ると、あの時間の大半は「切り分ける」仕事ではなく「作り直す」仕事でした。分割という操作に、変換が混ざっていたわけです。</p>
+                    <p>手元のツールでも、そうなっている箇所は一度探してみると面白いと思います。</p>
                 </section>
 
                 <section class="text-en">
