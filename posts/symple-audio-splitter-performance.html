@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【開発記】書き出しを 72 倍速くした音声分割 PWA ― 再エンコードしない分割と表示範囲だけの波形生成 | O-ya tech</title>
+    <meta name="description" content="mp3 / m4a / wav をブラウザだけで分割する PWA「Symple Audio Splitter」の高速化記録。コンテナ解析だけで即時表示、表示範囲だけの波形生成、再エンコードを捨てた 3 本のコピー経路、そして撤回した高速化までを実測値つきでまとめます。">
+    <link rel="canonical" href="https://g0083.github.io/posts/symple-audio-splitter-performance.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【開発記】書き出しを 72 倍速くした音声分割 PWA">
+    <meta property="og:description" content="30 分の m4a を 10 分割する書き出しが 16.8 秒から 0.23 秒に。再エンコードを捨てた AAC サンプルコピー、MP3 フレーム切り出し、表示範囲だけの波形生成まで、ブラウザ内音声処理の高速化を実測値つきで解説します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/symple-audio-splitter-performance.html">
+    <meta property="og:image" content="https://g0083.github.io/symple-audio-splitter.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-title .text-en {
+            font-size: 0.62em;
+            line-height: 1.4;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content .text-jp,
+        .article-content .text-en {
+            display: none;
+        }
+
+        body.lang-jp .article-content .text-jp,
+        body.lang-en .article-content .text-en {
+            display: block;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.92rem;
+        }
+
+        .spec-table th,
+        .spec-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .spec-table th {
+            background: rgba(80, 200, 120, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .spec-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .spec-table td.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-shot {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(80, 200, 120, 0.25);
+            margin: 1.8rem 0 0.6rem;
+        }
+
+        .hero-caption {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0;
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+
+        .status-line {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            .article-title {
+                font-size: 1.55rem;
+            }
+
+            .spec-table {
+                font-size: 0.82rem;
+            }
+
+            .spec-table th,
+            .spec-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/g0083-symple-audio-splitter" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">Web Audio / Performance</span>
+                <h1 class="article-title">
+                    <span class="text-jp">【開発記】書き出しを 72 倍速くした音声分割 PWA ― 再エンコードしない分割と、表示範囲だけの波形生成</span>
+                    <span class="text-en">【DevLog】Making a Browser Audio Splitter 72× Faster: No-Reencode Splitting and View-Scoped Waveforms</span>
+                </h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-10">2026.11.10</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連: Symple Audio Splitter</span>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>mp3 / m4a をブラウザだけで分割する PWA「<strong>Symple Audio Splitter</strong>」を作りました。ファイルはサーバーに送らず、分割も書き出しも端末内で完結します。</p>
+                    <p>最初の実装は素直でした。読み込み時に全部 PCM にデコードし、波形ピークを全編ぶん計算し、書き出すときは毎回 AAC / MP3 にエンコードし直す。機能は正しく動きますが、30 分の m4a を 10 分割すると<strong>全体で 21.5 秒</strong>かかり、そのうち 16.9 秒が書き出しでした。</p>
+                    <p>この記事は、そこから書き出しを <strong>16.9 秒 → 0.23 秒（約 72 倍）</strong>、体感を「待たされる」から「押した瞬間に終わる」へ変えるまでにやったことの記録です。速くするために<strong>機能を削るのではなく、やらなくていい処理をやめた</strong>のが主旨です。</p>
+
+                    <img class="hero-shot" src="../symple-audio-splitter.png" alt="Symple Audio Splitter の画面。波形と分割線、均等分割の設定、分割プレビューが並ぶ" loading="lazy">
+                    <p class="hero-caption">波形上のダブルクリックで分割線を追加、ドラッグで移動。プレビュー再生は元ファイルをそのまま <code>&lt;audio&gt;</code> に渡している。</p>
+
+                    <h2>1. まず測る — ステージごとの内訳を出す</h2>
+                    <p>高速化で最初にやるべきは、体感ではなく内訳の計測です。このプロジェクトでは <code>bench/</code> に Chrome を DevTools Protocol で操作する計測環境を置き、<strong>デコード / 波形ピーク / 書き出し / 合計</strong>を分けて記録しました。</p>
+
+                    <pre><code>node bench/make-fixtures.mjs          # テスト音源を生成 (ffmpeg が必要)
+node bench/run.mjs --label before --format m4a --bitrate original --splits 9 --repeat 3</code></pre>
+
+                    <p>30 分ステレオ (44.1kHz) を 10 分割したときの初期実装はこうでした。</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>工程</th>
+                                <th class="num">時間</th>
+                                <th>支配要因</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>デコード</td>
+                                <td class="num">4243 ms</td>
+                                <td>全編 PCM 化</td>
+                            </tr>
+                            <tr>
+                                <td>波形ピーク</td>
+                                <td class="num">438 ms</td>
+                                <td>全編を走査</td>
+                            </tr>
+                            <tr>
+                                <td><strong>書き出し</strong></td>
+                                <td class="num"><strong>16863 ms</strong></td>
+                                <td>10 セグメントを毎回 AAC エンコード</td>
+                            </tr>
+                            <tr>
+                                <td>合計</td>
+                                <td class="num">21544 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>書き出しが全体の 78% を占めています。ここを削るのが最短です。同時に、デコードと波形ピークは「書き出しのために必要」と思い込んでいただけで、実は<strong>再エンコードしないなら不要</strong>だという構造的な問題も見えてきました。</p>
+
+                    <h2>2. 読み込み: コンテナ解析だけで UI を出す</h2>
+                    <p>音声ファイルの長さ・サンプルレート・チャンネル数・ビットレートは、PCM にデコードしなくてもコンテナのメタデータから分かります。そこで <code>decodeAudioData</code> を待たず、数ミリ秒のヘッダ解析だけで画面を出すようにしました。</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>形式</th>
+                                <th>読む場所</th>
+                                <th>取り出す値</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>m4a</td>
+                                <td><code>moov &gt; trak &gt; mdia &gt; mdhd</code> / <code>stsd</code></td>
+                                <td>長さ、タイムスケール、チャンネル数、サンプルレート</td>
+                            </tr>
+                            <tr>
+                                <td>mp3</td>
+                                <td>フレームヘッダの連鎖</td>
+                                <td>フレーム数、サンプルレート、平均ビットレート、チャンネルモード</td>
+                            </tr>
+                            <tr>
+                                <td>wav</td>
+                                <td><code>fmt</code> / <code>data</code> チャンク</td>
+                                <td>フォーマットタグ、ビット深度、データ長</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>再生は <code>AudioBuffer</code> ではなく <code>&lt;audio&gt;</code> + Blob URL にしました。ブラウザのメディアスタックがそのままデコードしてくれるので、アプリ側で PCM を持つ必要がありません。結果として、30 分 m4a は<strong>操作可能まで 0.08 秒</strong>（従来は 8〜10 秒ブロック）になりました。</p>
+
+                    <div class="callout">
+                        <div class="callout-title">PCM デコードは「必要になった瞬間」だけ</div>
+                        <p style="margin: 0;">PCM を使うのは mp3 / m4a へ再エンコードする経路だけです。既定の「元のまま」では一度も呼ばれません。<code>AudioSource.loadPcm()</code> を遅延評価の Promise にしたので、同じファイルに対しては最初の 1 回だけデコードされます。</p>
+                    </div>
+
+                    <h2>3. 波形: 全編ではなく「見えている範囲」だけ作る</h2>
+                    <p>波形ピークは 1 ピクセルあたり 1 個あれば十分です。全体表示なら 1 ピークが数万サンプルを担当し、拡大すれば数百サンプルになります。つまり<strong>全編を同じ精度で計算するのは無駄</strong>です。</p>
+                    <p>そこで波形は表示範囲と解像度から必要なピーク間隔（256〜65536 サンプル、2 の冪）を決め、範囲の先頭フレームへシークしてデコードする方式に変えました。ズームやパンで足りない範囲だけを追加要求します。</p>
+
+                    <pre><code>// src/workers/peaks.worker.ts (抜粋)
+// 1 ピークが複数フレームにまたがる場合はフレームを間引く
+const frameSamples = /* 1 フレームのサンプル数 */;
+const step = Math.max(1, Math.floor(bucket / Math.max(1, frameSamples)));
+// 間引き時は 1 フレームのピークを step フレーム分へ引き伸ばす
+const spanSamples = step > 1 ? step * frameSamples : 0;</code></pre>
+
+                    <p>デコードには WebCodecs の <code>AudioDecoder</code> を使い、100ms ごとに <code>range-partial</code> を返して波形を左から順に埋めます。30 分 m4a の全体波形は<strong>0.36 秒</strong>で描画され、拡大時は表示範囲の先頭からデコードするので一瞬で終わります。拡大時のピークは <code>decodeAudioData</code> の結果と一致すること（最大誤差 0.0007）も確認しました。</p>
+
+                    <h3>Worker には File を渡す</h3>
+                    <p>解析対象のバイト列はメインスレッドから送らず、<code>File</code> をそのまま Worker に渡して Worker 側で <code>arrayBuffer()</code> します。41MB のバイト列を構造化クローンで複製すると、コピーだけでメインスレッドが数百ミリ秒止まるためです。</p>
+                    <p>また Worker は<strong>波形用と RMS 用で 2 つに分けました</strong>。1 つに相乗りさせると、全編 RMS の計算中にズーム操作が待たされてしまいます。無音検出用の 10ms RMS はバックグラウンドで作り、分割や書き出しを始めたら <code>terminate()</code> で止めます。</p>
+
+                    <h2>4. 書き出し: 再エンコードを捨てる</h2>
+                    <p>ここが最大の改善です。音声分割は「入力と同じ形式で、品質も元のまま」が既定なら、<strong>音声データを一切作り直さずに切れ目をコピーするだけ</strong>で成立します。</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>経路</th>
+                                <th>方式</th>
+                                <th class="num">10 分割の書き出し</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>m4a → m4a（元のまま）</td>
+                                <td>AAC サンプルをコピーして mp4-muxer で再構成</td>
+                                <td class="num">47 ms</td>
+                            </tr>
+                            <tr>
+                                <td>mp3 → mp3（元のまま）</td>
+                                <td>フレーム境界でバイト列を切り出す</td>
+                                <td class="num">28 ms</td>
+                            </tr>
+                            <tr>
+                                <td>wav → wav（元のまま）</td>
+                                <td>PCM をフレーム境界でコピー（ビット深度も維持）</td>
+                                <td class="num">67 ms</td>
+                            </tr>
+                            <tr>
+                                <td>m4a（ビットレート指定）</td>
+                                <td>WebCodecs AAC + mp4-muxer</td>
+                                <td class="num">1568 ms</td>
+                            </tr>
+                            <tr>
+                                <td>mp3（ビットレート指定）</td>
+                                <td>lamejs（Web Worker）</td>
+                                <td class="num">10653 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="status-line">3 分ステレオ 44.1kHz・10 分割・中央値。再エンコード経路はデコードを含まない書き出し時間。wav は 24bit PCM（47.6MB）で計測。</p>
+
+                    <h3>m4a: サンプルインデックスを作って切り出す</h3>
+                    <p>mp4 の <code>stbl</code> にはサンプルごとの位置と長さが入っています。<code>stco</code>（チャンクオフセット）、<code>stsc</code>（チャンク内のサンプル数）、<code>stsz</code>（サンプルサイズ）を展開すれば、<strong>各 AAC サンプルのバイトオフセット</strong>が求まります。あとは範囲に含まれるサンプルを <code>addAudioChunkRaw()</code> でそのまま muxer に渡すだけです。</p>
+
+                    <pre><code>// src/audio/m4acopy.ts (抜粋)
+const { from, to } = sampleRange(index, startSec, endSec);
+const muxer = new Muxer({
+  target,
+  fastStart: 'in-memory',
+  audio: { codec: 'aac', numberOfChannels: index.channels, sampleRate: index.sampleRate },
+  firstTimestampBehavior: 'offset',
+});
+
+for (let i = from; i &lt; to; i++) {
+  const offset = index.offsets[i];
+  const size = index.sizes[i];
+  muxer.addAudioChunkRaw(bytes.subarray(offset, offset + size), 'key', timestamp, duration, meta);
+  timestamp += duration;
+}</code></pre>
+
+                    <p>エンコードが無いので、10 分割でも <strong>47ms</strong>。30 分のファイルでも 232ms です。分割点はサンプル境界に丸め、隣接区間で同じ境界を共有するようにしたので、サンプルの重複も欠落もありません。</p>
+
+                    <h3>mp3: フレームを数えてバイト列を切る</h3>
+                    <p>mp3 はフレーム長がヘッダから決まります。全フレームのオフセットを一度インデックス化しておけば、指定時間に最も近いフレーム境界を求めて <code>subarray()</code> するだけです。<strong>7061ms → 28ms</strong> になりました。</p>
+
+                    <h3>wav: PCM をそのまま運ぶ</h3>
+                    <p>wav は <code>blockAlign</code> の倍数で切り、44 バイトのヘッダを付け直すだけです。元が 24bit なら 24bit のまま、32bit float なら float のまま出すので、<strong>ビット精度は元ファイルと完全に一致</strong>します。「分割したら微妙に音が変わった」が起きません。</p>
+
+                    <h3>再エンコード時: エンコーダを使い回す</h3>
+                    <p>ビットレートを指定した場合だけエンコードします。ここでもセグメントごとに <code>AudioEncoder</code> を作り直すと初期化コストが積み上がるため、同じ設定で書き出す間は<strong>1 つのセッションを使い回す</strong>ようにしました。WebCodecs の AAC が使えない環境では ffmpeg.wasm にフォールバックします（初回のみ約 30MB の読み込み）。</p>
+
+                    <h2>5. 地味に効く: 同期ズレとの戦い</h2>
+                    <p>コピー経路を入れると、今度は<strong>波形と再生位置がずれる</strong>問題が出ます。AAC にはエンコーダ遅延（priming）、MP3 には Xing ヘッダフレームと LAME タグの encoder delay があり、デコード結果の先頭には実際の音声より前のサンプルが含まれます。</p>
+                    <ul>
+                        <li><strong>m4a</strong>: <code>elst</code>（edit list）の <code>media_time</code> を読み、そのサンプル数を先頭で捨てる</li>
+                        <li><strong>mp3</strong>: 先頭の Xing/Info フレーム数 + LAME タグの delay + デコーダ固有の遅延 529 サンプル</li>
+                    </ul>
+                    <p>これを WebCodecs のデコード出力から差し引くことで、<code>decodeAudioData</code> で作った波形と一致するようになりました。高速化の話に見えて、実際はここが一番デバッグに時間を使いました。</p>
+
+                    <h2>6. 結果</h2>
+                    <p>3 分ステレオ (44.1kHz) を 10 分割したときの書き出し時間です。</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>条件</th>
+                                <th class="num">改善前</th>
+                                <th class="num">改善後</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>m4a → m4a（元のまま）</td>
+                                <td class="num">1445 ms</td>
+                                <td class="num"><strong>47 ms</strong></td>
+                            </tr>
+                            <tr>
+                                <td>mp3 → mp3（元のまま）</td>
+                                <td class="num">7061 ms</td>
+                                <td class="num"><strong>28 ms</strong></td>
+                            </tr>
+                            <tr>
+                                <td>m4a（192kbps 再エンコード）</td>
+                                <td class="num">1404 ms</td>
+                                <td class="num">1568 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>30 分ステレオ (44.1kHz) を 10 分割したときの全体です。</p>
+
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>工程</th>
+                                <th class="num">改善前</th>
+                                <th class="num">改善後</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>デコード</td>
+                                <td class="num">4243 ms</td>
+                                <td class="num">4544 ms</td>
+                            </tr>
+                            <tr>
+                                <td>波形ピーク</td>
+                                <td class="num">438 ms</td>
+                                <td class="num">487 ms</td>
+                            </tr>
+                            <tr>
+                                <td><strong>書き出し</strong></td>
+                                <td class="num"><strong>16863 ms</strong></td>
+                                <td class="num"><strong>232 ms</strong></td>
+                            </tr>
+                            <tr>
+                                <td>合計</td>
+                                <td class="num">21544 ms</td>
+                                <td class="num"><strong>5263 ms</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>再エンコードの 1568ms は改善前よりわずかに遅くなっています。これはエンコーダをセッションで使い回す代わりに、キュー制御と <code>AudioData</code> の組み立てを丁寧にやるようになったためです。書き出し経路の 99% は「元のまま」なので、全体としてはこちらを優先しました。</p>
+
+                    <div class="callout">
+                        <div class="callout-title">長いファイルでの体感</div>
+                        <p style="margin: 0;">30 分のファイルではデコードと波形計算が支配的になるため、合計は 21.5 秒 → 5.3 秒です。ただし既定の「元のまま」では PCM デコード自体が走らないので、実際に待つのは<strong>波形が出るまでの 0.36 秒だけ</strong>になります。</p>
+                    </div>
+
+                    <h2>7. 試して撤回した高速化</h2>
+                    <p>速くするつもりが遅くなった例も残しておきます。計測していなければ、どちらも「良かれと思って」入れてしまっていたはずです。</p>
+
+                    <h3>波形ピーク計算の Worker 化（撤回）</h3>
+                    <p>ピーク計算を Worker に移せばメインスレッドが空くと考えましたが、30 分の音源ではチャンネル配列のコピーが数百 MB になり、<strong>438ms → 1652ms</strong> と逆効果でした。コピーせずに済む「表示範囲だけ計算する」方式に変えたことで、結果的に Worker 化の目的（UI を止めない）も達成しています。</p>
+
+                    <h3>Worker 内での AudioDecoder デコード（撤回）</h3>
+                    <p>Worker には <code>OfflineAudioContext</code> が無いため <code>decodeAudioData</code> は使えません。そこで <code>AudioDecoder</code> で MP4 サンプルを直接デコードし、ピークだけ返す方式を試しました。メインスレッドのブロックは<strong>397ms → 43ms</strong> に減りますが、デコード自体が遅く、30 分で <strong>487ms → 7283ms</strong> と大幅に悪化したため撤回しました。「UI が固まらない」と「速い」は別物で、今回は後者を優先しています。</p>
+
+                    <h2>8. まとめ</h2>
+                    <p>今回の高速化は、アルゴリズムを賢くしたというより<strong>「やらなくていいことを見つけた」</strong>だけです。</p>
+                    <ul>
+                        <li>メタデータはコンテナから読めるので、PCM デコードを待たない</li>
+                        <li>波形は見えている範囲ぶんしか要らない</li>
+                        <li>同じ形式への分割は、エンコードし直す必要がない</li>
+                        <li>再生はブラウザのメディアスタックに任せれば、自前で PCM を持たなくていい</li>
+                    </ul>
+                    <p>ブラウザ内で完結する音声処理は、一見「WebAssembly で頑張る」話に見えますが、実際には<strong>コンテナ仕様を読んで、データを触らずに運ぶ</strong>ほうが桁違いに速いことが多いです。mp3 のフレーム長も mp4 のサンプルテーブルも、仕様書に書いてある通りに読めば十分でした。</p>
+                    <p>Symple Audio Splitter はブラウザで今すぐ使えます。ファイルはアップロードされず、インストールすればオフラインでも動きます。</p>
+                </section>
+
+                <section class="text-en">
+                    <p><strong>Symple Audio Splitter</strong> is a browser-only audio splitter for mp3 / m4a. This article covers its performance work: showing the UI from container metadata alone (0.08 s for a 30-minute m4a), generating waveform peaks only for the visible range with WebCodecs <code>AudioDecoder</code>, and eliminating re-encoding entirely for same-format exports.</p>
+                    <p>For same-format output, the app copies encoded frames: AAC samples are indexed from <code>stbl</code> and re-muxed with mp4-muxer (1445 ms → 47 ms for 10 segments), MP3 frames are sliced at frame boundaries (7061 ms → 28 ms), and WAV PCM is copied bit-exactly. A 30-minute file's export dropped from 16.9 s to 0.23 s. Two attempted optimizations (worker-side peak computation and worker-side <code>AudioDecoder</code> decoding) were measured and reverted because both were slower in practice.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>Symple Audio Splitter を使ってみる</h3>
+                    <p>mp3 / m4a / wav をブラウザだけで分割。ファイルはサーバーに送信されません。</p>
+                    <a href="https://g0083.github.io/g0083-symple-audio-splitter/" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                        アプリを開く ↗
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
