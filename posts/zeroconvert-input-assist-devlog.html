@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroConvert-IMEの入力補助を改善しました――誤入力、学習、片手操作まで | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="ZeroConvert-IMEの入力補助を改善しました――誤入力、学習、片手操作まで">
+    <meta property="og:description" content="タイポ補正、自動確定、辞書と学習の管理、Androidの片手操作。今回の変更で使えるようになった機能を紹介します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zeroconvert-input-assist-devlog.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.1rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.6rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1.1rem 1.3rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">IME / Development</span>
+                <h1 class="article-title">ZeroConvert-IMEの入力補助を改善しました――誤入力、学習、片手操作まで</h1>
+                <div class="article-meta"><time datetime="2026-11-13">2026.11.13</time><span>著者: g0083 (O-ya tech)</span></div>
+            </header>
+            <div class="article-content">
+                <p>文章を書いていると、隣のキーを押してしまったり、不要な変換候補が何度も出てきたりします。ひとつひとつは小さな手間でも、入力のたびに繰り返すと気になるものです。</p>
+                <p>ZeroConvert-IMEの今回の更新では、打ち間違いを補う仕組みを見直し、学習や辞書を自分で整理しやすくしました。Androidでは、キーボードの位置や操作感も調整できます。</p>
+                <h2>打ち間違いを、入力の流れの中で補う</h2>
+                <p>Windowsでは、タイポ補正に文字の入れ替えやQWERTYキーの位置を考慮した辞書検索を加えました。隣のキーを押したような誤入力に対して、意図した言葉を候補として探します。</p>
+                <p>正しく入力した言葉まで変わってしまっては困るので、正しい読みを不用意に書き換えないための判定も加えています。打ち間違いを直す手間を減らしながら、普段どおり入力できたときはそのまま使えることを目指した変更です。</p>
+                <p>Androidでは、次に押されそうなキーの判定範囲を少し広げ、キーの境界付近に触れた場合にもタッチ位置を補正候補に使う設定を追加しました。小さなキーを正確に狙い直す負担を減らすための機能です。</p>
+                <h2>自動確定をWindowsとAndroidで使いやすく</h2>
+                <p>ZeroConvert-IMEは、入力の先頭部分が安定すると自動で確定し、変換操作を減らすことを目指しています。今回、自動確定の判断をWindowsとAndroidで共通のエンジンにまとめました。</p>
+                <p>同じ考え方を両方の環境で使うことで、片方で加えた改善をもう片方にも反映しやすくなります。パソコンとスマートフォンのどちらでも、入力を続けながら文章を作れるIMEに近づけるための変更です。</p>
+                <h2>不要な学習は消して、よく使う言葉は登録する</h2>
+                <p>一度選んだ変換候補が、次から優先して表示されると便利です。ただ、間違えて選んだ候補まで残ると、今度はそれが邪魔になります。</p>
+                <p>Windowsでは、候補ウィンドウから不要な学習候補を削除し、再変換できるようにしました。設定画面では、変換学習と補正学習を選んで削除できます。Androidにも学習データを選んで削除する操作を追加しました。学習を整理しても、ユーザー辞書や設定は残ります。</p>
+                <p>Windowsのユーザー辞書には、検索と単語の一括取り込み・出力を追加しました。例えば「ぜろこん」と「ZeroCon」のような読みと単語の組をまとめて貼り付けられます。名前や専門用語を何件も登録したいときも、一件ずつ入力する手間を減らせます。</p>
+                <p>設定項目を検索できるようになり、設定画面には試し打ち欄も加えました。句読点や文字幅、ライブ変換の設定を変えたら、別のアプリに移らずその場で試せます。</p>
+                <h2>Androidのキーボードを、手に合わせる</h2>
+                <p>スマートフォンを片手で持つと、画面の反対側にあるキーには指が届きにくくなります。Android版の片手モードは、キーボードの幅を約82%に縮め、左または右に寄せる機能です。ツールバーや側面のボタンから、位置の切り替えや全幅への復帰ができます。</p>
+                <p>QWERTYでは、触れたキーの拡大プレビューや枠線表示を設定できます。上フリックの表示もキーのプレビューに統一しました。下部の余白とフリック感度も調整できるので、端末の持ち方や好みに合わせて使えます。</p>
+                <p>入力のたびに小さな修正や設定の探し直しが入ると、書こうとしていたことから意識が離れます。今回の更新では、そうした手間を減らし、文章を書くことに集中しやすくするための機能を揃えました。</p>
+                <p><a href="https://github.com/g0083/ZeroConvert-IME/releases/tag/v0.6.0">ZeroConvert-IME v0.6.0 試験版をダウンロード</a>　｜　<a href="https://github.com/g0083/ZeroConvert-IME">ソースコード</a></p>
+            </div>
+        </article>
+    </main>
+    <footer><p>&copy; 2026 g0083. All rights reserved.</p></footer>
+</body>
+</html>
