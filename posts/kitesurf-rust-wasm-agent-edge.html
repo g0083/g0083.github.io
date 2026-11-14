@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】なぜAIエージェントにChromiumは重すぎるのか？ ――Cloudflare KitesurfのRust×Wasm構成と、クライアント完結型設計の共通点 | O-ya tech</title>
+    <meta name="description" content="AIエージェントがブラウザを操作する際、500MB〜1GBを食うChromiumコンテナの運用が最大の足かせになっていた。CloudflareがOSS公開したKitesurf（Rust×WebAssembly）の脱Chromium思想と、Markdown TeX ViewerやZeroConvert-IMEなどクライアント完結型個人開発で培った軽量サンドボックス設計の共通点を考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/kitesurf-rust-wasm-agent-edge.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【考察】なぜAIエージェントにChromiumは重すぎるのか？ ――Cloudflare KitesurfのRust×Wasm構成と、クライアント完結型設計の共通点">
+    <meta property="og:description" content="500MB〜1GBを食うChromiumコンテナを回す時代は終わるのか。Cloudflare KitesurfのRust×Wasmアーキテクチャから、エッジとクライアントにおける軽量サンドボックスの必然性を掘り下げます。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/kitesurf-rust-wasm-agent-edge.html">
+    <meta property="og:image" content="https://g0083.github.io/markdown-tex-viewer.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(80, 200, 120, 0.25);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.8rem 0;
+        }
+
+        .tech-box h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.15rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        pre {
+            background: #111418;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            color: #a9b7c6;
+            margin: 1.5rem 0;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #6cdb94;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .author-box {
+            margin-top: 4rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .author-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+        }
+
+        .author-info h4 {
+            margin: 0 0 0.4rem;
+            color: #ffffff;
+        }
+
+        .author-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-accent">&gt;</span> O-ya tech
+            </a>
+            <nav class="nav">
+                <a href="../index.html#projects" class="nav-link"><span class="text-jp">プロジェクト</span><span class="text-en">Projects</span></a>
+                <a href="../index.html#blog" class="nav-link active"><span class="text-jp">記事一覧</span><span class="text-en">Articles</span></a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <a href="../index.html" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Architecture / WebAssembly</span>
+                <h1 class="article-title">【考察】なぜAIエージェントにChromiumは重すぎるのか？ ――Cloudflare KitesurfのRust×Wasm構成と、クライアント完結型設計の共通点</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-14">2026年11月14日</time>
+                    <span>著者: O-ya</span>
+                    <span>読了目安: 約8分</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <p>自律型AIエージェントにWebページを巡回させ、情報を収集させ、フォームを入力させる。そうしたワークフローを実運用に乗せようとしたとき、開発者の前に立ちはだかる最大の壁は何でしょうか。LLMの推論コストではありません。<strong>「裏で起動するヘッドレスブラウザの重さ」</strong>です。</p>
+
+                <p>PuppeteerやPlaywrightをDockerコンテナに詰め込み、エージェント1回のリクエストごとにChromeを立ち上げる構成を組むと、あっという間にメモリが枯渇します。1インスタンスあたり500MBから1GB超のRAMを消費し、起動には2〜5秒のコールドスタートを要する。数十、数百のタスクを同時に捌こうとすれば、インフラ費用の大半がブラウザコンテナの維持費に消えていきます。</p>
+
+                <p>2026年11月、Cloudflareがオープンソース公開した「<strong>Kitesurf</strong>（<code>cloudflare/kitesurf</code>）」は、この不条理に対する極めて明快な回答でした。Chromiumを完全に捨て、RustとWebAssemblyだけでヘッドレスブラウザエンジンを再構築したのです。</p>
+
+                <p>このアプローチは、私がこれまで取り組んできた個人開発――Typst Wasmによるブラウザ内PDF組版、Web Audioによる再エンコードなしの音声分割、極小SLM（0.09B）のCPU完結推論――と根底の思想が完全に一致しています。なぜいま「脱Chromium」「脱重厚コンテナ」が必然となっているのか、エンジニアの視点から整理します。</p>
+
+                <h2>1. 人間向けブラウザと、AIエージェント向けブラウザの断絶</h2>
+
+                <p>私たちが普段使っているGoogle ChromeやSafariは、人間の感覚器官（目と指）に合わせて究極まで最適化された怪物ソフトウェアです。</p>
+                <ul>
+                    <li>1秒間に60フレーム（あるいは120フレーム）途切れなく描画するGPUアクセラレーション</li>
+                    <li>滑らかなスクロール物理演算やアニメーション補間</li>
+                    <li>タブごとの完全なマルチプロセス分離とサンドボックス保護</li>
+                    <li>膨大なWeb拡張機能やメディアコーデックのフルサポート</li>
+                </ul>
+
+                <p>しかし、<strong>AIエージェントは画面を見て感動したり、滑らかなスクロールを味わったりしません。</strong></p>
+
+                <p>エージェントが欲しいのは、「HTMLをパースしてDOMツリーを構築し、CSSを当ててレイアウト上の相対位置を把握し、必要なJavaScriptを実行して、目的の要素のアクセシビリティツリーやテキストを抽出すること」だけです。たまに画像認識用としてスクリーンショットを撮ることはあっても、リアルタイムに60fpsでGPU合成を行い続ける必要性はどこにもありません。</p>
+
+                <p>にもかかわらず、これまでの私たちは「人間向けの巨大なChromiumバイナリ」を丸ごとコンテナに載せ、仮想ディスプレイ（Xvfb等）経由でエージェントに操作させてきました。これが無駄でなくて何でしょうか。</p>
+
+                <div class="tech-box">
+                    <h4>エージェントが必要とするブラウザ機能の現実</h4>
+                    <p>・<strong>必須</strong>：DOM解析、CSSカスケーディング/ボックス配置、最小限のJS実行、要素の座標計算、スナップショット生成<br>
+                    ・<strong>不要</strong>：GPUコンポジット、動画ハードウェアデコード、滑らかなアニメーション、拡張機能API、ブラウザプロファイル管理</p>
+                </div>
+
+                <h2>2. Cloudflare Kitesurfのアーキテクチャ：RustモジュールをWasmに束ねる</h2>
+
+                <p>Kitesurfの構造は非常に合理的です。ゼロから巨大ブラウザを書いたのではなく、Rustエコシステムにすでに存在する成熟したコンポーネントを厳選して組み合わせ、それをWebAssemblyにコンパイルしてCloudflare Workers上で動かしています。</p>
+
+                <pre><code>+-------------------------------------------------------------+
+|                 Cloudflare Kitesurf Architecture             |
+|                                                             |
+|   +-----------------------------------------------------+   |
+|   |         CDP Interface (Chrome DevTools Protocol)    |   |
+|   +-----------------------------------------------------+   |
+|                              |                              |
+|   +--------------------+     |     +--------------------+   |
+|   |    Blitz Engine    | <---+---> |   Stylo Engine     |   |
+|   | (DOM Parser & Box) |           | (Servo/Firefox CSS)|   |
+|   +--------------------+           +--------------------+   |
+|              |                               |              |
+|   +--------------------+           +--------------------+   |
+|   |  Boa JavaScript VM |           | Linebender 2D / Vello|
+|   |   (Pure Rust JS)   |           | (Vector Graphics)  |   |
+|   +--------------------+           +--------------------+   |
+|                                                             |
+|   Target: wasm32-unknown-unknown / Edge Worker Sandbox      |
++-------------------------------------------------------------+</code></pre>
+
+                <ul>
+                    <li><strong>Blitz</strong>：Dioxusチームが開発する軽量なHTML/DOMパースおよびボックスレイアウトエンジン。Taffyを利用してFlexbox/Gridを計算。</li>
+                    <li><strong>Stylo</strong>：Firefox/Servoから切り出された世界最速峰の並列CSSスタイルエンジン。</li>
+                    <li><strong>Boa</strong>：Pure Rustで書かれた組込み指向のJavaScriptエンジン。V8のような巨大なJITコンパイラを持たず、ステートレスに動く。</li>
+                    <li><strong>Linebender / Vello</strong>：フォント描画や2Dグラフィックスを正確にベクター計算するライブラリ群。</li>
+                </ul>
+
+                <p>これらを束ねた結果、<strong>「ステートレスでメモリ数MB、コールドスタート数ミリ秒、CDP（Chrome DevTools Protocol）を喋れるブラウザ環境」</strong>が手に入ります。Cloudflare Workersのような「メモリ制限128MB・実行時間数ミリ秒」の極小エッジワーカー上で、数千台の仮想ブラウザを並列起動できる理由がここにあります。</p>
+
+                <h2>3. クライアント完結型・エッジ完結型の共通定理</h2>
+
+                <p>この「重厚な既存コンテナを疑い、Rust×WebAssemblyで単一責任のサンドボックスに落とし込む」という思想は、個人開発のプロダクト設計と完全に地続きです。</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>領域</th>
+                            <th>従来のコンテナ依存型</th>
+                            <th>Rust×Wasm / クライアント完結型</th>
+                            <th>改善効果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>AIブラウジング</strong></td>
+                            <td>Docker + ヘッドレスChrome<br>（RAM 500MB〜1.5GB / 起動 3秒）</td>
+                            <td><strong>Cloudflare Kitesurf</strong><br>（RAM 数MB〜十数MB / 起動 10ms）</td>
+                            <td>メモリ95%削減<br>エッジワーカー並列実行</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数式・文書組版</strong></td>
+                            <td>TeX Live Dockerコンテナ<br>（イメージ 4GB超 / サーバーAPI）</td>
+                            <td><strong>Markdown TeX Viewer</strong><br>（Typst Wasm / ブラウザ内直接描画）</td>
+                            <td>サーバー維持費 0円<br>打鍵追従 20ms描画</td>
+                        </tr>
+                        <tr>
+                            <td><strong>音声分割・編集</strong></td>
+                            <td>Python + ffmpegコンテナ<br>（音声全アップロード / 再エンコード）</td>
+                            <td><strong>Symple Audio Splitter</strong><br>（Web Audio + フレームコピー）</td>
+                            <td>30分音源の書き出し<br>16.9秒 → 0.23秒（73倍）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>日本語入力・推論</strong></td>
+                            <td>クラウドLLM API / 7Bモデル<br>（VRAM 8GB〜 / ネットワーク遅延）</td>
+                            <td><strong>ZeroConvert-IME</strong><br>（0.09B SLM Wasm / CPU推論）</td>
+                            <td>VRAM 0MB / RAM 35MB<br>レイテンシ 8.4ms</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>事例1：Typst WasmでLaTeXコンテナを撲滅した話（Markdown TeX Viewer）</h3>
+                <p>かつてブラウザ上で美しい数式文書やPDFを生成しようとすると、サーバー側に数GBのTeX Live環境を立ち上げ、ユーザーの入力をPOSTしてコンパイル結果を返す構成が一般的でした。しかし、これではサーバーのスケールコストがかさみ、ネットワーク遅延でプレビューがもたつきます。</p>
+                <p>Rust製の新世代組版エンジン「Typst」をWebAssemblyへビルドしてブラウザに載せたことで、サーバー通信を完全に撤廃できました。ローカルのJavaScriptスレッドから数万行のマークアップを流し込むだけで、瞬時にベクターPDFがブラウザ内部で組み上がります。</p>
+
+                <h3>事例2：ffmpegコンテナを介さない「無変換フレームコピー」（Symple Audio Splitter）</h3>
+                <p>音声ファイルの分割・トリミングも同様です。多くのWebサービスはユーザーのギガ級音源をサーバーへアップロードさせ、ffmpegで再エンコードしてダウンロードさせます。</p>
+                <p>しかし、MP4/AACのコンテナ構造（moov/stbl/stszボックス）をブラウザのバイナリパーサーで読み解き、AACパケットやMP3フレームをヘッダごとそのまま切り出せば、再エンコードのCPU負荷はゼロになります。30分の音源を10分割するのに21秒待たされていた処理が、0.23秒で完了する世界に変わるのです。</p>
+
+                <h3>事例3：0.09B極小モデルによるブラウザ完結型言語処理（ZeroConvert-IME）</h3>
+                <p>「LLMを動かすには数十GBのVRAMと巨大なGPUサーバーが必要だ」という固定観念も、特定タスクに絞れば崩れ去ります。日本語の仮名漢字変換やタイポ補正という単一責任に特化させれば、モデルサイズは18.7 MiB（0.09B）まで圧縮可能です。</p>
+                <p>これをWebAssemblyやローカルプロセスで動かせば、GPUのないオフィスPC（VRAM 0MB）でもメモリ35MB、打鍵レイテンシ8.4msで推論が完了します。機密データを外部APIに一切送らない完全なプライバシー保護と、ゼロインフラ運用が同時に成立します。</p>
+
+                <h2>4. 「コンテナを立てるな、Wasmに落とせ」の時代へ</h2>
+
+                <p>クラウドコンピューティングの歴史は、「ハードウェアの仮想化（VM）」から「OSの仮想化（コンテナ）」へと軽量化を進めてきました。そして今、AIエージェントとエッジコンピューティングの爆発によって、コンテナのオーバーヘッドすら許容できないフェーズに突入しています。</p>
+
+                <p>Linuxカーネルやファイルシステム全体をエミュレートするコンテナは、多機能ですが重すぎます。これからのエージェントインフラやクライアントサイド開発に必要なのは、<strong>「単一の目的だけを果たす、メモリ安全で隔離された、ミリ秒で起動するサンドボックス」</strong>です。</p>
+
+                <p>KitesurfがChromiumを解体してRust×Wasmに再構築したように、あらゆる重厚な処理は今後、エッジやブラウザの軽量Wasmランタイムへと溶け出していきます。</p>
+                <ul>
+                    <li>重いブラウザを回すのではなく、エージェント用の軽量パーサーを回す。</li>
+                    <li>巨大なサーバーでレンダリングするのではなく、クライアントのWasmで描画する。</li>
+                    <li>クラウドの巨大LLMに頼るのではなく、手元の極小SLMで即座に判定する。</li>
+                </ul>
+
+                <p>この設計規律を意識し続けることこそが、爆発する計算コストから自由になり、本当の意味でスケールする個人開発プロダクトを生み出す鍵になると確信しています。</p>
+
+                <hr style="border: none; border-top: 1px solid rgba(80, 200, 120, 0.2); margin: 3rem 0;">
+
+                <div class="author-box">
+                    <img src="../icon.png" alt="O-ya" class="author-avatar">
+                    <div class="author-info">
+                        <h4>O-ya (@ooyatech)</h4>
+                        <p>WebAssembly、小規模言語モデル（SLM）、オンデバイスAI、高速ブラウザアプリの設計と実装を探求する個人開発者。代表作に「ZeroConvert-IME」「Symple Audio Splitter」「Markdown TeX Viewer」など。</p>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 O-ya tech. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
