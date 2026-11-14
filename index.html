@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">12</span>
+                <span class="tab-badge">13</span>
             </button>
         </div>
 
@@ -391,6 +391,29 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: Cloudflare Kitesurf & Rust+Wasm Agent Architecture (2026/11/14) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="markdown-tex-viewer.png" alt="Cloudflare Kitesurf and WebAssembly Architecture" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Architecture / WebAssembly</span>
+                            <button class="project-pill-btn" data-target-project="markdown-tex-viewer" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: Markdown TeX Viewer ↗</span>
+                                <span class="text-en">Project: Markdown TeX Viewer ↗</span>
+                            </button>
+                        </div>
+                        <h3>【考察】なぜAIエージェントにChromiumは重すぎるのか？ ――Cloudflare KitesurfのRust×Wasm構成と、クライアント完結型設計の共通点</h3>
+                        <p class="text-jp">AIエージェントのブラウザ操作で最大の足かせとなっていた「1GBのChromiumコンテナ問題」。CloudflareがOSS公開したKitesurf（Rust×WebAssembly）の脱Chromium思想から、Typst Wasmや極小SLM、音声分割PWAなどクライアント完結型設計に通底する軽量サンドボックスの必然性を考察します。</p>
+                        <p class="text-en">Why 1GB Chromium containers fail at scaling autonomous AI agents. Analyzing Cloudflare Kitesurf's Rust+Wasm headless browser architecture and its shared design philosophy with browser-native WebAssembly tools.</p>
+                        <a href="posts/kitesurf-rust-wasm-agent-edge.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <article class="card">
                     <div class="card-image-wrapper"><img src="zeroconvert.png" alt="ZeroConvert-IME" loading="lazy"></div>
                     <div class="card-content">
