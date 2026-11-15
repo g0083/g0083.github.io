@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">13</span>
+                <span class="tab-badge">15</span>
             </button>
         </div>
 
@@ -105,8 +105,8 @@
                     </div>
                     <div class="card-content">
                         <h3>ZeroConvert-IME</h3>
-                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4（18.7 MiB）」を搭載し、長文の自動確定・タイポ補正（正解率78%/実質86.7%）・先読みアシストに対応（Windows / Android）。</p>
-                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4 (18.7 MiB)' with streaming auto-commit, 78% accuracy typo correction, and predictive assist (Windows / Android).</p>
+                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4.1（18.7 MiB）」と共有エンジン統合のnam数値マスク、KVキャッシュ再利用・llama.cppグラフ初期化削減を搭載し、自動確定・統合タイポ補正・先読みアシストに対応（Windows / Android）。</p>
+                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4.1 (18.7 MiB)' with shared-engine nam digit masking, KV prefix reuse, and llama.cpp runtime optimization for auto-commit, unified typo correction, and predictive assist (Windows / Android).</p>
                         <div class="card-actions">
                             <a href="https://github.com/g0083/ZeroConvert-IME/releases" class="btn-primary" target="_blank" rel="noopener noreferrer">
                                 <span class="text-jp">ダウンロード</span>
@@ -391,6 +391,58 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: ZeroCon Nano v4.1 & Shared Engine nam Masking (2026/11/15) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroCon Nano v4.1 & Shared nam Masking" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Model Training / Edge AI</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」と共有エンジンへのnam数値マスク統合</span>
+                            <span class="text-en">ZeroCon Nano v4.1 &amp; Integrating Shared nam Digit Masking Across Windows/Android</span>
+                        </h3>
+                        <p class="text-jp">18.7 MiBの超小型モデルをNano v4.1へ刷新し、日常口語・補助動詞・過剰漢字抑止を強化（口語100問で87%→97%、740問全体で97.16%）。ベンチマーク専用だった数値マスクnamと英単語保護2パス復元をWindows/Androidの共有変換エンジンへ組み込みました。</p>
+                        <p class="text-en">Upgraded the 18.7 MiB ZeroCon Nano model to v4.1 for colloquial chat and auxiliary-hiragana accuracy (97/100 colloquial, 97.16% across 740 cases), and integrated nam digit masking with two-pass English-safe restoration directly into the Windows/Android shared IME engines.</p>
+                        <a href="posts/zerocon-nano-v4-1-model-accuracy.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: ZeroConvert-IME Inference Speed Optimization (2026/11/15) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME Inference Speed Optimization" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Performance / Runtime</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">ZeroConvert-IMEの推論高速化――llama.cppグラフ初期化削減、Swiftコンテキスト再利用、Android KVプレフィックス共有</span>
+                            <span class="text-en">Accelerating ZeroConvert-IME: llama.cpp Graph Probes, Swift Context Reuse &amp; Android KV Sharing</span>
+                        </h3>
+                        <p class="text-jp">GPT-2モデルで不要な融合グラフ探索を省くllama.cppパッチ、Swift ZenzContext再利用とシングルパスargmax、Android JNIの最長共通プレフィックスKVキャッシュ共有を実装。CPUコールド中央値27.83ms→20.96msへの短縮データを公開しています。</p>
+                        <p class="text-en">Skipping unused fused-graph probes in llama.cpp for GPT-2 models, reusing allocated Swift ZenzContext with single-pass raw-logit argmax, and sharing longest-common-prefix KV cache in Android JNI—cutting CPU cold median latency from 27.83 ms to 20.96 ms.</p>
+                        <a href="posts/zerocon-inference-speed-optimization.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: Cloudflare Kitesurf & Rust+Wasm Agent Architecture (2026/11/14) -->
                 <article class="card">
                     <div class="card-image-wrapper">
