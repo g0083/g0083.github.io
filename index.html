@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">15</span>
+                <span class="tab-badge">16</span>
             </button>
         </div>
 
@@ -141,6 +141,11 @@
                             <a href="posts/dora-vs-lora-slm-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？</span>
                                 <span class="text-en">【Architecture】Why 0.09B Edge SLMs Needed DoRA Instead of LoRA</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/llamacpp-v1-semver-embedded-edge-ime.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と組み込みエッジAI</span>
+                                <span class="text-en">【Architecture】When llama.cpp Reached v1.0.0: What SemVer Means for Embedded Edge AI</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -391,6 +396,32 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: llama.cpp v1.0.0 SemVer & Embedded Edge AI (2026/11/16) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="llama.cpp v1.0.0 and Embedded Edge AI" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Architecture / Runtime</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と、組み込みエッジAI（ZeroConvert-IME）の未来</span>
+                            <span class="text-en">When llama.cpp Reached v1.0.0: Ending the Rolling-Build Era and What SemVer Means for Embedded Edge AI</span>
+                        </h3>
+                        <p class="text-jp">3年半の日単位ビルド番号（bXXXX）を経てllama.cppがv1.0.0へ。C API/ABIのSemVer厳格化、35以上の非推奨API削除、NextN投機的デコード統合。特定ビルドパッチに悩まされてきたZeroConvert-IMEの視点から、組み込みエッジAIの安定化がもたらす価値を考察します。</p>
+                        <p class="text-en">llama.cpp has officially reached v1.0.0, establishing strict SemVer for its C API/ABI, purging 35+ deprecated functions, and integrating NextN speculative decoding into the core header. Exploring what this stabilization brings to embedded edge SLMs like ZeroConvert-IME.</p>
+                        <a href="posts/llamacpp-v1-semver-embedded-edge-ime.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: ZeroCon Nano v4.1 & Shared Engine nam Masking (2026/11/15) -->
                 <article class="card">
                     <div class="card-image-wrapper">

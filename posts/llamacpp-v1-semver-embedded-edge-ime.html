@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と、組み込みエッジAI（ZeroConvert-IME）の未来 | O-ya tech</title>
+    <meta name="description" content="2026年11月13日、3年半に及ぶ日単位のビルド番号（bXXXX）運用を終え、llama.cppがついにv1.0.0をリリース。C API/ABIのSemVer厳格化、35以上の非推奨API削除、NextN投機的デコード統合。ZeroConvert-IME開発者の視点から、組み込みエッジAIにおける安定化の価値とアーキテクチャの分岐点を整理します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/llamacpp-v1-semver-embedded-edge-ime.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と、組み込みエッジAI（ZeroConvert-IME）の未来">
+    <meta property="og:description" content="3年半のローリングビルドを経てllama.cppがv1.0.0へ。SemVer採用とC API/ABI安定化が、ZeroConvert-IMEのような極小モデル×アプリ組み込み現場に何をもたらすかを考察します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/llamacpp-v1-semver-embedded-edge-ime.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.93rem;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1.1rem 1.3rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Architecture / Runtime</span>
+                <h1 class="article-title">【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と、組み込みエッジAI（ZeroConvert-IME）の未来</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-16">2026.11.16</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>関連プロジェクト: ZeroConvert-IME / GGML Runtime</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <p>2026年11月13日、C/C++推論エンジンの代表格であるllama.cppが、約3年半にわたるローリングビルド（日単位のビルド番号管理）に終止符を打ち、初のメジャー安定版「v1.0.0」を正式リリースした。CLIツールやllama-serverとして使っている一般ユーザーにとっては「ついに1.0か」という感慨に留まるかもしれない。だが、アプリの内部にライブラリとしてllama.cppを組み込んできた開発者にとって、この節目は極めて大きな意味を持つ。</p>
+
+                <p>ZeroConvert-IMEの開発過程でも、上流のビルド追従には常に骨を折ってきた。特定ビルドに固定したパッチ（<code>zerocon-compat-b12125.patch</code> など）を当てては、APIシグネチャの変更やヘッダの再配置に追われる日々だったからだ。v1.0.0が掲げたセマンティックバージョニング（SemVer）への移行とC API/ABIの安定化方針から、組み込みエッジAIの未来を整理してみたい。</p>
+
+                <h2>1. ビルド番号で追いかけ続けた3年半の現実</h2>
+
+                <p>llama.cppのこれまでの開発スピードは驚異的だった。新しいモデル構造（MoE、Mamba、RWKV、DeepSeek、Qwenなど）や量子化方式（IQ系、K-quants）が登場するたび、数日以内にプルリクエストが飛び交い、ビルド番号が1つずつ加算されていった。最前線の研究成果を即座に試せる点において、これほど活発なOSSは稀有だったと言っていい。</p>
+
+                <p>一方で、ライブラリ組み込み側には重い代償があった。セマンティックバージョニングが存在しないため、「ビルド番号が10上がっただけなのに、引数の型が変わってコンパイルが通らなくなる」「使っていた初期化関数が予告なく名前を変え、ヘッダの奥深くへ移動する」といった事態が日常茶飯事だった。下流でC++、Swift、Kotlin（JNI）などのバインディングを書いている側は、実質的にすべてのビルドを「破壊的変更の可能性があるもの」として警戒せざるを得なかった。</p>
+
+                <p>ZeroConvert-IMEのように、打鍵応答20msを死守するためにコンテキスト初期化処理へ直接パッチを当てるプロジェクトでは、上流更新のたびにパッチの衝突を手作業で解消するコストが重くのしかかっていた。この「ビルド番号地獄」に終止符が打たれたのが、今回のv1.0.0だ。</p>
+
+                <h2>2. v1.0.0で何が変わり、何が削ぎ落とされたのか</h2>
+
+                <p>今回のリリースにおける最大の骨子は、公開C API（<code>llama.h</code>）およびABIに対する厳格なSemVerの適用宣言だ。今後は後方互換性を壊す変更が入らない限りメジャーバージョンは上がらず、パッチ更新やマイナー更新を安全に取り込めるようになる。</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>v1.0.0以前（ローリングビルド）</th>
+                            <th>v1.0.0以降（SemVer運用）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>バージョン規則</td>
+                            <td>コミット順のビルド番号（<code>b4100</code>, <code>b12125</code> 等）</td>
+                            <td>メジャー.マイナー.パッチ（<code>v1.0.0</code>）</td>
+                        </tr>
+                        <tr>
+                            <td>C API / ABI 保証</td>
+                            <td>随時破壊的変更あり（事前予告なし）</td>
+                            <td>メジャー更新時のみ破壊的変更を許容</td>
+                        </tr>
+                        <tr>
+                            <td>非推奨関数の扱い</td>
+                            <td>数年間にわたり警告付きで放置・累積</td>
+                            <td>35以上の古いレガシーAPIを一斉削除</td>
+                        </tr>
+                        <tr>
+                            <td>投機的デコードAPI</td>
+                            <td>個別ブランチや周辺実験コードに分散</td>
+                            <td><code>llama.h</code> 本流へNextN投機的デコードを統合</td>
+                        </tr>
+                        <tr>
+                            <td>KVキャッシュ機能</td>
+                            <td>F16 / Q8_0 主体</td>
+                            <td>OCP FP8 KVキャッシュを標準サポート</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>注目すべきは、SemVer導入に伴い「35以上のレガシーAPI」が一斉に削除された点だ。<code>llama_set_warmup</code> や古いデフラグ経路など、何世代にもわたって形骸化していたパブリック関数が完全に削ぎ落とされた。長年放置されてきたコードベースの膿を出し切った状態でv1.0.0の基底線を引いた姿勢には、メンテナ陣の強い覚悟が窺える。</p>
+
+                <p>さらに、投機的デコード（Speculative Decoding）のAPIがメインヘッダに正式統合された。これまで外部の実験的ラッパーや別ヘッダに散らばっていた投機的サンプリングの仕組みが、統一された作法で呼び出せるようになっている。</p>
+
+                <h2>3. 組み込みエッジAI（ZeroConvert-IME）から見た技術的恩恵</h2>
+
+                <p>この安定化は、デスクトップ常駐アプリやモバイル組み込み型SLMの開発に直接的な好影響を与える。</p>
+
+                <h3>C APIの安定によるバインディング保守の劇的な軽減</h3>
+                <p>ZeroConvert-IMEでは、Windows版のSwift変換器（<code>AzooKeyKanaKanjiConverter</code>）およびAndroid版のC++ JNI層（<code>zenz_jni.cpp</code>）から <code>llama.h</code> のAPIを直接呼び出している。ABIが固定されれば、動的リンクライブラリ（DLL / .so）の差し替えだけで推論エンジンのバグ修正やSIMD最適化を安全に享受できる。OSごとのパッケージ配布（wingetや各Linuxディストリビューション）でも安定した共有ライブラリとして流通させやすくなる。</p>
+
+                <h3>投機的デコードとFP8 KVキャッシュが切り拓く極小モデルの可能性</h3>
+                <p>ZeroConvert-IME v0.7.0では、18.7 MiBの「ZeroCon Nano v4.1」を採用し、不要な融合グラフ探索のスキップやKVプレフィックス共有によってCPUコールド遅延20.96 msを達成した。ここにv1.0.0の正式機能であるNextN投機的デコードを組み合わせる余地が生まれた。</p>
+
+                <p>IMEの変換では「今日（きょう）」「変換（へんかん）」のように、高い確率で決まるトークン列が頻出する。軽量な下位モデル（または極小のDraftヘッド）が先読みで複数トークンを一度に投機生成し、本体モデルが一括検証する構造を作れば、1打鍵あたりの実効デコード時間をさらに半減させられる可能性がある。また、モバイル環境で課題となりやすいメモリ帯域と省電力化においても、FP8 KVキャッシュは有力な選択肢になる。</p>
+
+                <div class="callout">
+                    <div class="callout-title">カスタムパッチ運用の視点</div>
+                    <p style="margin:0;">ZeroConvert-IMEで行った「GPT-2アーキテクチャ時に不要なGDNやLightning Indexer探索を抑止するパッチ」のような軽量化ハックも、ベースラインのコードがSemVerで固定されることで、パッチの寿命が圧倒的に長くなる。上流の急激な変化に怯えず、プロダクト固有のプロファイル最適化に集中できる環境が整った。</p>
+                </div>
+
+                <h2>4. クラウド肥大化の対極にある「組み込みSLM」の確立</h2>
+
+                <p>現在、AIの世界では数千億パラメータのフロンティアモデルがクラウド上で競い合う一方、端末側では「数メガバイトから数ギガバイトの小規模モデル（SLM）をいかにゼロ遅延・ゼロインフラ費で動かすか」という実利的な挑戦が続いている。</p>
+
+                <p>ブラウザ上ではWebGPUが主要ブラウザすべてでBaselineに到達し、Wasm上の同期エージェントループが台頭している。そしてネイティブ環境では、llama.cppがv1.0.0という揺るぎない土台を手に入れた。実験室のPoCから実務で使われるソフトウェアコンポーネントへ。今回のメジャーリリースは、ローカル・エッジAIが成熟期に入ったことを告げる象徴的なマイルストーンだ。</p>
+
+                <p>ZeroConvert-IMEでも、v1.0.0のAPI体系に合わせたランタイムの再編と、さらなる打鍵レスポンスの限界突破を進めていく予定だ。</p>
+
+                <div class="cta-box">
+                    <h3 style="margin-top:0; color:#fff;">ZeroConvert-IME を使ってみる</h3>
+                    <p style="margin-bottom:0.5rem; color:var(--text-muted);">18.7 MiBの極小モデルと独自最適化ランタイムによる「変換キー不要」の日本語入力をWindows・Androidで体験できます。</p>
+                    <a href="https://github.com/g0083/ZeroConvert-IME" class="cta-btn" target="_blank" rel="noopener noreferrer">
+                        GitHub リポジトリを見る →
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
