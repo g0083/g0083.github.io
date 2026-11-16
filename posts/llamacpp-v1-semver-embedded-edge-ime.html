@@ -212,6 +212,40 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
         }
+
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 1.8rem 0;
+        }
+
+        .table-scroll .comparison-table {
+            margin: 0;
+        }
+
+        @media (max-width: 640px) {
+            .article-container {
+                padding: 24px 16px 60px;
+            }
+
+            .article-title {
+                font-size: 1.45rem;
+                line-height: 1.4;
+            }
+
+            .article-content h2 {
+                font-size: 1.3rem;
+            }
+
+            .comparison-table {
+                font-size: 0.85rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 0.55rem 0.7rem;
+            }
+        }
     </style>
 </head>
 
@@ -268,6 +302,7 @@
 
                 <p>今回のリリースにおける最大の骨子は、公開C API（<code>llama.h</code>）およびABIに対する厳格なSemVerの適用宣言だ。今後は後方互換性を壊す変更が入らない限りメジャーバージョンは上がらず、パッチ更新やマイナー更新を安全に取り込めるようになる。</p>
 
+                <div class="table-scroll">
                 <table class="comparison-table">
                     <thead>
                         <tr>
@@ -304,6 +339,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
 
                 <p>注目すべきは、SemVer導入に伴い「35以上のレガシーAPI」が一斉に削除された点だ。<code>llama_set_warmup</code> や古いデフラグ経路など、何世代にもわたって形骸化していたパブリック関数が完全に削ぎ落とされた。長年放置されてきたコードベースの膿を出し切った状態でv1.0.0の基底線を引いた姿勢には、メンテナ陣の強い覚悟が窺える。</p>
 
