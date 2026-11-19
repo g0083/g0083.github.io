@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論 | O-ya tech</title>
+    <meta name="description" content="POSTECHの最新論文『Weight-Space Programming Doesn't Need Transformers』（arXiv:2611.22055）を解説。LLMに勾配計算なしで重みを書かせるとTransformerを拒否しスパース連想テーブルを選ぶ理由と、ZeroConvert-IMEの18.7 MiB極小SLM＋nam数値マスク設計との構造的な一致を考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/wsp-doesnt-need-transformers-zerocon.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論">
+    <meta property="og:description" content="勾配降下法を使わないならTransformerは最適解ではない？ パラメータ1/1,800・最大17倍高速な連想メモリテーブルをLLMが自ら選んだPOSTECH論文（arXiv:2611.22055）と、ZeroConvert-IMEの責務分離設計を紐解きます。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/wsp-doesnt-need-transformers-zerocon.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.94rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .callout-warning {
+            background: rgba(255, 170, 0, 0.08);
+            border-left-color: #ffaa00;
+        }
+
+        .callout-warning .callout-title {
+            color: #ffaa00;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            margin-top: 3.5rem;
+            padding: 1.5rem;
+            background: var(--surface-dark);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html?tab=blog" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">LLM Research & Architecture</span>
+                <h1 class="article-title">【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月19日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>関連論文: arXiv:2611.22055 (POSTECH)</span>
+                </div>
+            </div>
+
+            <!-- Related Project Banner -->
+            <div class="related-project-banner" style="background: rgba(80, 200, 120, 0.08); border: 1px solid rgba(80, 200, 120, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 2.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #50C878; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Related Project / 関連プロジェクト</span>
+                    <strong style="font-size: 1.15rem; color: #fff;">ZeroConvert-IME</strong>
+                    <div style="font-size: 0.88rem; color: #b0b0b0; margin-top: 2px;">変換操作をゼロに近づける次世代AI日本語IME（Windows / Android）</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="../index.html?project=zeroconvert" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">トップで見る ↗</a>
+                    <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">GitHub</a>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                    2026年11月上旬、当ブログではMIT CSAIL発の「Weight-Space Programming（WSP：勾配計算なしでモデルの重みを直接書き換える手法）」を自作日本語IMEの極小モデル（<code>ZeroCon Model Standard v4 / 90.5M</code>）に適用した<a href="weight-space-programming-zerocon.html" style="color: #50C878; text-decoration: underline;">検証レポート</a>を公開した。
+                </p>
+                <p>
+                    あの実験で筆者が見つけたのは、全角・半角数字のキメラバグ（<code>１0キロ走る</code>）を重みの5%減衰で一発修正できた一方、<strong>「語彙欠落や高頻度アトラクター（<code>100円</code>→<code>1000円</code>）は、Transformerの密な重み行列をいじっても綺麗に直せない」</strong>という構造的な限界だった。
+                </p>
+                <p>
+                    そして今週、Hugging Face Daily PapersやZennで話題になっているPOSTECH（Hyunjong Ok氏・Jaeho Lee氏）の最新論文<strong>「<a href="https://arxiv.org/abs/2611.22055" target="_blank" rel="noopener noreferrer" style="color: #50C878; text-decoration: underline;">Weight-Space Programming Doesn't Need Transformers</a>」（arXiv:2611.22055）</strong>が、まさにその「なぜTransformerの重みを手書き・直接編集しようとすると歪みが出るのか」という疑問に、非常に明快な理論的裏付けを与えてくれた。
+                </p>
+
+                <h2>1. 論文の核心：「勾配を使わないなら、なぜTransformerを使うのか？」</h2>
+                <p>
+                    そもそも、私たちが当たり前に使っているTransformerというアーキテクチャは、何のためにその形をしているのか。論文の著者らは原点に立ち返ってこう問いかける。
+                </p>
+                <ul>
+                    <li>Transformerの密行列積（Dense Matmul）と残差接続・Attention構造は、<strong>勾配降下法（Backpropagation）による最適化</strong>と<strong>GPUの密演算スループット</strong>を最大化するために進化してきた。</li>
+                    <li>しかし、Weight-Space Programmingのように<strong>「LLMが推論モデルの重みを直接生成・編集し、勾配降下法を一切回さない」</strong>前提に立った瞬間、Transformerである必然性は消滅する。</li>
+                </ul>
+                <p>
+                    そこで研究チームは、3つのフロンティアLLMに対し、わずかなヒントと10個のラベル付き例題、そしてターゲットモデルのアーキテクチャと重みを自由に書けるサンドボックスを与えてみた。
+                </p>
+
+                <div class="callout">
+                    <div class="callout-title">フロンティアLLMが自ら選んだ答え</div>
+                    <p style="margin: 0;">
+                        3つのLLMは<strong>すべてTransformer構造を完全に拒否</strong>し、テキストの事実情報を<strong>「1ファクト1行のスパースな連想メモリ型テーブル（Sparse Associative-Memory Table）」＋「固定のクエリ手順」</strong>としてコンパイルするアーキテクチャを独自に設計した。
+                    </p>
+                </div>
+
+                <h3>驚くべき定量結果：約1,800分の1のサイズで高精度・17倍高速</h3>
+                <p>
+                    LLMが自ら設計したスパース・テーブル型の連想メモリモデルは、同じLLMが手で重みを書いた最良のTransformerと比較して、以下の指標を記録している。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>比較項目</th>
+                            <th>LLMが手書きしたTransformer</th>
+                            <th>LLMが設計したスパース連想テーブル</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>パラメータ効率</td>
+                            <td>ベースライン（密行列に事実を分散）</td>
+                            <td class="badge-success">約 1,800分の1 のパラメータ数で上回る精度</td>
+                        </tr>
+                        <tr>
+                            <td>GPU推論速度</td>
+                            <td>同規模Transformer基準（1x）</td>
+                            <td class="badge-success">最大 17倍 高速</td>
+                        </tr>
+                        <tr>
+                            <td>バグ修正（デバッグ性）</td>
+                            <td>複数層・数千万パラメータに知識が干渉</td>
+                            <td class="badge-success">誤答に直結する「該当行」だけ特定・書き換え可能</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    考えてみれば至極当然の話だ。人間やLLMが「明示的なルールや事実」をプログラムするとき、巨大な6000×768の浮動小数点行列にコサイン類似度で無理やり埋め込む必要はない。キーとバリューが対応した連想テーブルに1行ずつ書き込んだ方が、圧倒的に省メモリで、衝突せず、後から1行だけ直すのも確実だからだ。
+                </p>
+
+                <h2>2. ZeroConvert-IMEで起きた現象との完全な一致</h2>
+                <p>
+                    この論文を読んで思わず膝を打ったのは、筆者が<code>ZeroConvert-IME</code>（18.7 MiBの極小モデル <code>ZeroCon Nano v4.1</code> と 90.5M の <code>Standard v4</code>）で実際に踏んだ落とし穴と、その解決策が<strong>まったく同じ構造</strong>だったからである。
+                </p>
+
+                <h3>2-1. Transformerの重み編集が破綻した「100円 → 1000円」問題</h3>
+                <p>
+                    11月4日のWSP実験では、<code>ZeroCon Standard v4</code> の埋め込み行列 <code>transformer.wte.weight</code>（6000 × 768）に対して全角数字の重みノルムを5%落とすだけで <code>１0キロ走る</code> の全半角キメラが直った。ここまでは論文で言う「局所的な挙動の抑制」だ。
+                </p>
+                <p>
+                    しかし、<code>１００えんのあめ</code> が <code>1000円の飴</code> に化けるバグでは、<code>100</code> 出力直後の生ロジットで <code>0</code>（22.0178）が <code>円</code>（17.4934）を4.5ポイント以上上回っていた。日本語コーパスにおける「1000円」「10000円」という強力な頻度アトラクターが、Transformerの複数層の重み全体に分散して染み込んでいたため、WSP的な重み引き算では「200」や「300」まで道連れに壊れてしまった。
+                </p>
+
+                <h3>2-2. 解決策は「Transformerから責務を剥ぎ取ること」だった</h3>
+                <p>
+                    そこで11月15日にリリースした <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME v0.7.0</a> では、数値の全半角や桁数保持をTransformerに解かせるのをキッパリ諦めた。代わりに採ったのが、以下の<strong>明確な責務分離（ハイブリッド構成）</strong>である。
+                </p>
+                <ul>
+                    <li><strong>決定論的コード層（Swift / Rust / C++ / Kotlin）</strong>：連続した数字列を入力前に <code>nam</code> プレースホルダへ置換し、出力後に2パス復元（<code>name</code> や <code>dynamic</code> などの英単語は保護しつつ、<code>100円</code> や <code>Wi-Fi 6E</code>、<code>Bluetooth 5.4</code> は元の数字を100%正確に書き戻す）。</li>
+                    <li><strong>密Transformer層（Nano v4.1 / 18.7 MiB）</strong>：数字の桁数や表記揺れというノイズから解放され、「<code>namえんのあめ</code> → <code>nam円の飴</code>」「口語・補助動詞のひらがな維持」「文脈に応じた同音異義語の判別」という<strong>統計的・曖昧な自然言語推論</strong>だけに容量を集中する。</li>
+                </ul>
+
+                <pre><code>// ZeroConvert-IME v0.7.0 のハイブリッド分業パイプライン
+入力: "１００えんのあめ"
+  ├── [1] 決定論的マスク (Swift / Rust / C++): 数字列を抽出 ["100"] → "namえんのあめ"
+  ├── [2] 18.7 MiB 極小SLM (勾配学習済みTransformer): "nam円の飴" を生成
+  └── [3] 2パス英単語保護復元: "100円の飴" を確定（数値復元率 100.0% / 740問総合 97.16%）</code></pre>
+
+                <p>
+                    結果として、ベンチマーク740問における数値復元率は<strong>100.0%</strong>に到達し、パラメータ数わずか約26.7M（IQ4_emb8で18.7 MiB）のNano v4.1が、90.5MのStandardモデルに肉薄する総合97.16%を記録した。
+                </p>
+
+                <h2>3. 「勾配で学ぶ密な脳」と「手で書ける疎な記憶」の使い分け</h2>
+                <p>
+                    POSTECHの論文とZeroConvert-IMEの現場実装を並べると、今後のAI・SLMアプリケーション設計における黄金律が見えてくる。それは<strong>「すべてを1つの密なTransformerに詰め込まない」</strong>というアーキテクチャ上の見極めだ。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>処理・知識の性質</th>
+                            <th>最適な表現構造</th>
+                            <th>更新・デバッグ手法</th>
+                            <th>IME / エージェントでの具体例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>文脈の曖昧性解消・口語揺れ・タイポ修復</td>
+                            <td><strong>密なTransformer / SLM</strong></td>
+                            <td>勾配降下法・蒸留・DoRA</td>
+                            <td>「はし」「きょう」の文脈判定、フリック/QWERTY誤打鍵補正</td>
+                        </tr>
+                        <tr>
+                            <td>離散的ファクト・1対1対応・厳密フォーマット</td>
+                            <td><strong>スパース連想テーブル / ルールコード</strong></td>
+                            <td>直接編集（WSP / テーブル行書き換え）</td>
+                            <td>ユーザー辞書、固有名詞登録、<code>nam</code> 数値マスク・2パス復元</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">設計上のアンチパターン</div>
+                    <p style="margin: 0;">
+                        「AIエージェントやLLMが賢いのだから、辞書引きも正規表現で済む検証も、全部Transformerの重み空間に押し込もう」という発想は、1,800倍ものパラメータ浪費と、1箇所直すと別の箇所が壊れる副作用（カタストロフィック干渉）を招く。
+                    </p>
+                </div>
+
+                <h2>まとめ：小さなモデルの時代ほど「非Transformer」が効いてくる</h2>
+                <p>
+                    クラウドの巨大モデルであれば、数千億パラメータの暴力で「数値の桁保存」や「固有の事実テーブル」まで密行列の中に丸ごと飲み込めてしまう。しかし、スマホやPC上でメモリ数十MB・数ミリ秒で走らせるエッジSLMや、LLMが自律的に記憶・ツールを更新するエージェントの世界では、その贅沢は許されない。
+                </p>
+                <p>
+                    <code>Weight-Space Programming Doesn't Need Transformers</code> が示した「LLMに直接メモリを書かせるならTransformerよりスパースな連想テーブルが圧倒的に強い」という知見は、逆説的に<strong>「勾配でしか学べない曖昧さだけを極小Transformerに残し、確定的な知識と規則はテーブルやコードへ逃がす」</strong>というハイブリッド設計の正しさを証明している。
+                </p>
+                <p>
+                    ZeroConvert-IMEでも今後、ユーザー辞書やドメイン固有の固有名詞学習において、SLMのファインチューニング（DoRA）だけに頼るのではなく、こうした軽量な連想テーブル・プレフィックス誘導とのハイブリッド化をさらに推し進めていく予定だ。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    WSP論文とエッジSLMのハイブリッド設計についての考察が参考になりましたら、ぜひXなどでご感想をお寄せください！
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91%E3%80%8CWeight-Space%20Programming%E3%81%ABTransformer%E3%81%AF%E4%B8%8D%E8%A6%81%E3%80%8D%E8%AB%96%E6%96%87%E3%81%A8%E3%80%8118.7%20MiB%E6%A5%B5%E5%B0%8FIME%E3%81%AE%E3%83%8F%E3%82%A4%E3%83%96%E3%83%AA%E3%83%83%E3%83%89%E8%A8%AD%E8%A8%88%E3%81%8C%E8%BE%BF%E3%82%8A%E7%9D%80%E3%81%84%E3%81%9F%E5%90%8C%E3%81%98%E7%B5%90%E8%AB%96&url=https://g0083.github.io/posts/wsp-doesnt-need-transformers-zerocon.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
