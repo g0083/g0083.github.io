@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">16</span>
+                <span class="tab-badge">17</span>
             </button>
         </div>
 
@@ -146,6 +146,11 @@
                             <a href="posts/llamacpp-v1-semver-embedded-edge-ime.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【考察】llama.cppが「v1.0.0」に到達した日――ビルド番号運用の終焉と組み込みエッジAI</span>
                                 <span class="text-en">【Architecture】When llama.cpp Reached v1.0.0: What SemVer Means for Embedded Edge AI</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/wsp-doesnt-need-transformers-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】「Weight-Space ProgrammingにTransformerは不要」論文と18.7 MiB極小IMEの同じ結論</span>
+                                <span class="text-en">【Research】Why Weight-Space Programming Doesn't Need Transformers &amp; Edge IME Hybrid Design</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -396,6 +401,32 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: Weight-Space Programming Doesn't Need Transformers & Hybrid Edge IME (2026/11/19) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="Weight-Space Programming Doesn't Need Transformers and ZeroConvert-IME" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">LLM Research &amp; Architecture</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論</span>
+                            <span class="text-en">Why Weight-Space Programming Doesn't Need Transformers: Parallel Lessons from an 18.7 MiB Edge IME</span>
+                        </h3>
+                        <p class="text-jp">POSTECHの最新論文（arXiv:2611.22055）では、LLMに重みを手書きさせるとTransformerを拒否し、約1,800分の1のパラメータ数で最大17倍高速な連想メモリテーブルを選ぶことが示されました。ZeroConvert-IMEで直面した重み編集の限界とnam数値マスク分離設計との構造的な一致を考察します。</p>
+                        <p class="text-en">POSTECH's new paper (arXiv:2611.22055) shows that LLMs writing weights directly reject Transformers in favor of sparse associative-memory tables—with 1,800x fewer parameters and up to 17x faster execution. Comparing this finding with ZeroConvert-IME's hybrid architecture separating dense SLMs from deterministic nam digit masking.</p>
+                        <a href="posts/wsp-doesnt-need-transformers-zerocon.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: llama.cpp v1.0.0 SemVer & Embedded Edge AI (2026/11/16) -->
                 <article class="card">
                     <div class="card-image-wrapper">
