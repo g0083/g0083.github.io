@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】Discord「Project Phoenix」のRust×WASM共有コアと、脱Electron時代に個人開発アプリが採った同じ生存戦略 | O-ya tech</title>
+    <meta name="description" content="ElectronとReact Nativeを捨て、Rust共通コア＋GPUI＋WebAssembly（WASM）でRAM 290MBを実現したDiscord「Project Phoenix」。Typst Wasm（Markdown TeX Viewer）やネイティブ共有コア（ZeroConvert-IME）などの個人開発から見えたメリットと、設計上のトレードオフを考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/discord-phoenix-rust-wasm-shared-core.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】Discord「Project Phoenix」のRust×WASM共有コアと、脱Electron時代に個人開発アプリが採った同じ生存戦略">
+    <meta property="og:description" content="Electronを捨ててRust共通コア＋GPUI＋WebAssemblyへ移行しRAM約290MBを叩き出したDiscord「Project Phoenix」。Typst Wasmや軽量ネイティブPWAの個人開発経験から、その必然性と「代わりに重くなる場所」を掘り下げます。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/discord-phoenix-rust-wasm-shared-core.html">
+    <meta property="og:image" content="https://g0083.github.io/markdown-tex-viewer.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.94rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .callout-warning {
+            background: rgba(255, 170, 0, 0.08);
+            border-left-color: #ffaa00;
+        }
+
+        .callout-warning .callout-title {
+            color: #ffaa00;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            margin-top: 3.5rem;
+            padding: 1.5rem;
+            background: var(--surface-dark);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/markdown-tex-viewer" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html?tab=blog" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">Architecture / Rust &amp; WebAssembly</span>
+                <h1 class="article-title">【考察】Discord「Project Phoenix」のRust×WASM共有コアと、脱Electron時代に個人開発アプリが採った同じ生存戦略</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月20日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>関連: Markdown TeX Viewer / ZeroConvert-IME / Symple Audio Splitter</span>
+                </div>
+            </div>
+
+            <!-- Related Project Banner -->
+            <div class="related-project-banner" style="background: rgba(80, 200, 120, 0.08); border: 1px solid rgba(80, 200, 120, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 2.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #50C878; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Related Project / 関連プロジェクト</span>
+                    <strong style="font-size: 1.15rem; color: #fff;">Markdown TeX Viewer</strong>
+                    <div style="font-size: 0.88rem; color: #b0b0b0; margin-top: 2px;">Typst WebAssembly内蔵・ブラウザ完結型 Markdown &amp; TeX エディタ（Web PWA / Android）</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="../index.html?project=markdown-tex-viewer" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">トップで見る ↗</a>
+                    <a href="https://github.com/g0083/markdown-tex-viewer" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">GitHub</a>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                    2026年11月、開発者コミュニティで大きな話題を集めたのが、Discord共同創業者兼CTOのStanislav Vishnevskiy氏がプレビュー公開した次世代クライアント刷新計画<strong>「Project Phoenix」</strong>である。
+                </p>
+                <p>
+                    デスクトップ版の <strong>Electron（Chromium + Node.js）</strong> とモバイル版の <strong>React Native</strong> を両方捨て、アプリケーションの中核ロジックを <strong>単一のRustコア</strong> へ統合する。デスクトップUIにはZedエディタチーム発のGPUアクセラレーション対応Rust製フレームワーク <strong>GPUI</strong> を採用し、ブラウザ版には同じRustコアを <strong>WebAssembly（WASM）</strong> へコンパイルして供給する構成だ。
+                </p>
+                <p>
+                    Windows 11上の初期プレビューでは、複数アカウントを同時に稼働させた状態でもメモリ消費量が <strong>約290MB</strong> に収まったことが示され、アイドル時でも1〜2GB、ヘビーユースでは4GB超に達していた従来のElectron版からの劇的な軽量化が注目を集めている。
+                </p>
+                <p>
+                    このニュースを見て強く共感したのは、筆者自身が個人開発でメンテナンスしている <a href="../index.html?project=markdown-tex-viewer" style="color: #50C878; text-decoration: underline;">Markdown TeX Viewer</a>（Typst WASM）や <a href="../index.html?project=zeroconvert" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a>（18.7 MiB極小モデル＋共有ネイティブエンジン）、<a href="../index.html?project=symple-audio-splitter" style="color: #50C878; text-decoration: underline;">Symple Audio Splitter</a>（サーバーレス音声分割PWA）もまた、規模こそ違えど<strong>「重い汎用ラッパーを捨て、コアをRust/ネイティブとWASMに分離する」</strong>というまったく同じ設計思想に辿り着いていたからである。
+                </p>
+
+                <h2>1. 「UIまで1つのWeb技術で統一する」時代の限界</h2>
+                <p>
+                    これまでのクロスプラットフォーム開発では、「デスクトップもWebもChromium（Electron）＋JavaScriptで統一すれば1コードベースで済む」という考え方が主流だった。しかし2026年現在、ローカルAI（SLM）やリアルタイム音声・メディア処理がクライアント側へ降りてきたことで、その前提が崩れている。
+                </p>
+                <ul>
+                    <li><strong>メモリ予算の奪い合い：</strong> アプリのUI枠だけで1GB〜2GBのRAMを占有してしまうと、ユーザーの手元でローカルLLMや開発ツールを同時稼働させる余地がなくなる。</li>
+                    <li><strong>起動レイテンシの壁：</strong> V8とChromiumプロセス群を立ち上げる数秒の待ち時間は、毎日何度も開くエディタや常駐コミュニケーションツールでは明確なストレスになる。</li>
+                    <li><strong>Webの進化：</strong> ブラウザ自身がPWA・Web Worker・File System Access API・WebAssemblyを標準装備したことで、「ローカルファイルを触りたいだけならElectronを配る必要すらない」領域が広がった。</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title">💡 Project Phoenixが示した解：共有すべきは「UI」ではなく「Core」</div>
+                    <p>
+                        Discordは「すべての画面を同じHTML/CSSで描く」ことを諦める代わりに、状態管理・通信・ビジネスロジックなどの<strong>Core層だけをRustで統一</strong>し、出力先に応じて GPUI（デスクトップ）、ネイティブUI（モバイル）、HTML＋WebAssembly（ブラウザ）を使い分ける判断を下した。
+                    </p>
+                </div>
+
+                <h2>2. 個人開発3プロジェクトで実践した「脱重量ランタイム」の実測値</h2>
+                <p>
+                    大規模プロダクトだけでなく、個人開発レベルでも「Electronや重いバックエンドを挟まない設計」にすると、ユーザー体験と開発コストのバランスがどう変わるか。これまでに公開・運用してきた3つのアプリの実測データと構造を整理してみる。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>対象アプリ / プロジェクト</th>
+                            <th>従来の重い構成</th>
+                            <th>採用した軽量アーキテクチャ</th>
+                            <th>実測・成果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Discord (Project Phoenix)</strong></td>
+                            <td>Electron (Desktop)<br>React Native (Mobile)</td>
+                            <td>Rust共通コア<br>+ GPUI / Native UI / WASM (Web)</td>
+                            <td class="badge-success">RAM ~290MB（複数アカウント時）<br>従来1〜4GB超から大幅削減</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Markdown TeX Viewer</strong></td>
+                            <td>サーバー側LaTeXビルド<br>or Electron同梱アプリ</td>
+                            <td>ブラウザPWA (DOM 60fpsプレビュー)<br>+ Rust製 Typst Wasm (Web Worker)</td>
+                            <td class="badge-success">サーバー通信ゼロでベクターPDF出力<br>File System Access APIで直保存</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Symple Audio Splitter</strong></td>
+                            <td>FFmpegフル再エンコード<br>or サーバーアップロード処理</td>
+                            <td>ブラウザPWA完結<br>コンテナ解析＋フレーム直接コピー</td>
+                            <td class="badge-success">30分m4aの10分割書き出し<br>21秒 → 約0.23秒へ短縮</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ZeroConvert-IME</strong></td>
+                            <td>クラウドAPI通信<br>or 0.5B〜大型モデル常駐</td>
+                            <td>Windows / Android 共有変換コア<br>+ 18.7 MiB Nano v4.1 (<code>nam</code>分離)</td>
+                            <td class="badge-success">推論メモリ約35MB<br>CPUコールド中央値 20.96ms</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    特に <a href="markdown-tex-viewer-typst-wasm.html" style="color: #50C878; text-decoration: underline;">Markdown TeX Viewer</a> では、Rustで書かれた組版エンジン <strong>Typst</strong> を WebAssembly 化してブラウザの Web Worker に閉じ込めたことが決定打になった。もしこれを Electron で配布していたら、毎回アップデートごとに数百MBのバイナリを配布する羽目になるが、PWA＋Typst Wasmならブラウザだけでオフライン動作し、ローカルの <code>.md</code> ファイルも直接上書きできる。
+                </p>
+                <p>
+                    また <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a> でも、WindowsとAndroidのUI・OSフック層（TSF / InputMethodService）はそれぞれのネイティブ言語で薄く書きつつ、数値マスク <code>nam</code> や2パス英単語保護といった変換ロジックを共有エンジン側に寄せることで、推論メモリ約35MB・コールド中央値 20.96ms という常駐可能なフットプリントを維持できている。
+                </p>
+
+                <h2>3. ただし魔法ではない――「速く軽くする」と代わりに何が重くなるのか？</h2>
+                <p>
+                    ちょうど本日（2026年11月20日）のZennでも『検索を速くすると、代わりに何が重くなるのか』といった設計トレードオフの記事が注目を集めていたが、これはクライアントアーキテクチャでもまったく同じである。Electronを捨てて「Rust/ネイティブコア＋WASM」に移行すると、RAMと起動時間は劇的に軽くなる一方で、<strong>確実に重くなる場所（コストの移動先）</strong>が存在する。
+                </p>
+
+                <h3>トレードオフ ①：DOMとWASMの境界（メモリコピーと初期化）</h3>
+                <p>
+                    WASMは高速だが、ブラウザのDOMを直接触る処理や、巨大なアセット（フォントや辞書、モデル重み）をJS側からWASM線形メモリへ渡す境界には必ずコストが発生する。
+                </p>
+                <pre><code>// Markdown TeX Viewer における責務分離の例
+// 1. 入力中の60fpsプレビューはメインスレッドのDOM (Markdown-it + KaTeX) で完結
+//    → 1打鍵ごとにWASM境界を跨ぐとマーシャリングと再レイアウトで詰まる
+// 2. PDF書き出し時のみ Web Worker 上の Typst Wasm へAST/テキストを渡す
+const pdfBytes = await typstWorker.compile({
+    mainFile: typstDoc,
+    fonts: cachedFontBuffers // 初回のみ転送しWorker側で保持
+});</code></pre>
+                <p>
+                    Discord Phoenixがブラウザ版で「UI描画は標準HTMLのまま残し、アプリケーションロジックだけをWASMに載せる」構成を選んだのも、まさにDOM境界を跨ぐオーバーヘッドを避けつつロジック共有の恩恵だけを取るためである。
+                </p>
+
+                <h3>トレードオフ ②：UI層のプラットフォーム固有実装コスト</h3>
+                <p>
+                    Electronなら1つのCSSとHTMLでWindows・macOS・Linux・Webがすべて同じ見た目になる。しかしコアだけをRust/C++で共有する戦略を採ると、デスクトップはGPUI、モバイルはSwift/Kotlin、WebはHTML/CSSというように<strong>UI層の保守コストはプラットフォーム数に比例して重くなる</strong>。
+                </p>
+                <p>
+                    実際、ZeroConvert-IMEでも変換コアは共有できているが、WindowsのTSF候補ウィンドウ制御とAndroidのソフトウェアキーボード（IMEサービス＋片手操作レイアウト）は完全に別実装として維持する必要がある。
+                </p>
+
+                <h3>トレードオフ ③：ビルドパイプラインとデバッグ体験</h3>
+                <p>
+                    ブラウザやNode.jsだけで完結していた開発体験と比べ、<code>wasm-bindgen</code>・JNI・NDK・GPUIといったマルチターゲットのビルド環境は複雑になりやすい。実際、先日の <a href="llamacpp-v1-semver-embedded-edge-ime.html" style="color: #50C878; text-decoration: underline;">llama.cpp v1.0.0記事</a> でも触れたとおり、C/C++/Rustライブラリを複数OSへ組み込む現場では、ABI安定性とビルド手順の自動化が開発速度を左右する。
+                </p>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">⚠️ 個人開発での見極めライン</div>
+                    <p>
+                        「画面が100個ある業務管理画面」ならWeb/Electronのまま生産性を優先した方がよい。逆に、<strong>「常駐するツール（チャット・IME）」「重い計算やバイナリ処理を伴うツール（組版PDF・音声分割・ローカルSLM）」</strong>では、UIをブラウザ/ネイティブに委ねてCoreをRust/WASM/C++に切る投資が確実に回収できる。
+                    </p>
+                </div>
+
+                <h2>4. まとめ：小さいチーム・個人開発ほど「Core共有＋薄いUI」が効く</h2>
+                <p>
+                    DiscordのProject Phoenixは、巨大サービスであっても「ユーザーのメモリを1GB以上奪う汎用ラッパー」がもはや許容されなくなってきた象徴的な転換点だ。
+                </p>
+                <p>
+                    そして面白いことに、個人開発の現場ではすでに同じ構造が強力な武器になっている。重いサーバーも巨大なデスクトップラッパーも持たず、<strong>コア計算はRust（WASM）や極小ネイティブエンジンに寄せ、配信はブラウザPWAやOS標準UIへ載せる</strong>。今回のPhoenixの続報やGPUIエコシステムの成熟は、こうした軽量クライアント設計がこれからさらに当たり前になっていくことを裏付けている。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    Rust×WASM共有コアや脱Electronの設計考察が参考になりましたら、ぜひXなどでご感想をお寄せください。
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91Discord%E3%80%8CProject%20Phoenix%E3%80%8D%E3%81%AERust%C3%97WASM%E5%85%B1%E6%9C%89%E3%82%B3%E3%82%A2%E3%81%A8%E3%80%81%E8%84%B1Electron%E6%99%82%E4%BB%A3%E3%81%AB%E5%80%8B%E4%BA%BA%E9%96%8B%E7%99%BA%E3%82%A2%E3%83%97%E3%83%AA%E3%81%8C%E6%8E%A1%E3%81%A3%E3%81%9F%E5%90%8C%E3%81%98%E7%94%9F%E5%AD%98%E6%88%A6%E7%95%A5&url=https://g0083.github.io/posts/discord-phoenix-rust-wasm-shared-core.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
