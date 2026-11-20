@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">17</span>
+                <span class="tab-badge">18</span>
             </button>
         </div>
 
@@ -184,6 +184,11 @@
                             <a href="posts/markdown-tex-viewer-typst-wasm.html" class="related-link">
                                 <span class="text-jp">【解説】Typst Wasmでブラウザ完結の超美麗ベクターPDF出力を実現する</span>
                                 <span class="text-en">【Tech】Browser-side Vector PDF Export with Typst Wasm</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/discord-phoenix-rust-wasm-shared-core.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】Discord「Project Phoenix」のRust×WASM共有コアと個人開発の同じ生存戦略</span>
+                                <span class="text-en">【Architecture】Discord Project Phoenix's Rust+WASM Shared Core &amp; Indie App Lessons</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -401,6 +406,32 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: Discord Project Phoenix Rust+WASM Shared Core (2026/11/20) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="markdown-tex-viewer.png" alt="Discord Project Phoenix Rust and WASM Shared Core" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Architecture / Rust &amp; WebAssembly</span>
+                            <button class="project-pill-btn" data-target-project="markdown-tex-viewer" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: Markdown TeX Viewer ↗</span>
+                                <span class="text-en">Project: Markdown TeX Viewer ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">【考察】Discord「Project Phoenix」のRust×WASM共有コアと、脱Electron時代に個人開発アプリが採った同じ生存戦略</span>
+                            <span class="text-en">Discord's Project Phoenix (Rust + WASM Shared Core) &amp; Lessons from Lightweight Indie Apps</span>
+                        </h3>
+                        <p class="text-jp">Electronを捨てRust共通コア＋GPUI＋WebAssemblyへ移行しRAM約290MBを実現したDiscord「Project Phoenix」。Typst Wasm（Markdown TeX Viewer）や極小IME（ZeroConvert-IME）、音声分割PWAの実装経験から、その必然性と「代わりに重くなる境界コスト」を考察します。</p>
+                        <p class="text-en">Discord's Project Phoenix drops Electron for a shared Rust core, GPUI on desktop, and WebAssembly on the web (~290MB RAM). Exploring the same core-sharing tradeoffs seen in Typst Wasm (Markdown TeX Viewer), ZeroConvert-IME, and Symple Audio Splitter.</p>
+                        <a href="posts/discord-phoenix-rust-wasm-shared-core.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: Weight-Space Programming Doesn't Need Transformers & Hybrid Edge IME (2026/11/19) -->
                 <article class="card">
                     <div class="card-image-wrapper">
