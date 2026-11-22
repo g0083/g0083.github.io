@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">18</span>
+                <span class="tab-badge">19</span>
             </button>
         </div>
 
@@ -151,6 +151,11 @@
                             <a href="posts/wsp-doesnt-need-transformers-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【考察】「Weight-Space ProgrammingにTransformerは不要」論文と18.7 MiB極小IMEの同じ結論</span>
                                 <span class="text-en">【Research】Why Weight-Space Programming Doesn't Need Transformers &amp; Edge IME Hybrid Design</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/system1-agents-local-slm-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【考察】「System 1 agents」のテキスト非生成・1パス選択と18.7 MiB極小IMEの共通解</span>
+                                <span class="text-en">【Edge AI】System 1 Agents' Text-Free 1-Pass Selection &amp; 18.7 MiB Edge IME Reliability</span>
                                 <span class="arrow">→</span>
                             </a>
                         </div>
@@ -406,6 +411,32 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: System 1 Agents & Local SLM Reliability (2026/11/22) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="System 1 Agents and ZeroConvert-IME Local SLM Reliability" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Edge AI / Architecture</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解</span>
+                            <span class="text-en">System 1 Agents' Text-Free 1-Pass Selection &amp; Local AI Reliability Lessons from an 18.7 MiB Edge IME</span>
+                        </h3>
+                        <p class="text-jp">決定論的コンパイラ×1パス選択でハルシネーション0%・正答率97.0%を達成した「System 1 agents」と、18.7 MiBのZeroCon Nano v4.1におけるnam数値マスク分離設計・1パスargmax評価を比較。クラウド漏洩リスクとローカルSLMの信頼性を両立する設計原則を考察します。</p>
+                        <p class="text-en">Comparing System 1 agents (deterministic compiler + 1-pass selection achieving 97.0% accuracy and 0% hallucination) with ZeroConvert-IME's 18.7 MiB Nano v4.1 and shared nam digit masking to eliminate local SLM drift.</p>
+                        <a href="posts/system1-agents-local-slm-zerocon.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: Discord Project Phoenix Rust+WASM Shared Core (2026/11/20) -->
                 <article class="card">
                     <div class="card-image-wrapper">

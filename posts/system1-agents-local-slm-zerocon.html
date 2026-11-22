@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解 | O-ya tech</title>
+    <meta name="description" content="Hugging Face Daily Papersで話題の「System 1 agents」（決定論的コンパイラ×1パス選択でハルシネーション0%・正答率97.0%）と、18.7 MiB極小IMEモデルZeroCon Nano v4.1のnam数値マスク分離設計を比較し、ローカルSLMを実務で壊さず動かす設計原則を考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/system1-agents-local-slm-zerocon.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解">
+    <meta property="og:description" content="ローカル小型LLMに自由生成させるとハルシネーションが起きる。決定論的境界で選択肢を絞り1パスで判定する「System 1 agents」と、ZeroConvert-IMEのnam数値マスク分離設計の共通解を整理します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/system1-agents-local-slm-zerocon.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.94rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .callout-warning {
+            background: rgba(255, 170, 0, 0.08);
+            border-left-color: #ffaa00;
+        }
+
+        .callout-warning .callout-title {
+            color: #ffaa00;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            margin-top: 3.5rem;
+            padding: 1.5rem;
+            background: var(--surface-dark);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html?tab=blog" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">Edge AI / Architecture</span>
+                <h1 class="article-title">【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月22日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>関連: ZeroConvert-IME / System 1 agents / SPILLWAY</span>
+                </div>
+            </div>
+
+            <!-- Related Project Banner -->
+            <div class="related-project-banner" style="background: rgba(80, 200, 120, 0.08); border: 1px solid rgba(80, 200, 120, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 2.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #50C878; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Related Project / 関連プロジェクト</span>
+                    <strong style="font-size: 1.15rem; color: #fff;">ZeroConvert-IME</strong>
+                    <div style="font-size: 0.88rem; color: #b0b0b0; margin-top: 2px;">18.7 MiB極小モデル「Nano v4.1」と共有変換エンジンによるオンデバイス日本語IME（Windows / Android）</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="../index.html?project=zeroconvert" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">トップで見る ↗</a>
+                    <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">GitHub</a>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                    2026年11月下旬のAI・開発コミュニティを見ていると、ローカルAIとエージェント設計の「前提」が一段と現実的なフェーズへ移ってきたことがわかる。
+                </p>
+                <p>
+                    11月21日には、Together AIにおいて開発用公開リポジトリ（<code>xorl</code>）へAIコーディングエージェントが認証情報を誤コミットしたことに端を発し、プライベートリポジトリに保存されていた過去リクエストのプロンプトサンプルが第三者にダウンロードされた事案が公表された。機密テキストや日常の打鍵データを外部推論APIに預けるリスクが改めて露呈した形だ。
+                </p>
+                <p>
+                    その一方で、ローカルの小型モデル（SLM）を手元で動かそうとすると別の壁にぶつかる。自己回帰でテキストやJSONを自由生成させると、構文エラーや勝手な値の捏造（ハルシネーション）がどうしても紛れ込むのである。
+                </p>
+                <p>
+                    このジレンマに対して極めて明快な解法を提示し、Hugging Face Daily Papersでも注目を集めているのが、Eleftherios Tzanis氏とMichail E. Klontzas氏による論文およびOSSフレームワーク<strong>「System 1 agents: a method for local, reliable and fast agentic AI」</strong>（<a href="https://github.com/eltzanis/SystemOneAgents" target="_blank" rel="noopener noreferrer" style="color: #50C878; text-decoration: underline;">SystemOneAgents</a>）である。読んでみると、筆者が <a href="../index.html?project=zeroconvert" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a>（18.7 MiBの極小モデル <code>ZeroCon Model Nano v4.1</code>）の開発で辿り着いた設計と驚くほど同じ急所を突いていた。
+                </p>
+
+                <h2>1. 「テキストを生成しない」System 1 agents の発想</h2>
+                <p>
+                    従来のLLMエージェントは、医療・臨床データ解析のような機微領域であっても「ツール呼び出し用のJSON文字列を1トークンずつ自己回帰生成する」のが当たり前だった。しかし、小型のローカルLLMにこれをやらせると、スキーマ逸脱や引数値の勝手な作り変えが連鎖的な失敗を引き起こす。
+                </p>
+                <p>
+                    System 1 agents が採ったアプローチは逆転している。<strong>「ツールを呼ぶためにテキストを生成しない（Text-Free Tool Calling）」</strong>のだ。
+                </p>
+                <ul>
+                    <li><strong>決定論的コンパイラによる選択肢の生成：</strong> ツールのスキーマとユーザーのリクエスト文脈から、取り得る有効な操作と引数候補を決定論的なコンパイラが複数選択問題（Multiple-Choice）へ自動変換する。</li>
+                    <li><strong>逃げ道の明示：</strong> 該当ツールがない場合の <code>none of these</code> や、引数が文中に存在しない場合の <code>not specified</code> も選択肢に組み込む。</li>
+                    <li><strong>1パス（Single Forward Pass）の判定モデル：</strong> 軽量なローカル判定モデルが、生成ループを回さず<strong>たった1回のフォワードパス</strong>で選択肢の確率を評価して選ぶ。</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title">📊 System 1 agents の実測データ（157個の生物医学ツール・1,952リクエスト）</div>
+                    <p style="margin:0;">
+                        論文の評価では、18種類の標準的なローカルLLMエージェント構成（最高正答率95.2%、引数ハルシネーション率 5.5%〜19.7%）に対し、System 1 agents は<strong>正答率 97.0%</strong> を記録。さらに決定的なのが、<strong>引数における捏造・ハルシネーション発生率が 0%</strong> に抑えられた点である。生成ループを捨てたことでレイテンシと消費電力も大幅に削られた。
+                    </p>
+                </div>
+
+                <h2>2. 極小モデルが「自由生成」で壊れる理由――2611.21885 との符合</h2>
+                <p>
+                    小型モデルに自由度を与えすぎると壊れるという事実は、同じく11月下旬のarXiv（<code>arXiv:2611.21885</code>「Language Models Can Rewrite Their Own Weights」）でも別の角度から裏付けられている。
+                </p>
+                <p>
+                    この研究では、オープンウェイトの27Bモデルがテスト時に自身の失敗を診断して重み行列を直接書き換えることで、未知テストセットの精度を+6.6ポイント向上させ、破損したコピーも80%以上まで自己修復した。しかし注目すべきはスケーリング傾向で、同じモデル系列でも <strong>2B・4B・9Bの小型モデルは重み書き換えに失敗するか、自分自身を壊してしまった</strong> と報告されている。
+                </p>
+                <p>
+                    ましてやエッジやモバイルで常駐する0.03B（26.7M）〜0.09B（90.5M）クラスの極小SLMに、何でも自由生成や自己判断で完結させようとすれば破綻するのは必然だ。Zennやはてなブックマーク周辺で語られている「AIにテストケースを書かせるな、ルールを書け」という開発論や、ツール呼び出し権限をセット照合で分離する防衛手法「SPILLWAY」も含め、<strong>「不変条件（ルール）は決定論的コード側で保証し、ニューラルネットの責務を極限まで狭める」</strong>潮流がはっきり見えている。
+                </p>
+
+                <h2>3. ZeroConvert-IME（18.7 MiB）で実践した同じ「責務分離」</h2>
+                <p>
+                    実はこれとまったく同じ問題に、日本語IME <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME v0.7.0</a> の開発でも直面していた。
+                </p>
+                <p>
+                    18.7 MiBの <code>ZeroCon Model Nano v4.1</code>（6層・約26.7Mパラメータ）に、ユーザーの打鍵した数字や英単語混じりの文をそのまま自己回帰生成させると、かつては次のような「小さなモデル特有の破綻」が避けられなかった。
+                </p>
+                <ul>
+                    <li><code>１０きろはしる</code> → <code>１0キロ走る</code>（全角・半角が1文字目と2文字目でねじれる）</li>
+                    <li><code>１００えんのあめ</code> → <code>1000円の飴</code>（コーパス頻度の引力に負けて桁を捏造する）</li>
+                </ul>
+                <p>
+                    そこで私たちが採った解は、先日の <a href="wsp-doesnt-need-transformers-zerocon.html" style="color: #50C878; text-decoration: underline;">WSP論文の考察記事</a> でも触れた<strong>「数値と英単語保護を決定論的パイプラインへ追い出す」</strong>設計と、ランタイム側の<strong>「シングルパス評価」</strong>だった。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>設計レイヤー</th>
+                            <th>System 1 agents (論文・OSS)</th>
+                            <th>ZeroConvert-IME v0.7.0 (18.7 MiB Nano v4.1)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>決定論的コンパイラ / 前処理</strong></td>
+                            <td>ツールスキーマとリクエストから<br>有効な選択肢集合を機械的に構築</td>
+                            <td>共有エンジンの <code>nam</code> 数値マスク<br>（Rust / Swift / C++ / Kotlin 4層統一）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ニューラルモデルの責務</strong></td>
+                            <td>テキストを生成せず、1パスで<br>提示された選択肢の確率を判定</td>
+                            <td>文脈・助数詞・仮名漢字の変換推論と<br><code>ZenzCandidateEvaluator</code> 1パスargmax評価</td>
+                        </tr>
+                        <tr>
+                            <td><strong>安全機構 / 復元ルール</strong></td>
+                            <td><code>none of these</code> / <code>not specified</code><br>による強制フォールバック</td>
+                            <td>英単語（<code>name</code>, <code>dynamic</code>等）を壊さない<br>2パス復元＋不整合時キャッシュクリア</td>
+                        </tr>
+                        <tr>
+                            <td><strong>実測パフォーマンス</strong></td>
+                            <td>正答率 <strong>97.0%</strong> (1,952件)<br>引数ハルシネーション <span class="badge-success">0%</span></td>
+                            <td>740問総合 <strong>97.16%</strong> / 数値復元 <span class="badge-success">100.0%</span><br>CPUコールド中央値 <strong>20.96 ms</strong> (平均 19.60 ms)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    ZeroConvert-IMEでは、ベンチマーク専用だった <code>nam</code> マスクをWindows（Swift / Rust）とAndroid（JNI C++ / Kotlin）の共有変換エンジンへ組み込み、タイポ補正・ライブ変換・先読みアシストのすべてで同じ決定論的保護を通している。
+                </p>
+
+                <pre><code>// 決定論的境界で数値・英単語を守り、極小SLMは文脈と助数詞だけに集中させる
+1. 入力: "１００えんのあめ" / "SELECT name FROM users"
+2. 決定論的前処理 (mask_digits_with_nam):
+   → モデルには "namえんのあめ" を渡す (digits = ["100"])
+3. 極小SLM推論 (18.7 MiB Nano v4.1 / llama.cpp GPT-2パッチ + KVキャッシュ再利用):
+   → モデルは桁数や全半角を悩まず "nam円の飴" だけを返す
+   → 複数候補が不要な経路は生ロジット1パスargmaxで即決
+4. 決定論的2パス復元 (restore_nam_digits):
+   → 英単語(name, dynamic, naming)をスキップしつつ "100円の飴" を確実に復元</code></pre>
+
+                <p>
+                    この責務分離に加えて、<a href="zerocon-inference-speed-optimization.html" style="color: #50C878; text-decoration: underline;">推論高速化記事</a> でまとめた通り、<code>ZenzCandidateEvaluator</code> で候補リスト全体が不要な経路を「生ロジット1パスargmax」へ切り替えたこと、そして548問のタイポ補正評価で正常入力コントロール156問への<strong>誤補正ゼロ</strong>を達成できたことも、「モデルに余計な生成をさせない」思想の延長線上にある。
+                </p>
+
+                <h2>4. 個人開発者がこれからローカルAIを設計するための3原則</h2>
+                <p>
+                    System 1 agentsの成果とZeroConvert-IMEの運用経験、そして昨今のクラウド側の情報漏洩インシデントを重ね合わせると、個人開発やエッジ環境でローカルAIを組み込む際の指針は次の3点に集約される。
+                </p>
+
+                <div class="callout">
+                    <div class="callout-title">① 「自由生成」は最後の手段にする</div>
+                    <p style="margin:0;">
+                        ツール呼び出し、パラメータ抽出、数値・IDの保持といった「正解の集合が閉じているタスク」を小型モデルの自己回帰生成に丸投げしない。決定論的パーサやコンパイラで候補を有限集合へ落とし、モデルには<strong>スコアリングや選択（できれば1パス）だけ</strong>をさせる。
+                    </p>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title">② 不変条件はモデルの「外側」のコードで握る</div>
+                    <p style="margin:0;">
+                        プロンプトやLoRAの微調整で「数字を勝手に増やすな」「英単語を壊すな」「許可されていない宛先に送るな」とお願いし続けるより、前処理・後処理・セット照合の十数行のコードを外側に置く方が、100%の保証をゼロ遅延で得られる。
+                    </p>
+                </div>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">③ 機微な入力ほど「ローカル完結＋最小権限」へ寄せる</div>
+                    <p style="margin:0;">
+                        日々のキー入力、ローカルファイル、社外秘のテキストを外部サーバーへ送る構成は、どれだけAPIプロバイダが安全を謳っても設定ミスやサプライチェーン経由の漏洩リスクをゼロにできない。18.7 MiBのオンデバイスSLMやブラウザWASMのように、<strong>そもそもデータが端末の外に出ないアーキテクチャ</strong>を選べる領域はローカルに閉じ込めるべきだ。
+                    </p>
+                </div>
+
+                <h2>おわりに</h2>
+                <p>
+                    「System 1 agents」が示した<strong>“テキストを生成せずに1パスでローカルAIを確実に動かす”</strong>というアプローチは、巨大なフロンティアモデルの性能競争とは別軸にある、ソフトウェア工学としてのAI設計の王道だ。
+                </p>
+                <p>
+                    18.7 MiBのモデルでも、決定論的コードとの境界を正しく引けば740問評価で97.16%・数値復元100%・コールド中央値20.96 msで実用に耐える。これからエージェントや組込みAIを作る際は、「どうやってモデルの自由度を下げるか」「どうやって1パスで決め切れる構造にコンパイルするか」を設計の出発点に置くと、ローカルSLMの信頼性は劇的に跳ね上がるはずだ。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    ローカルSLMの信頼性設計やSystem 1 agentsとの比較が参考になりましたら、ぜひXなどでご感想をお寄せください。
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91%E3%80%8CSystem%201%20agents%E3%80%8D%E3%81%AE%E3%83%86%E3%82%AD%E3%82%B9%E3%83%88%E9%9D%9E%E7%94%9F%E6%88%90%E3%83%BB1%E3%83%91%E3%82%B9%E9%81%B8%E6%8A%9E%E3%81%A8%E3%80%8118.7%20MiB%E6%A5%B5%E5%B0%8FIME%EF%BC%88ZeroConvert-IME%EF%BC%89%E3%81%8C%E8%BE%BF%E3%82%8A%E7%9D%80%E3%81%84%E3%81%9F%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%ABAI%E4%BF%A1%E9%A0%BC%E6%80%A7%E3%81%AE%E5%85%B1%E9%80%9A%E8%A7%A3&url=https://g0083.github.io/posts/system1-agents-local-slm-zerocon.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
