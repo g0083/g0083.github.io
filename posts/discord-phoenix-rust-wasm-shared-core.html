@@ -320,7 +320,7 @@
                         <tr>
                             <td><strong>ZeroConvert-IME</strong></td>
                             <td>クラウドAPI通信<br>or 0.5B〜大型モデル常駐</td>
-                            <td>Windows / Android 共有変換コア<br>+ 18.7 MiB Nano v4.1 (<code>nam</code>分離)</td>
+                            <td>Windows / Android 共有変換コア<br>+ 18.7 MiB Nano v4.1</td>
                             <td class="badge-success">推論メモリ約35MB<br>CPUコールド中央値 20.96ms</td>
                         </tr>
                     </tbody>
@@ -330,7 +330,7 @@
                     特に <a href="markdown-tex-viewer-typst-wasm.html" style="color: #50C878; text-decoration: underline;">Markdown TeX Viewer</a> では、Rustで書かれた組版エンジン <strong>Typst</strong> を WebAssembly 化してブラウザの Web Worker に閉じ込めたことが決定打になった。もしこれを Electron で配布していたら、毎回アップデートごとに数百MBのバイナリを配布する羽目になるが、PWA＋Typst Wasmならブラウザだけでオフライン動作し、ローカルの <code>.md</code> ファイルも直接上書きできる。
                 </p>
                 <p>
-                    また <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a> でも、WindowsとAndroidのUI・OSフック層（TSF / InputMethodService）はそれぞれのネイティブ言語で薄く書きつつ、数値マスク <code>nam</code> や2パス英単語保護といった変換ロジックを共有エンジン側に寄せることで、推論メモリ約35MB・コールド中央値 20.96ms という常駐可能なフットプリントを維持できている。
+                    また <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME</a> でも、WindowsとAndroidのUI・OSフック層（TSF / InputMethodService）はそれぞれのネイティブ言語で薄く書きつつ、数値表記の誤変換を減らす仕組みといった変換ロジックを共有エンジン側に寄せることで、推論メモリ約35MB・コールド中央値 20.96ms という常駐可能なフットプリントを維持できている。
                 </p>
 
                 <h2>3. ただし魔法ではない――「速く軽くする」と代わりに何が重くなるのか？</h2>

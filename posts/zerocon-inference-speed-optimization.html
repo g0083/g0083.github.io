@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroConvert-IMEの推論高速化――llama.cppグラフ初期化削減、Swiftコンテキスト再利用、Android KVプレフィックス共有 | O-ya tech</title>
+    <title>ZeroConvert-IMEの推論高速化――性能レポート | O-ya tech</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="icon" href="../icon.png">
 
@@ -20,8 +20,8 @@
         rel="stylesheet">
 
     <!-- Open Graph / Meta -->
-    <meta property="og:title" content="ZeroConvert-IMEの推論高速化――llama.cppグラフ初期化削減、Swiftコンテキスト再利用、Android KVプレフィックス共有">
-    <meta property="og:description" content="モデル軽量化だけでなくランタイムと変換器側の無駄を徹底的に削ったZeroConvert-IME v0.7.0の高速化記録。llama.cppパッチ、Swift ZenzContext再利用とシングルパスargmax、AndroidのKVプレフィックス共有、実測遅延データまで公開。">
+    <meta property="og:title" content="ZeroConvert-IMEの推論高速化――性能レポート">
+    <meta property="og:description" content="平均遅延23.13ms→19.60msへ短縮したZeroConvert-IMEの推論高速化の性能レポート。">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://g0083.github.io/posts/zerocon-inference-speed-optimization.html">
     <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
@@ -250,126 +250,31 @@
             </header>
 
             <div class="article-content">
-                <p>日本語IMEの変換推論は、数GB級のLLMで長文を生成するときとはボトルネックの場所がまるで違う。入力される読みは十数トークン程度と短く、1回ごとの行列積そのものはごく軽量だ。むしろコンテキストの再確保、不要なカーネル探索、全語彙LogSumExp、スレッドディスパッチといった周辺オーバーヘッドが打鍵レスポンスを左右する。</p>
+                <section class="text-jp">
+                    <p>ZeroConvert-IME v0.7.0 では、モデルの軽量化に加えて推論の高速化を行いました。本記事は実装の内部ではなく、<strong>性能の結果</strong>だけをまとめます。</p>
+                    <h2>遅延の改善</h2>
+                    <p>同一マシン・同一モデルでの比較では、コールドプロンプト遅延の平均が <strong>23.13 ms → 19.60 ms</strong>、中央値が <strong>27.83 ms → 20.96 ms</strong> へ短縮しました。短い入力が多いIMEでは、初期化や周辺処理の削減が打鍵レスポンスに効きます。</p>
+                    <h2>構成の整理</h2>
+                    <p>補正用の常駐構成は、メイン変換モデル1本で動作する構成へ統合しました。常駐プロセス数の削減により、メモリと起動負荷を抑えながら、タイポ補正と変換を両立しています。</p>
+                    <h2>まとめ</h2>
+                    <p>軽量なモデルと高速化の組み合わせにより、<strong>18.7 MiB</strong> のサイズで20ms前後の応答を実現しています。詳細な計測条件は GitHub Releases をご覧ください。</p>
+                </section>
 
-                <p>ZeroConvert-IME v0.7.0にかけた一連の改修では、モデル構造を6層のNano系へ軽くしただけでなく、llama.cpp本体のコンテキスト初期化、Windows側のSwift変換器、Android JNIのKVキャッシュ管理、そして常駐プロセス構成まで手を入れた。</p>
-
-                <h2>1. llama.cpp側で使われない融合グラフ探索を止める</h2>
-
-                <p>ZeroCon系の日本語変換モデルはGPT-2ベースの設計をとる。ところが現代のllama.cppは多様な大型モデルに対応するため、コンテキスト予約時にGDN、Lightning Indexer、DeepSeek V4向けHyper-Connectionsなどの融合演算グラフが使えるかを毎回プローブする既定値を持っていた。</p>
-
-                <p><code>patches/llama.cpp/zerocon-compat-b12125.patch</code> の <code>src/llama-context.cpp</code> パッチでは、アーキテクチャが <code>LLM_ARCH_GPT2</code> である場合に限り、<code>fused_gdn_ar</code>、<code>fused_gdn_ch</code>、<code>fused_lid</code>、<code>fused_dsv4_hc_pre</code>、<code>fused_dsv4_hc_comb</code>、<code>fused_dsv4_hc_post</code>、<code>auto_fhc</code> の各フラグを明示的に無効化した。あわせてコンテキストサイズやバッチパラメータ、Flash Attention、パフォーマンス集計停止を見直している。</p>
-
-                <pre><code>if (model.arch == LLM_ARCH_GPT2) {
-    cparams.fused_gdn_ar       = false;
-    cparams.fused_gdn_ch       = false;
-    cparams.fused_lid          = false;
-    cparams.fused_dsv4_hc_pre  = false;
-    cparams.fused_dsv4_hc_comb = false;
-    cparams.fused_dsv4_hc_post = false;
-    cparams.auto_fhc           = false;
-}</code></pre>
-
-                <p>同一マシン・同一モデル <code>zerocon-nano-v4.1-iq4nl-emb8.gguf</code> を使ったCPU条件の横並び計測では、このランタイムパッチと <code>llama-server</code> 設定最適化により、初回コールドプロンプトの平均遅延が23.13 msから19.60 ms、中央値が27.83 msから20.96 msへ短縮した。</p>
-
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>計測条件（CPU 80リクエスト計）</th>
-                            <th>コールド平均</th>
-                            <th>コールド中央値</th>
-                            <th>コールド p95</th>
-                            <th>連続ウォーム中央値</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>変更前 (<code>-c 2048 --threads 4</code>)</td>
-                            <td>23.13 ms</td>
-                            <td>27.83 ms</td>
-                            <td>33.14 ms</td>
-                            <td>16.17 ms</td>
-                        </tr>
-                        <tr>
-                            <td><strong>変更後 (<code>-c 512 --flash-attn on --cache-reuse 1 --no-perf</code>)</strong></td>
-                            <td><strong>19.60 ms</strong></td>
-                            <td><strong>20.96 ms</strong></td>
-                            <td><strong>32.77 ms</strong></td>
-                            <td><strong>16.07 ms</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h2>2. Swift変換器でのコンテキスト再利用とシングルパス評価</h2>
-
-                <p>Windows側の中核を担うSwift製の変換器パッケージ <code>AzooKeyKanaKanjiConverter</code> は、これまでリセットのたびに <code>llama_context</code> を破棄して作り直す経路が残っていた。これを <code>ZenzContext.resetContext()</code> で <code>llama_memory_clear</code> のみを呼び出し、確保済みのコンテキストと計算グラフをそのまま再利用する形へ改めている。</p>
-
-                <p>初期化設定自体もIMEの短いコンテキストに合わせて調整した。コンテキスト長 <code>n_ctx=1024</code>、統一KVバッファ <code>n_seq_max=2</code>・<code>kv_unified=true</code>、<code>n_batch=1024</code>、<code>n_ubatch=512</code>、最大出力 <code>n_outputs_max=256</code>、<code>LLAMA_FLASH_ATTN_TYPE_ENABLED</code>、<code>no_perf=true</code> とし、スレッド数も1トークン生成用の <code>decodeThreads</code> とまとめて評価する <code>batchThreads</code> を分けて動的に切り替える。</p>
-
-                <p>候補スコアを評価する <code>ZenzCandidateEvaluator</code> では、複数候補の完全な確率分布を要しない経路向けに <code>!requestRichCandidates</code> 時の生ロジット一巡argmax高速パスを入れた。全語彙の <code>stabilizedLogSumExp</code> を計算するタイミングも早期終了判定の後へ遅らせている。</p>
-
-                <h2>3. Android JNIの共通プレフィックスKVキャッシュ共有</h2>
-
-                <p>スマートフォンの入力体験に直結するのがAndroid JNI層 <code>zenz_jni.cpp</code> と <code>assist_jni.cpp</code> のKVキャッシュ管理だ。ライブ変換では1打鍵ごとに末尾の1文字だけが増えたプロンプトが繰り返し飛んでくる。先頭から左文脈を含めて毎回ゼロから再評価していては、限られたモバイルCPU時間とバッテリーを無駄に消費する。</p>
-
-                <p>新しい実装では前回のトークン列 <code>g_cached_tokens</code> を保持し、今回のトークン列との最長共通プレフィックス長 <code>common_len</code> を計算する。一致した箇所まではKVキャッシュに計算済み状態を残したまま、分岐した末尾以降だけを <code>llama_memory_seq_rm(mem, 0, common_len, -1)</code> で破棄し、差分トークン <code>prompt_delta</code> のみを評価する。</p>
-
-                <p>もう一つ効いたのがスレッド数の切り替えだ。差分 <code>prompt_delta</code> が4トークン以下の細かな増分更新では <code>g_batch_threads</code> を起こさず <code>g_decode_threads</code> のまま回し、スレッド起床のオーバーヘッドを抑えた。キャッシュ状態の整合チェックとして <code>llama_memory_seq_pos_max(mem, 0) == common_len - 1</code> を検証し、食い違いを検知した場合は即座にクリアへフォールバックする安全策も入れている。</p>
-
-                <h2>4. モデル統合・CUDA廃止によるフットプリント削減とパイプライン実測</h2>
-
-                <p>これまでWindows版のタイポ補正は独立サーバーとしてポート18090に常駐し、さらにGPUオフロード用にCUDAランタイムと設定コードを抱えていた。v0.2.3以降の一連の整理を経て、v0.7.0ではスタンドアロンのCorrector常駐プロセスおよびCUDA固有コード（<code>cuda_backend.rs</code>）を完全に廃止した。現在は通常のメインモデルプロセス1本で、通常変換・Keyboard Hybridタイポ補正リランキング・先読みアシストを一気通貫で処理する。</p>
-
-                <p>Windowsの共有変換エンジンを用いた548問のタイポ補正ベンチマークでは、Nano v4.1 IQ4_emb8構成で通常変換時の中央値49.24 msに対し、タイポ補正を有効にした場合でも中央値52.87 msに収まった。同一ケースごとのペア差分中央値はわずか +1.14 ms にとどまる。標準モデルにNano v4.1 IQ4を選ぶと、12層のStandard v4.1 Q8と比べてCPU単体平均遅延で約3.3倍から4.1倍速く、ピークRSSメモリも約64%から65%抑えられる。</p>
-
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>評価セット</th>
-                            <th>Nano v4.1 IQ4 平均遅延</th>
-                            <th>Nano v4.1 IQ4 ピークRSS</th>
-                            <th>Standard v4.1 Q8 平均遅延</th>
-                            <th>Standard v4.1 Q8 ピークRSS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>IME実経路 160問</td>
-                            <td>21.00 ms</td>
-                            <td>132.31 MB</td>
-                            <td>69.60 ms</td>
-                            <td>366.00 MB</td>
-                        </tr>
-                        <tr>
-                            <td>開発評価 230問</td>
-                            <td>22.27 ms</td>
-                            <td>169.13 MB</td>
-                            <td>82.56 ms</td>
-                            <td>474.03 MB</td>
-                        </tr>
-                        <tr>
-                            <td>高難度文脈 250問</td>
-                            <td>24.33 ms</td>
-                            <td>263.37 MB</td>
-                            <td>98.99 ms</td>
-                            <td>755.87 MB</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="callout">
-                    <div class="callout-title">計測範囲についての注記</div>
-                    <p style="margin:0;">上記の遅延およびRSS数値はいずれも開発PC上のCPU条件（<code>-ngl 0</code>）で測定したモデル推論およびSwift評価パイプラインの記録であり、各ユーザーのOS環境やアプリ側のUI再描画時間すべてを表すものではない。</p>
-                </div>
-
-                <p>極小モデルと推論パイプラインの軽量化を組み合わせた結果、メモリ常駐量を大きく減らしながら日常入力で違和感のない応答速度を維持できる土台が整った。最新の改善を取り込んだバイナリはv0.7.0で配布している。</p>
+                <section class="text-en">
+                    <p>Inference optimization reduced average cold-prompt latency from 23.13 ms to 19.60 ms at 18.7 MiB. Performance summary only.</p>
+                </section>
 
                 <div class="cta-box">
-                    <h3 style="margin-top:0; color:#fff;">ZeroConvert-IME v0.7.0 を試す</h3>
-                    <p style="margin-bottom:0.5rem; color:var(--text-muted);">今回の高速化とNano v4.1を同梱したWindowsインストーラー・Android APKを公開しています。</p>
-                    <a href="https://github.com/g0083/ZeroConvert-IME/releases/tag/v0.7.0" class="cta-btn" target="_blank" rel="noopener noreferrer">
-                        GitHub Releases v0.7.0 へ →
-                    </a>
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
                 </div>
             </div>
         </article>

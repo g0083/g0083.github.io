@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論 | O-ya tech</title>
-    <meta name="description" content="POSTECHの最新論文『Weight-Space Programming Doesn't Need Transformers』（arXiv:2611.22055）を解説。LLMに勾配計算なしで重みを書かせるとTransformerを拒否しスパース連想テーブルを選ぶ理由と、ZeroConvert-IMEの18.7 MiB極小SLM＋nam数値マスク設計との構造的な一致を考察します。">
+    <meta name="description" content="POSTECHの最新論文『Weight-Space Programming Doesn't Need Transformers』（arXiv:2611.22055）を解説。LLMに勾配計算なしで重みを書かせるとTransformerを拒否しスパース連想テーブルを選ぶ理由と、ZeroConvert-IMEの18.7 MiB極小SLMの分離設計との構造的な一致を考察します。">
     <link rel="canonical" href="https://g0083.github.io/posts/wsp-doesnt-need-transformers-zerocon.html">
     <link rel="stylesheet" href="../style.css">
     <link rel="icon" href="../icon.png">
@@ -316,7 +316,7 @@
                 </table>
 
                 <p>
-                    考えてみれば至極当然の話だ。人間やLLMが「明示的なルールや事実」をプログラムするとき、巨大な6000×768の浮動小数点行列にコサイン類似度で無理やり埋め込む必要はない。キーとバリューが対応した連想テーブルに1行ずつ書き込んだ方が、圧倒的に省メモリで、衝突せず、後から1行だけ直すのも確実だからだ。
+                    考えてみれば至極当然の話だ。人間やLLMが「明示的なルールや事実」をプログラムするとき、巨大な浮動小数点行列にコサイン類似度で無理やり埋め込む必要はない。キーとバリューが対応した連想テーブルに1行ずつ書き込んだ方が、圧倒的に省メモリで、衝突せず、後から1行だけ直すのも確実だからだ。
                 </p>
 
                 <h2>2. ZeroConvert-IMEで起きた現象との完全な一致</h2>
@@ -326,25 +326,7 @@
 
                 <h3>2-1. Transformerの重み編集が破綻した「100円 → 1000円」問題</h3>
                 <p>
-                    11月4日のWSP実験では、<code>ZeroCon Standard v4</code> の埋め込み行列 <code>transformer.wte.weight</code>（6000 × 768）に対して全角数字の重みノルムを5%落とすだけで <code>１0キロ走る</code> の全半角キメラが直った。ここまでは論文で言う「局所的な挙動の抑制」だ。
-                </p>
-                <p>
-                    しかし、<code>１００えんのあめ</code> が <code>1000円の飴</code> に化けるバグでは、<code>100</code> 出力直後の生ロジットで <code>0</code>（22.0178）が <code>円</code>（17.4934）を4.5ポイント以上上回っていた。日本語コーパスにおける「1000円」「10000円」という強力な頻度アトラクターが、Transformerの複数層の重み全体に分散して染み込んでいたため、WSP的な重み引き算では「200」や「300」まで道連れに壊れてしまった。
-                </p>
-
-                <h3>2-2. 解決策は「Transformerから責務を剥ぎ取ること」だった</h3>
-                <p>
-                    そこで11月15日にリリースした <a href="zerocon-nano-v4-1-model-accuracy.html" style="color: #50C878; text-decoration: underline;">ZeroConvert-IME v0.7.0</a> では、数値の全半角や桁数保持をTransformerに解かせるのをキッパリ諦めた。代わりに採ったのが、以下の<strong>明確な責務分離（ハイブリッド構成）</strong>である。
-                </p>
-                <ul>
-                    <li><strong>決定論的コード層（Swift / Rust / C++ / Kotlin）</strong>：連続した数字列を入力前に <code>nam</code> プレースホルダへ置換し、出力後に2パス復元（<code>name</code> や <code>dynamic</code> などの英単語は保護しつつ、<code>100円</code> や <code>Wi-Fi 6E</code>、<code>Bluetooth 5.4</code> は元の数字を100%正確に書き戻す）。</li>
-                    <li><strong>密Transformer層（Nano v4.1 / 18.7 MiB）</strong>：数字の桁数や表記揺れというノイズから解放され、「<code>namえんのあめ</code> → <code>nam円の飴</code>」「口語・補助動詞のひらがな維持」「文脈に応じた同音異義語の判別」という<strong>統計的・曖昧な自然言語推論</strong>だけに容量を集中する。</li>
-                </ul>
-
-                <pre><code>// ZeroConvert-IME v0.7.0 のハイブリッド分業パイプライン
-入力: "１００えんのあめ"
-  ├── [1] 決定論的マスク (Swift / Rust / C++): 数字列を抽出 ["100"] → "namえんのあめ"
-  ├── [2] 18.7 MiB 極小SLM (勾配学習済みTransformer): "nam円の飴" を生成
+                    11月4日のWSP実験では、<code>ZeroCon Standard v4 の重みを分析し、特定の表記の出力を調整するだけで修正できました: "数字を保持した表記" を生成
   └── [3] 2パス英単語保護復元: "100円の飴" を確定（数値復元率 100.0% / 740問総合 97.16%）</code></pre>
 
                 <p>
@@ -369,14 +351,14 @@
                         <tr>
                             <td>文脈の曖昧性解消・口語揺れ・タイポ修復</td>
                             <td><strong>密なTransformer / SLM</strong></td>
-                            <td>勾配降下法・蒸留・DoRA</td>
+                            <td>勾配降下法による学習</td>
                             <td>「はし」「きょう」の文脈判定、フリック/QWERTY誤打鍵補正</td>
                         </tr>
                         <tr>
                             <td>離散的ファクト・1対1対応・厳密フォーマット</td>
                             <td><strong>スパース連想テーブル / ルールコード</strong></td>
                             <td>直接編集（WSP / テーブル行書き換え）</td>
-                            <td>ユーザー辞書、固有名詞登録、<code>nam</code> 数値マスク・2パス復元</td>
+                            <td>ユーザー辞書、固有名詞登録、数値表記の誤変換削減</td>
                         </tr>
                     </tbody>
                 </table>
@@ -396,7 +378,7 @@
                     <code>Weight-Space Programming Doesn't Need Transformers</code> が示した「LLMに直接メモリを書かせるならTransformerよりスパースな連想テーブルが圧倒的に強い」という知見は、逆説的に<strong>「勾配でしか学べない曖昧さだけを極小Transformerに残し、確定的な知識と規則はテーブルやコードへ逃がす」</strong>というハイブリッド設計の正しさを証明している。
                 </p>
                 <p>
-                    ZeroConvert-IMEでも今後、ユーザー辞書やドメイン固有の固有名詞学習において、SLMのファインチューニング（DoRA）だけに頼るのではなく、こうした軽量な連想テーブル・プレフィックス誘導とのハイブリッド化をさらに推し進めていく予定だ。
+                    ZeroConvert-IMEでも今後、ユーザー辞書やドメイン固有の固有名詞学習において、SLMのファインチューニングだけに頼るのではなく、こうした軽量な連想テーブル・プレフィックス誘導とのハイブリッド化をさらに推し進めていく予定だ。
                 </p>
             </div>
 

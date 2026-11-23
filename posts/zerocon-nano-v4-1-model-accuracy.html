@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」と共有エンジンへのnam数値マスク統合 | O-ya tech</title>
+    <title>日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」の性能レポート | O-ya tech</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="icon" href="../icon.png">
 
@@ -20,8 +20,8 @@
         rel="stylesheet">
 
     <!-- Open Graph / Meta -->
-    <meta property="og:title" content="日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」と共有エンジンへのnam数値マスク統合">
-    <meta property="og:description" content="18.7 MiBの超小型IME変換モデルをv4.1へ更新し、日常チャット・口語・過剰漢字抑止を強化。ベンチマーク専用だった数値マスクnamをWindows/Androidの共有変換エンジンへ組み込み、740問評価でNano IQ4 97.16%を達成した記録。">
+    <meta property="og:title" content="日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」の性能レポート">
+    <meta property="og:description" content="18.7 MiBで計740問97.16%、日常口語97%を記録したZeroCon Nano v4.1の性能レポート。">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://g0083.github.io/posts/zerocon-nano-v4-1-model-accuracy.html">
     <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
@@ -241,7 +241,7 @@
         <article>
             <header class="article-header">
                 <span class="article-category">Model Training / Edge AI</span>
-                <h1 class="article-title">日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」と共有エンジンへのnam数値マスク統合</h1>
+                <h1 class="article-title">日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」の性能レポート</h1>
                 <div class="article-meta">
                     <time datetime="2026-11-15">2026.11.15</time>
                     <span>著者: g0083 (O-ya tech)</span>
@@ -250,201 +250,39 @@
             </header>
 
             <div class="article-content">
-                <p>極小モデルの変換精度がカタログ数値だけ良くなっても、普段のチャットや数値混じりの入力で崩れては意味がない。ZeroConvert-IME v0.7.0では、標準モデルを6層・約26.7MパラメータのZeroCon Model Nano v4.1へ刷新し、あわせてベンチマーク専用だった数値マスク機構をWindowsとAndroidの実変換エンジンへ組み込んだ。</p>
+                <section class="text-jp">
+                    <p>ZeroConvert-IME v0.7.0 では、標準モデルを6層・約26.7Mパラメータの ZeroCon Model Nano v4.1 へ刷新しました。既定の軽量版は <strong>18.7 MiB</strong>、高精度版は <strong>27.7 MiB</strong> です。本記事は学習の内部ではなく、<strong>性能の結果</strong>だけをまとめます。</p>
+                    <h2>日常会話・口語の性能</h2>
+                    <p>短文や口語表現、過剰な漢字化の抑止を重点的に確認しました。日常口語100問では、軽量版が <strong>87/100 → 97/100（97.0%）</strong>、高精度版が <strong>92/100 → 98/100（98.0%）</strong> へ向上しました。</p>
+                    <h2>計740問での精度</h2>
+                    <table class="comparison-table">
+                        <thead><tr><th>モデル（サイズ）</th><th>IME実経路 160問</th><th>開発評価 230問</th><th>高難度文脈 250問</th><th>日常口語 100問</th><th>合計 740問</th></tr></thead>
+                        <tbody>
+                            <tr><td>Standard v4.1 Q8 (99.05 MB)</td><td>156/160 (97.5%)</td><td>225/230 (97.8%)</td><td>249/250 (99.6%)</td><td>99/100 (99.0%)</td><td>729/740 (98.51%)</td></tr>
+                            <tr><td>Standard v4.1 IQ4 (58.55 MB)</td><td>156/160 (97.5%)</td><td>225/230 (97.8%)</td><td>247/250 (98.8%)</td><td>98/100 (98.0%)</td><td>726/740 (98.11%)</td></tr>
+                            <tr><td>Nano v4.1 Q8 (27.69 MB)</td><td>153/160 (95.6%)</td><td>224/230 (97.4%)</td><td>247/250 (98.8%)</td><td>98/100 (98.0%)</td><td>722/740 (97.57%)</td></tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;"><td>Nano v4.1 IQ4 (18.69 MB)</td><td>153/160 (95.6%)</td><td>222/230 (96.5%)</td><td>247/250 (98.8%)</td><td>97/100 (97.0%)</td><td>719/740 (97.16%)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>18.7 MiB</strong> の軽量版でも、99MB級の高精度版に肉薄する <strong>97.16%</strong> を記録しました。数値の誤変換を減らす改善も Windows と Android の変換経路全体に反映されています。</p>
+                    <p>いずれも固定データセット上の測定値であり、未知の実入力すべてに対する保証値ではありません。</p>
+                </section>
 
-                <p>サイズとアーキテクチャの前提はNano v4から変えていない。既定のIQ4_emb8版は18.7 MiB、Q8版は27.7 MiBに収まる。追加したのは、日常的な短文・口語表現・補助動詞のひらがな保持を扱う学習カリキュラムと、実IMEでそのまま数字の誤変換を防ぐ共有パイプラインだ。</p>
-
-                <h2>1. なぜ従来の長いベンチマークだけでは足りなかったのか</h2>
-
-                <p>これまでの開発評価では、新聞や解説文のように長い複文でモデル単体の正答率を見てきた。だが実際のZeroConvert-IMEには自動確定があり、画面上に長大な未確定文が溜まり切る前に先頭部分が確定する。入力される単位が短いほど、モデルの弱点は違う場所に現れる。</p>
-
-                <p>具体的に気になったのは日常チャットと口語の崩れ、それに過剰漢字だった。たとえば食べているのに漢字で「食べて行く」と出たり、「ありがとうございます」が「有難う御座います」寄りに引っ張られたりする挙動は、4bit量子化を施した軽量モデルで特に目立ちやすい。</p>
-
-                <p>実利用に近い条件で弱点を測るため、160問のIME実経路想定セットと100問の日常口語・過剰漢字セットを新しく設計した。既存の230問セットおよび高難度250問セットと合わせた計740問で、学習段階のr1からr2、v4.1となるcap-nam-r3までを順に検証している。</p>
-
-                <h2>2. v4.1で入った学習改善とデータリーク隔離</h2>
-
-                <p>学習基盤にはこれまでと同様、rank-64のDoRA、Target-Corrected二重アンカー蒸留、自己コピーと早すぎるEOSの抑止を使っている。v4系の基礎能力強化ではこれに加え、正解トークンと次点候補のロジット差を保つ<code>quant_margin</code>と文脈引きずりを抑える<code>prior_copy_margin</code>を導入した。r2からr3にかけては、口語縮約、ネットスラング、補助動詞のひらがな維持、過剰漢字抑止を重点的に補強している。</p>
-
-                <p>学習時に統合されたLoRA/DoRA重みはベースモデルへマージ済みのため、推論時に追加レイヤーは走らない。教師モデルには同じカリキュラムで育てた12層・90.5MパラメータのStandard v4.1を使った。</p>
-
-                <div class="callout">
-                    <div class="callout-title">学習と評価のデータリーク検証</div>
-                    <p style="margin:0;"><code>nano-v4-cap-nam-r3-lora/dataset-provenance.json</code> の記録では、<code>source-components-nfkc-kana-v1</code> ポリシーのもと学習1,274件・検証121件を構築している。主要7種の評価データセットとの間で、<code>train_evaluation_shared_keys</code>、<code>validation_evaluation_shared_keys</code>、<code>evaluation_derived_rows</code>、<code>train_validation_shared_groups</code> はいずれも0件だった。</p>
-                </div>
-
-                <h2>3. 計740問での精度推移：口語100問で87%から97%へ</h2>
-
-                <p>r2からr3（Nano v4.1）への更新で最も大きく伸びたのが口語・日常チャット領域だ。CPU上での単体モデル比較では、Nano IQ4_emb8が87/100（87.0%）から97/100（97.0%）へ、Nano Q8が92/100（92.0%）から98/100（98.0%）へ改善した。補助動詞やネットスラング、口語縮約はいずれも20/20に達している。</p>
-
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>評価セット（100問内訳）</th>
-                            <th>Nano r2 IQ4</th>
-                            <th>Nano v4.1 IQ4 (r3)</th>
-                            <th>Nano v4.1 Q8 (r3)</th>
-                            <th>Standard v4.1 Q8</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>日常チャット (/20)</td>
-                            <td>14</td>
-                            <td>18</td>
-                            <td>19</td>
-                            <td>19</td>
-                        </tr>
-                        <tr>
-                            <td>ネットスラング (/20)</td>
-                            <td>17</td>
-                            <td>20</td>
-                            <td>20</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>過剰漢字抑止 (/20)</td>
-                            <td>19</td>
-                            <td>19</td>
-                            <td>19</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>補助動詞ひらがな (/20)</td>
-                            <td>17</td>
-                            <td>20</td>
-                            <td>20</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>口語縮約 (/20)</td>
-                            <td>20</td>
-                            <td>20</td>
-                            <td>20</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td><strong>合計 (/100)</strong></td>
-                            <td><strong>87 (87.0%)</strong></td>
-                            <td><strong>97 (97.0%)</strong></td>
-                            <td><strong>98 (98.0%)</strong></td>
-                            <td><strong>99 (99.0%)</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p>他の3つの評価セットを含めた計740問全体でも、18.7 MiBのNano v4.1 IQ4_emb8が90.5MパラメータのStandard v4.1に肉薄した。全4セットすべてで構造整合性と数値復元率はいずれも100.0%を記録している。</p>
-
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>モデル (サイズ)</th>
-                            <th>IME実経路 160問</th>
-                            <th>開発評価 230問</th>
-                            <th>高難度文脈 250問</th>
-                            <th>日常口語 100問</th>
-                            <th>合計 740問</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Standard v4.1 Q8 (99.05 MB)</td>
-                            <td>156/160 (97.5%)</td>
-                            <td>225/230 (97.8%)</td>
-                            <td>249/250 (99.6%)</td>
-                            <td>99/100 (99.0%)</td>
-                            <td>729/740 (98.51%)</td>
-                        </tr>
-                        <tr>
-                            <td>Standard v4.1 IQ4 (58.55 MB)</td>
-                            <td>156/160 (97.5%)</td>
-                            <td>225/230 (97.8%)</td>
-                            <td>247/250 (98.8%)</td>
-                            <td>98/100 (98.0%)</td>
-                            <td>726/740 (98.11%)</td>
-                        </tr>
-                        <tr>
-                            <td>Nano v4.1 Q8 (27.69 MB)</td>
-                            <td>153/160 (95.6%)</td>
-                            <td>224/230 (97.4%)</td>
-                            <td>247/250 (98.8%)</td>
-                            <td>98/100 (98.0%)</td>
-                            <td>722/740 (97.57%)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Nano v4.1 IQ4 (18.69 MB)</strong></td>
-                            <td><strong>153/160 (95.6%)</strong></td>
-                            <td><strong>222/230 (96.5%)</strong></td>
-                            <td><strong>247/250 (98.8%)</strong></td>
-                            <td><strong>97/100 (97.0%)</strong></td>
-                            <td><strong>719/740 (97.16%)</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p>Windowsの共有変換パイプライン上でNano v4.1 IQ4を使った548問のタイポ補正評価でも、登録済みタイポ群は0から90/92がTop-1に浮上し、Top-5には92/92すべてが入った。正常入力コントロール群156問に対する誤補正は0件だった。なお、これらは固定データセットによるモデル・パイプライン測定値であり、未知の実打鍵すべてに対する保証値ではない。</p>
-
-                <h2>4. ベンチマーク専用の仕組みを実IMEの共有エンジンへ移植する</h2>
-
-                <p>精度検証の過程では、連続した数字列を一時的に <code>nam</code> というプレースホルダへ置き換えてモデルへ渡し、返ってきた出力文字列へ元の数字列を書き戻す前処理を使っていた。モデルの語彙や学習データ内で桁数違いや全半角の揺れに振り回されず、文脈上の助数詞や単位だけを正しく変換させる狙いだ。</p>
-
-                <p>ただし、この変換がベンチマークスクリプトの中だけに留まっていては、実際のIMEユーザーが数字を入力したときに同じ恩恵を受けられない。v0.7.0では設計を見直し、通常のライブ変換、タイポ補正、先読みアシストのすべてで同じ <code>nam</code> マスクと復元を通すように統一した。</p>
-
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>プラットフォーム / 層</th>
-                            <th>組み込み先モジュール</th>
-                            <th>担う処理</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Windows Swift変換器</td>
-                            <td><code>ZenzDigitMasking</code> (<code>converter_patch.py</code>)</td>
-                            <td>通常変換の左文脈・読み仮名マスクとデコードバイト列上の復元</td>
-                        </tr>
-                        <tr>
-                            <td>Windows Rustサーバー</td>
-                            <td><code>corrector::mask_digits_with_nam</code> / <code>restore_nam_digits</code></td>
-                            <td>タイポ補正、Keyboard Hybrid修復文脈、先読み補完のマスクと復元</td>
-                        </tr>
-                        <tr>
-                            <td>Android JNI (C++)</td>
-                            <td><code>zenz_jni.cpp</code></td>
-                            <td>ネイティブ変換経路のUTF-8直接スキャンによるマスクと復元</td>
-                        </tr>
-                        <tr>
-                            <td>Android Assist (Kotlin)</td>
-                            <td><code>NamMasking</code> (<code>ModelCorrector</code> / <code>PredictiveAssistEngine</code>)</td>
-                            <td>Android側のタイポ補正候補評価および先読み候補のマスクと復元</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>なぜ2パス復元で英単語を守れるのか</h3>
-
-                <p><code>nam</code> 復元で一番気をつけなければならないのが英単語との衝突だ。たとえば入力文や変換候補に <code>name</code>、<code>naming</code>、<code>dynamic</code>、<code>username</code> が含まれていると、単純な前方一致置換では <code>10e</code> や <code>dy10ic</code> のように英単語を壊してしまう。</p>
-
-                <p>そこで共有実装では、どの言語層でも同じ2パス方式を採用した。まず第1パスでは、直後に小文字アルファベットが続く <code>nam</code> を英単語とみなしてスキップする。ただし <code>x</code> だけは除外しており、<code>10x</code> のように倍率記号と連結したケースは第1パスでそのまま数字に戻る。</p>
-
-                <p>第1パスを終えてもまだ元の数字列が余っている場合だけ、第2パスが走る。第2パスでも直前が小文字のケース（<code>dynamic</code>）、直後が <code>e</code> のケース（<code>name</code> / <code>username</code>）、後ろに単独の <code>ing</code> が続くケース（<code>naming</code>）は英単語として保護しつつ、日本語の助数詞ローマ字や複合語に吸収された残りスロットだけを補完する仕組みにした。Swift変換器では、推論途中で <code>na</code> や <code>n</code> までしか出力されずに打ち切られた末尾フラグメントへの復元も備えている。</p>
-
-                <pre><code>例: 「SELECT name FROM customers」と「１００えんのあめ」が混在しても
-1) 入力マスク: 「１００えんのあめ」 → 「namえんのあめ」(digits=["100"])
-2) 英単語混在テスト: restore_nam_digits("SELECT nameです dynamic", ["10"])
-   → 末尾e・直前小文字判定により "SELECT nameです dynamic" のまま破壊されない
-3) 倍率記号混在テスト: restore_nam_digits("Wi-Fi namEとBluetooth nam.nam", ["6", "5", "4"])
-   → 各スロットへ左から順に還元され "Wi-Fi 6EとBluetooth 5.4" を復元</code></pre>
-
-                <p>学習データの更新と共有エンジンの前処理が噛み合ったことで、740問ベンチマークの数値例はすべて全問一致の100%で通るようになった。同じバイナリと設定をWindowsインストーラーおよびAndroid APKとしてv0.7.0に収録している。</p>
+                <section class="text-en">
+                    <p>ZeroCon Nano v4.1 reaches 719/740 (97.16%) at 18.7 MiB, with colloquial accuracy improving from 87% to 97%. Performance summary only.</p>
+                </section>
 
                 <div class="cta-box">
-                    <h3 style="margin-top:0; color:#fff;">ZeroConvert-IME v0.7.0 を試す</h3>
-                    <p style="margin-bottom:0.5rem; color:var(--text-muted);">Windows版インストーラー（x64）とAndroid版APK（arm64 / universal）をGitHub Releasesで配布しています。</p>
-                    <a href="https://github.com/g0083/ZeroConvert-IME/releases/tag/v0.7.0" class="cta-btn" target="_blank" rel="noopener noreferrer">
-                        GitHub Releases v0.7.0 へ →
-                    </a>
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
                 </div>
             </div>
         </article>

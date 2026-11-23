@@ -345,7 +345,7 @@ agent-desktop type @s8f3k2p9:e12 "report.pdf"</code></pre>
                 <div class="callout callout-warning">
                     <div class="callout-title">状態ズレを「誤爆させず検知する」思想</div>
                     <p style="margin:0;">
-                        DarkModePDFが「画像XObjectに触れない」「1ページずつ破棄して次へ進む」境界を引くのと同じように、<code>agent-desktop</code> は <code>STALE_REF</code> で「古い仮定のまま次工程へ進まない」保証を入れている。筆者がZeroConvert-IMEのAndroid JNI層で最長共通プレフィックスKVキャッシュ共有を実装した際も、<code>llama_memory_seq_pos_max(mem, 0) == common_len - 1</code> の整合チェックが外れたら即座にキャッシュクリアへフォールバックさせた。構造を直接操作する実装ほど、前提が崩れた瞬間に止まる安全装置が命綱になる。
+                        DarkModePDFが「画像XObjectに触れない」「1ページずつ破棄して次へ進む」境界を引くのと同じように、<code>agent-desktop</code> は <code>STALE_REF</code> で「古い仮定のまま次工程へ進まない」保証を入れている。筆者がZeroConvert-IMEのAndroid層でキャッシュ共有を実装した際も、整合チェックが外れたら即座にキャッシュクリアへフォールバックさせました。構造を直接操作する実装ほど、前提が崩れた瞬間に止まる安全装置が命綱になる。
                     </p>
                 </div>
 

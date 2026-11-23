@@ -23,7 +23,7 @@
 
     <!-- Open Graph / Meta for Social Sharing -->
     <meta property="og:title" content="【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解">
-    <meta property="og:description" content="ローカル小型LLMに自由生成させるとハルシネーションが起きる。決定論的境界で選択肢を絞り1パスで判定する「System 1 agents」と、ZeroConvert-IMEのnam数値マスク分離設計の共通解を整理します。">
+    <meta property="og:description" content="ローカル小型LLMに自由生成させるとハルシネーションが起きる。決定論的境界で選択肢を絞り1パスで判定する「System 1 agents」と、ZeroConvert-IMEの数値表記の誤変換を減らす分離設計の共通解を整理します。">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://g0083.github.io/posts/system1-agents-local-slm-zerocon.html">
     <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
@@ -325,12 +325,12 @@
                         <tr>
                             <td><strong>決定論的コンパイラ / 前処理</strong></td>
                             <td>ツールスキーマとリクエストから<br>有効な選択肢集合を機械的に構築</td>
-                            <td>共有エンジンの <code>nam</code> 数値マスク<br>（Rust / Swift / C++ / Kotlin 4層統一）</td>
+                            <td>共有エンジンの数値表記の誤変換を減らす仕組み<br>（Windows / Android 共通）</td>
                         </tr>
                         <tr>
                             <td><strong>ニューラルモデルの責務</strong></td>
                             <td>テキストを生成せず、1パスで<br>提示された選択肢の確率を判定</td>
-                            <td>文脈・助数詞・仮名漢字の変換推論と<br><code>ZenzCandidateEvaluator</code> 1パスargmax評価</td>
+                            <td>文脈・助数詞・仮名漢字の変換推論</td>
                         </tr>
                         <tr>
                             <td><strong>安全機構 / 復元ルール</strong></td>
@@ -346,21 +346,15 @@
                 </table>
 
                 <p>
-                    ZeroConvert-IMEでは、ベンチマーク専用だった <code>nam</code> マスクをWindows（Swift / Rust）とAndroid（JNI C++ / Kotlin）の共有変換エンジンへ組み込み、タイポ補正・ライブ変換・先読みアシストのすべてで同じ決定論的保護を通している。
+                    ZeroConvert-IMEでは、数値の誤変換を減らす仕組みを Windows と Android の共有変換エンジンへ組み込み、タイポ補正・ライブ変換・先読みアシストのすべてで同じ保護を通しています。
                 </p>
 
                 <pre><code>// 決定論的境界で数値・英単語を守り、極小SLMは文脈と助数詞だけに集中させる
-1. 入力: "１００えんのあめ" / "SELECT name FROM users"
-2. 決定論的前処理 (mask_digits_with_nam):
-   → モデルには "namえんのあめ" を渡す (digits = ["100"])
-3. 極小SLM推論 (18.7 MiB Nano v4.1 / llama.cpp GPT-2パッチ + KVキャッシュ再利用):
-   → モデルは桁数や全半角を悩まず "nam円の飴" だけを返す
-   → 複数候補が不要な経路は生ロジット1パスargmaxで即決
-4. 決定論的2パス復元 (restore_nam_digits):
-   → 英単語(name, dynamic, naming)をスキップしつつ "100円の飴" を確実に復元</code></pre>
+入力された数字は、誤変換を減らす仕組みで正確に保持されます。
+英単語は壊さず、数字だけを復元します。</code></pre>
 
                 <p>
-                    この責務分離に加えて、<a href="zerocon-inference-speed-optimization.html" style="color: #50C878; text-decoration: underline;">推論高速化記事</a> でまとめた通り、<code>ZenzCandidateEvaluator</code> で候補リスト全体が不要な経路を「生ロジット1パスargmax」へ切り替えたこと、そして548問のタイポ補正評価で正常入力コントロール156問への<strong>誤補正ゼロ</strong>を達成できたことも、「モデルに余計な生成をさせない」思想の延長線上にある。
+                    この責務分離に加えて、<a href="zerocon-inference-speed-optimization.html" style="color: #50C878; text-decoration: underline;">推論高速化記事</a> でまとめた通り、タイポ補正評価で正常入力への<strong>誤補正ゼロ</strong>を達成できたことも、「モデルに余計な生成をさせない」思想の延長線上にある。
                 </p>
 
                 <h2>4. 個人開発者がこれからローカルAIを設計するための3原則</h2>

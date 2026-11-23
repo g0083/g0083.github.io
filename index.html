@@ -105,8 +105,8 @@
                     </div>
                     <div class="card-content">
                         <h3>ZeroConvert-IME</h3>
-                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4.1（18.7 MiB）」と共有エンジン統合のnam数値マスク、KVキャッシュ再利用・llama.cppグラフ初期化削減を搭載し、自動確定・統合タイポ補正・先読みアシストに対応（Windows / Android）。</p>
-                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4.1 (18.7 MiB)' with shared-engine nam digit masking, KV prefix reuse, and llama.cpp runtime optimization for auto-commit, unified typo correction, and predictive assist (Windows / Android).</p>
+                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4.1（18.7 MiB）」を搭載し、自動確定・統合タイポ補正・先読みアシストに対応（Windows / Android）。</p>
+                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4.1 (18.7 MiB)' for auto-commit, unified typo correction, and predictive assist (Windows / Android).</p>
                         <div class="card-actions">
                             <a href="https://github.com/g0083/ZeroConvert-IME/releases" class="btn-primary" target="_blank" rel="noopener noreferrer">
                                 <span class="text-jp">ダウンロード</span>
@@ -139,8 +139,8 @@
                                 <span class="arrow">→</span>
                             </a>
                             <a href="posts/dora-vs-lora-slm-zerocon.html" class="related-link" style="margin-top: 0.6rem;">
-                                <span class="text-jp">【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？</span>
-                                <span class="text-en">【Architecture】Why 0.09B Edge SLMs Needed DoRA Instead of LoRA</span>
+                                <span class="text-jp">【性能比較】0.09B極小モデルで変換精度とタイポ補正を両立させた結果</span>
+                                <span class="text-en">【Performance】0.09B Edge SLM Performance Comparison</span>
                                 <span class="arrow">→</span>
                             </a>
                             <a href="posts/llamacpp-v1-semver-embedded-edge-ime.html" class="related-link" style="margin-top: 0.6rem;">
@@ -469,8 +469,8 @@
                             <span class="text-jp">【考察】「System 1 agents」のテキスト非生成・1パス選択と、18.7 MiB極小IME（ZeroConvert-IME）が辿り着いたローカルAI信頼性の共通解</span>
                             <span class="text-en">System 1 Agents' Text-Free 1-Pass Selection &amp; Local AI Reliability Lessons from an 18.7 MiB Edge IME</span>
                         </h3>
-                        <p class="text-jp">決定論的コンパイラ×1パス選択でハルシネーション0%・正答率97.0%を達成した「System 1 agents」と、18.7 MiBのZeroCon Nano v4.1におけるnam数値マスク分離設計・1パスargmax評価を比較。クラウド漏洩リスクとローカルSLMの信頼性を両立する設計原則を考察します。</p>
-                        <p class="text-en">Comparing System 1 agents (deterministic compiler + 1-pass selection achieving 97.0% accuracy and 0% hallucination) with ZeroConvert-IME's 18.7 MiB Nano v4.1 and shared nam digit masking to eliminate local SLM drift.</p>
+                        <p class="text-jp">決定論的コンパイラ×1パス選択でハルシネーション0%・正答率97.0%を達成した「System 1 agents」と、18.7 MiBのZeroCon Nano v4.1における数値表記の誤変換削減を比較。クラウド漏洩リスクとローカルSLMの信頼性を両立する設計原則を考察します。</p>
+                        <p class="text-en">Comparing System 1 agents (deterministic compiler + 1-pass selection achieving 97.0% accuracy and 0% hallucination) with ZeroConvert-IME's 18.7 MiB Nano v4.1 and shared digit-error reduction.</p>
                         <a href="posts/system1-agents-local-slm-zerocon.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
@@ -521,8 +521,8 @@
                             <span class="text-jp">【考察】「Weight-Space ProgrammingにTransformerは不要」論文と、18.7 MiB極小IMEのハイブリッド設計が辿り着いた同じ結論</span>
                             <span class="text-en">Why Weight-Space Programming Doesn't Need Transformers: Parallel Lessons from an 18.7 MiB Edge IME</span>
                         </h3>
-                        <p class="text-jp">POSTECHの最新論文（arXiv:2611.22055）では、LLMに重みを手書きさせるとTransformerを拒否し、約1,800分の1のパラメータ数で最大17倍高速な連想メモリテーブルを選ぶことが示されました。ZeroConvert-IMEで直面した重み編集の限界とnam数値マスク分離設計との構造的な一致を考察します。</p>
-                        <p class="text-en">POSTECH's new paper (arXiv:2611.22055) shows that LLMs writing weights directly reject Transformers in favor of sparse associative-memory tables—with 1,800x fewer parameters and up to 17x faster execution. Comparing this finding with ZeroConvert-IME's hybrid architecture separating dense SLMs from deterministic nam digit masking.</p>
+                        <p class="text-jp">POSTECHの最新論文（arXiv:2611.22055）では、LLMに重みを手書きさせるとTransformerを拒否し、約1,800分の1のパラメータ数で最大17倍高速な連想メモリテーブルを選ぶことが示されました。ZeroConvert-IMEで直面した重み編集の限界と分離設計との構造的な一致を考察します。</p>
+                        <p class="text-en">POSTECH's new paper (arXiv:2611.22055) shows that LLMs writing weights directly reject Transformers in favor of sparse associative-memory tables—with 1,800x fewer parameters and up to 17x faster execution. Comparing this finding with ZeroConvert-IME's hybrid architecture separating dense SLMs from deterministic digit handling.</p>
                         <a href="posts/wsp-doesnt-need-transformers-zerocon.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
@@ -556,10 +556,10 @@
                     </div>
                 </article>
 
-                <!-- Article: ZeroCon Nano v4.1 & Shared Engine nam Masking (2026/11/15) -->
+                <!-- Article: ZeroCon Nano v4.1 Performance Report (2026/11/15) -->
                 <article class="card">
                     <div class="card-image-wrapper">
-                        <img src="zeroconvert.png" alt="ZeroCon Nano v4.1 & Shared nam Masking" loading="lazy">
+                        <img src="zeroconvert.png" alt="ZeroCon Nano v4.1 Performance Report" loading="lazy">
                     </div>
                     <div class="card-content">
                         <div class="card-tag-row">
@@ -570,11 +570,9 @@
                             </button>
                         </div>
                         <h3>
-                            <span class="text-jp">日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」と共有エンジンへのnam数値マスク統合</span>
-                            <span class="text-en">ZeroCon Nano v4.1 &amp; Integrating Shared nam Digit Masking Across Windows/Android</span>
-                        </h3>
-                        <p class="text-jp">18.7 MiBの超小型モデルをNano v4.1へ刷新し、日常口語・補助動詞・過剰漢字抑止を強化（口語100問で87%→97%、740問全体で97.16%）。ベンチマーク専用だった数値マスクnamと英単語保護2パス復元をWindows/Androidの共有変換エンジンへ組み込みました。</p>
-                        <p class="text-en">Upgraded the 18.7 MiB ZeroCon Nano model to v4.1 for colloquial chat and auxiliary-hiragana accuracy (97/100 colloquial, 97.16% across 740 cases), and integrated nam digit masking with two-pass English-safe restoration directly into the Windows/Android shared IME engines.</p>
+                            <span class="text-jp">日常会話に強い極小IMEモデル「ZeroCon Nano v4.1」の性能レポート</span>
+                            <span class="text-en">ZeroCon Nano v4.1 Performance Report"text-jp">18.7 MiBの超小型モデルをNano v4.1へ刷新し、日常口語・補助動詞・過剰漢字抑止を強化（口語100問で87%→97%、740問全体で97.16%）。数値の誤変換を減らす改善をWindows/Androidの変換経路全体に反映しました。</p>
+                        <p class="text-en">Upgraded the 18.7 MiB ZeroCon Nano model to v4.1 for colloquial chat and auxiliary-hiragana accuracy (97/100 colloquial, 97.16% across 740 cases), with digit-error reduction reflected across Windows/Android conversion paths.</p>
                         <a href="posts/zerocon-nano-v4-1-model-accuracy.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
@@ -599,8 +597,8 @@
                             <span class="text-jp">ZeroConvert-IMEの推論高速化――llama.cppグラフ初期化削減、Swiftコンテキスト再利用、Android KVプレフィックス共有</span>
                             <span class="text-en">Accelerating ZeroConvert-IME: llama.cpp Graph Probes, Swift Context Reuse &amp; Android KV Sharing</span>
                         </h3>
-                        <p class="text-jp">GPT-2モデルで不要な融合グラフ探索を省くllama.cppパッチ、Swift ZenzContext再利用とシングルパスargmax、Android JNIの最長共通プレフィックスKVキャッシュ共有を実装。CPUコールド中央値27.83ms→20.96msへの短縮データを公開しています。</p>
-                        <p class="text-en">Skipping unused fused-graph probes in llama.cpp for GPT-2 models, reusing allocated Swift ZenzContext with single-pass raw-logit argmax, and sharing longest-common-prefix KV cache in Android JNI—cutting CPU cold median latency from 27.83 ms to 20.96 ms.</p>
+                        <p class="text-jp">推論の高速化により、CPUコールド中央値27.83ms→20.96msへの短縮を実現しました。</p>
+                        <p class="text-en">Inference optimization cutting CPU cold median latency from 27.83 ms to 20.96 ms.</p>
                         <a href="posts/zerocon-inference-speed-optimization.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
@@ -688,10 +686,10 @@
                     </div>
                 </article>
 
-                <!-- Article: DoRA vs LoRA on 0.09B SLM -->
+                <!-- Article: Performance Comparison on 0.09B SLM -->
                 <article class="card">
                     <div class="card-image-wrapper">
-                        <img src="zeroconvert.png" alt="DoRA vs LoRA on 0.09B SLM Article" loading="lazy">
+                        <img src="zeroconvert.png" alt="Performance Comparison on 0.09B SLM Article" loading="lazy">
                     </div>
                     <div class="card-content">
                         <div class="card-tag-row">
@@ -701,9 +699,9 @@
                                 <span class="text-en">Project: ZeroConvert-IME ↗</span>
                             </button>
                         </div>
-                        <h3>【考察】なぜ0.09Bの極小モデルにはLoRAではなく「DoRA」が必要だったのか？ 〜18MBでタイポ補正と日本語変換を両立させた重み分解PEFTの実践〜</h3>
-                        <p class="text-jp">7B以上のLLMでは定番のLoRAが、0.09B（18.7MB）の極小言語モデルではなぜ破綻したのか。重みの大きさと方向を分解するDoRA（Weight-Decomposed LoRA）によるブレークスルーと実測データを考察します。</p>
-                        <p class="text-en">Why did standard LoRA fail on a 0.09B (18.7MB) edge SLM, and how did DoRA (Weight-Decomposed LoRA) achieve both 92.7% Japanese conversion and 78% typo correction? A deep dive into weight-space PEFT dynamics.</p>
+                        <h3>【性能比較】0.09B極小モデルで変換精度とタイポ補正を両立させた結果 〜18MBでタイポ補正と日本語変換を両立させた重み分解PEFTの実践〜</h3>
+                        <p class="text-jp">0.09B（18.7MB）の極小言語モデルで、通常変換92.7%とタイポ補正78.0%を両立させた性能比較結果をまとめます。</p>
+                        <p class="text-en">Performance comparison on a 0.09B (18.7MB) edge SLM: 92.7% Japanese conversion and 78% typo correction.</p>
                         <a href="posts/dora-vs-lora-slm-zerocon.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
@@ -770,8 +768,8 @@
                             </button>
                         </div>
                         <h3>【開発記】18MBの極小モデルで変換キーをゼロへ――ZeroConvert-IMEの独自モデル学習の全軌跡</h3>
-                        <p class="text-jp">わずか18.7 MiBの極小モデルでGoogle日本語入力に迫る変換精度とタイポ補正78%を両立。DoRA、Target-Corrected蒸留、Induction Head自己コピー抑止、QWERTYタスク統合など、これまで積み重ねてきた独自モデル学習の歩みを総括。</p>
-                        <p class="text-en">How we trained our custom 18.7 MiB edge SLM to achieve 92.7% Japanese conversion accuracy and 78% typo correction through DoRA, target-corrected distillation, and unified multi-task architectures.</p>
+                        <p class="text-jp">わずか18.7 MiBの極小モデルで、変換精度92.7%とタイポ補正78%を両立させた性能レポート。</p>
+                        <p class="text-en">Performance report: 18.7 MiB edge SLM achieving 92.7% conversion accuracy and 78% typo correction.</p>
                         <a href="posts/zerocon-ime-custom-model-training.html" class="btn-primary">
                             <span class="text-jp">記事を読む</span>
                             <span class="text-en">Read Article</span>
