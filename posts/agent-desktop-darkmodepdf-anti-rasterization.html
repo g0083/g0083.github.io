@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】脱ピクセルの「agent-desktop」と、PDFを画像化せず中身を書き換える「DarkModePDF」――構造化データを直接叩く設計の共通点 | O-ya tech</title>
+    <meta name="description" content="GitHub Trendingで話題のRust製CLI「vercel-labs/agent-desktop」（OSアクセシビリティツリー直接操作）と、自作アプリDarkModePDF（PDF内部命令ストリーム書き換え）・Markdown TeX Viewer（Typst WASM組版）を比較し、AIエージェント時代に「ピクセル化・ラスタライズを避けて構造化データを直接叩く」設計がなぜ強いのかを考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/agent-desktop-darkmodepdf-anti-rasterization.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】脱ピクセルの「agent-desktop」と、PDFを画像化せず中身を書き換える「DarkModePDF」――構造化データを直接叩く設計の共通点">
+    <meta property="og:description" content="スクリーンショットを撮ってVisionモデルに読ませるのをやめたvercel-labs/agent-desktop。PDFを画像にせず命令ストリームを書き換えるDarkModePDFやTypst WASM組版のMarkdown TeX Viewerと照らし合わせ、脱ラスタライズ設計の本質を整理します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/agent-desktop-darkmodepdf-anti-rasterization.html">
+    <meta property="og:image" content="https://g0083.github.io/DarkModePDF.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .article-content pre {
+            background: #181818;
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .article-content pre code {
+            background: transparent;
+            color: #d4d4d4;
+            padding: 0;
+            font-size: 0.94rem;
+            line-height: 1.6;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .callout-warning {
+            background: rgba(255, 170, 0, 0.08);
+            border-left-color: #ffaa00;
+        }
+
+        .callout-warning .callout-title {
+            color: #ffaa00;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .share-box {
+            margin-top: 3.5rem;
+            padding: 1.5rem;
+            background: var(--surface-dark);
+            border: 1px solid rgba(80, 200, 120, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/DarkModePDF" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html?tab=blog" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">Architecture / Rust &amp; PDF</span>
+                <h1 class="article-title">【考察】脱ピクセルの「agent-desktop」と、PDFを画像化せず中身を書き換える「DarkModePDF」――構造化データを直接叩く設計の共通点</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月23日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>関連: DarkModePDF / Markdown TeX Viewer / agent-desktop</span>
+                </div>
+            </div>
+
+            <!-- Related Project Banner -->
+            <div class="related-project-banner" style="background: rgba(80, 200, 120, 0.08); border: 1px solid rgba(80, 200, 120, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 2.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #50C878; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Related Project / 関連プロジェクト</span>
+                    <strong style="font-size: 1.15rem; color: #fff;">DarkModePDF &amp; Markdown TeX Viewer</strong>
+                    <div style="font-size: 0.88rem; color: #b0b0b0; margin-top: 2px;">PDF内部ストリームを直接変換するDarkModePDF（Android / Web PWA）と、Typst WASMでベクターPDFを出力するMarkdownエディタ</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="../index.html?project=darkmodepdf" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">DarkModePDF ↗</a>
+                    <a href="../index.html?project=markdown-tex-viewer" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">TeX Viewer ↗</a>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                    コンピュータを操作するAIエージェントの実装は、長らく画面のスクリーンショットを撮ってVisionモデルに渡し、ボタンのピクセル座標を当てさせるやり方が主流だった。ところが解像度やDPIの違いで座標がずれ、毎ターン画像トークンを消費するため遅くて高い。
+                </p>
+                <p>
+                    この非効率を真正面からひっくり返して2026年11月のGitHub Trendingで注目を集めているのが、Vercel Labsが公開したRust製CLIおよびCライブラリ <code>vercel-labs/agent-desktop</code> だ。内部にLLMを持たず、macOS AX API、Windows UI Automation、Linux AT-SPIといったOS標準のアクセシビリティツリーを直接叩いて構造化JSONを返す。
+                </p>
+                <p>
+                    実装の考え方を眺めていて既視感を覚えた。筆者が作ってきた <a href="../index.html?project=darkmodepdf" style="color: #50C878; text-decoration: underline;">DarkModePDF</a> や <a href="../index.html?project=markdown-tex-viewer" style="color: #50C878; text-decoration: underline;">Markdown TeX Viewer</a> でも、最初にぶつかった壁と突破口はまったく同じだったからだ。どちらも「見た目（ピクセル）に一度潰してから処理する」安易なルートを捨て、裏側の構造化表現を直接扱うことで初めて実用になる。
+                </p>
+
+                <h2>1. agent-desktopが「スクリーンショット」を捨てた理由</h2>
+                <p>
+                    <code>agent-desktop</code> のループは極めてドライで実務的だ。AIエージェント（Claude Codeなど）はシェル経由または組み込みのMCPサーバー（<code>agent-desktop mcp</code>）経由で <code>snapshot</code> を叩き、操作可能なUI要素に割り当てられた参照IDを受け取る。
+                </p>
+
+                <pre><code># 1. 画面を撮らずにOSのアクセシビリティツリーを取得
+agent-desktop snapshot --app "Finder" -i
+
+# 2. スナップショットID付きの安定したref（例: @s8f3k2p9:e8）に対して操作を実行
+agent-desktop click @s8f3k2p9:e8
+agent-desktop type @s8f3k2p9:e12 "report.pdf"</code></pre>
+
+                <p>
+                    ここで特にうまいのが、参照IDが特定のスナップショットIDに紐づいている点だ。操作前にUIが変化して要素が消えたり位置が変わったりしていた場合、<code>agent-desktop</code> は見当違いの座標をクリックする代わりに <code>STALE_REF</code> エラーを返して安全に止まる。さらに既定でヘッドレス動作（アクセシビリティAPI経由のバックグラウンド操作）をとるため、物理マウスカーソルやウィンドウフォーカスを奪わない。
+                </p>
+
+                <div class="callout">
+                    <div class="callout-title">構造を直接読むと何が消えるか</div>
+                    <p style="margin:0;">
+                        画面をPNG化してからOCRや座標推定を走らせる方式では、フォント差、スケーリング倍率、重なり順の誤認といったノイズが避けられない。OS自身が保持している意味ツリーをそのまま読めば、ロール名・状態・テキスト・バウンディングボックスをゼロ誤差で取り出せる。
+                    </p>
+                </div>
+
+                <h2>2. PDFでもまったく同じ罠がある――画像化方式の破綻</h2>
+                <p>
+                    実はPDFの世界でも、これと瓜二つの失敗パターンが繰り返されてきた。かつて <a href="darkmodepdf-conversion-logic.html" style="color: #50C878; text-decoration: underline;">DarkModePDFの開発記</a> に書いた通り、白背景のPDFをダークモード変換する一番簡単な実装は「各ページをPNGとしてレンダリングし、Canvasで色反転してPDFへ貼り直す」ことである。
+                </p>
+                <p>
+                    だが一度ピクセルへラスタライズした瞬間、ドキュメントが本来持っていた構造情報はすべて吹き飛ぶ。
+                </p>
+                <ul>
+                    <li>ベクターの文字や罫線がビットマップに潰れ、拡大すると輪郭がぼやける。</li>
+                    <li>テキストレイヤーが消滅するため、文字列の選択・検索・コピーができなくなる。</li>
+                    <li>1MBだった論文PDFが数十MBに膨れ上がり、モバイル端末のメモリを圧迫する。</li>
+                    <li>ページ内の写真やグラフまでネガフィルムのように色反転してホラー画像と化す。</li>
+                </ul>
+                <p>
+                    <a href="markdown-tex-viewer-typst-wasm.html" style="color: #50C878; text-decoration: underline;">Markdown TeX Viewer</a> のPDF書き出しでも同じ問題に直面した。<code>html2canvas</code> でDOMを画像に焼いてPDF化する一般的なWeb実装だと、数式が荒れて論文用途に耐えない。そこで入力プレビューはKaTeXとMarkdown-itで60fpsのDOM描画を行いつつ、書き出し時はWeb Worker上の <strong>Typst WebAssembly</strong> にASTから変換した組版コードを渡し、完全なベクターPDFバイナリを生成する道を選んだ。
+                </p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>領域</th>
+                            <th>ピクセル / ラスタライズ依存</th>
+                            <th>構造化データ直接操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>デスクトップ操作</strong><br>(<code>agent-desktop</code>)</td>
+                            <td>スクショ撮影＋Visionモデル座標推定<br>高レイテンシ・DPI依存・誤爆リスク</td>
+                            <td>OSアクセシビリティツリー直接取得<br><code>@s8f3k2p9:e8</code> 指定・変化時は <code>STALE_REF</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>PDF色変換</strong><br>(<code>DarkModePDF</code>)</td>
+                            <td>ページPNG化＋Canvas反転<br>検索不可・ファイルサイズ10倍以上・写真崩壊</td>
+                            <td>内部命令ストリーム (<code>rg</code>/<code>g</code>/<code>k</code>) 書換<br><code>/Subtype /Image</code> 保護・背景矩形注入</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ブラウザPDF組版</strong><br>(<code>Markdown TeX Viewer</code>)</td>
+                            <td><code>html2canvas</code> でDOMを画像化<br>数式劣化・ページ跨ぎの精密制御不可</td>
+                            <td>AST→Typst記法変換＋Typst WASM<br>ベクター文字保持・オフライン完結</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>3. 「中身を直接書き換える」泥臭さと安全装置の共通点</h2>
+                <p>
+                    構造化表現を直接触る設計は美しく聞こえるが、実装の現場では仕様の隅を突く泥臭い対処が欠かせない。DarkModePDFでは、そもそも多くのPDF仕様上に「白い背景オブジェクト」が存在せず紙の白が透けているだけだと知り、コンテンツストリームの先頭へ黒い塗りつぶし矩形コマンド <code>q 0 0 0 rg ... re f Q</code> を割り込ませる必要があった。
+                </p>
+                <p>
+                    さらに文字や罫線の色オペレータ（<code>rg</code> / <code>RG</code> / <code>g</code> / <code>G</code> / <code>k</code> / <code>K</code>）だけを解析して反転し、埋め込み画像オブジェクト（XObject <code>/Subtype /Image</code>）はスキップして写真を保護する。数百ページのPDFでモバイルOSのOOMを食らわないよう、1ページずつ逐次ストリーム処理とバッファ解放を回す泥臭さもセットだった。
+                </p>
+                <p>
+                    一方で <code>agent-desktop</code> に目を戻すと、スナップショットID付きの参照に加えて、要素の多い重量級アプリでツリー全ダンプが重くなりすぎるのを防ぐ <code>--skeleton</code> や <code>--root</code> による段階的ドリルダウンを備えている。構造化データであっても無制限に展開すればメモリとトークンを食い潰すため、「必要な部分だけを境界切って読む」設計が効いている。
+                </p>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">状態ズレを「誤爆させず検知する」思想</div>
+                    <p style="margin:0;">
+                        DarkModePDFが「画像XObjectに触れない」「1ページずつ破棄して次へ進む」境界を引くのと同じように、<code>agent-desktop</code> は <code>STALE_REF</code> で「古い仮定のまま次工程へ進まない」保証を入れている。筆者がZeroConvert-IMEのAndroid JNI層で最長共通プレフィックスKVキャッシュ共有を実装した際も、<code>llama_memory_seq_pos_max(mem, 0) == common_len - 1</code> の整合チェックが外れたら即座にキャッシュクリアへフォールバックさせた。構造を直接操作する実装ほど、前提が崩れた瞬間に止まる安全装置が命綱になる。
+                    </p>
+                </div>
+
+                <h2>4. 2026年11月のツール群に広がる「中間ラッパー排除」の流れ</h2>
+                <p>
+                    この傾向はデスクトップ操作に限らない。はてなブックマークのITカテゴリで話題になった次世代メールプロトコル「JMAP」は、レガシーなIMAPのテキストベースのやり取りやポーリングの煩雑さを捨て、HTTPとJSONの構造化同期へ振り切ることでWebメール開発を単純化した。Zenn周辺で議論が活発なClaude Codeの拡張機構 <code>mods</code> やDocker Sandboxesによる隔離、OpenSpec v2.0のスキル一元化（<code>.agents/skills/</code>）も、曖昧な自然言語プロンプトや場当たり的な画面操作に頼らず、型や境界・仕様ファイルという構造側へ責務を寄せる動きと地続きに見える。
+                </p>
+                <p>
+                    個人開発のツールでも、大企業の基盤でも、結局強いのは「一度人間向けの見た目やテキストに潰したものをAIや別プロセスに再解釈させる」のではなく、プログラムが本来持っている構造・命令ストリーム・ツリーをそのまま触れるレイヤーに立つことだ。
+                </p>
+
+                <h2>おわりに</h2>
+                <p>
+                    <code>vercel-labs/agent-desktop</code> が見せた「スクリーンショットを捨ててOSのアクセシビリティツリーを直接読む」アプローチは、DarkModePDFでPDFの描画命令ストリームを書き換え、Markdown TeX ViewerでTypst WebAssemblyから直接ベクターPDFを吐き出したときの感覚と重なる。ピクセルに落とすのは最後の出力だけにして、途中の変換と操作は構造のまま回す。この原則を押さえておくだけで、ローカルツールもAIエージェントも驚くほど軽く壊れにくくなる。
+                </p>
+            </div>
+
+            <div class="share-box">
+                <h3 style="margin-top: 0; color: #50C878;">この記事をシェアする</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                    脱ピクセル・構造化データ直接操作の設計論が参考になりましたら、ぜひXなどでご感想をお寄せください。
+                </p>
+                <a href="https://twitter.com/intent/tweet?text=%E3%80%90%E8%80%83%E5%AF%9F%E3%80%91%E8%84%B1%E3%83%94%E3%82%AF%E3%82%BB%E3%83%AB%E3%81%AE%E3%80%8Cagent-desktop%E3%80%8D%E3%81%A8%E3%80%81PDF%E3%82%92%E7%94%BB%E5%83%8F%E5%8C%96%E3%81%9B%E3%81%9A%E4%B8%AD%E8%BA%AB%E3%82%92%E6%9B%B8%E3%81%8D%E6%8F%9B%E3%81%88%E3%82%8B%E3%80%8CDarkModePDF%E3%80%8D%E2%80%95%E2%80%95%E6%A7%8B%E9%80%A0%E5%8C%96%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E7%9B%B4%E6%8E%A5%E5%8F%A9%E3%81%8F%E8%A8%AD%E8%A8%88%E3%81%AE%E5%85%B1%E9%80%9A%E7%82%B9&url=https://g0083.github.io/posts/agent-desktop-darkmodepdf-anti-rasterization.html&via=ooyatech"
+                    target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: rgba(80, 200, 120, 0.2);">
+                    Xでポストする
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 g0083. All rights reserved.</p>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>
