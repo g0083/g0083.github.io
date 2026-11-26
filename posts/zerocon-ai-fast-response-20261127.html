@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIが動いているのに1打鍵5〜7ms――ZeroConvert-IME v0.9.0の応答速度と処理時間削減 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="AIが動いているのに1打鍵5〜7ms――ZeroConvert-IME v0.9.0の応答速度と処理時間削減">
+    <meta property="og:description" content="Windowsで平均5〜7ms台・840問6.5秒、Android（Snapdragon 8 Elite）で71.95ms→32.92msへ短縮したZeroConvert-IME v0.9.0の応答性能レポート。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zerocon-ai-fast-response-20261127.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .callout {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            padding: 1.1rem 1.3rem;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Performance / Release v0.9.0</span>
+                <h1 class="article-title">AIが動いているのに1打鍵5〜7ms――ZeroConvert-IME v0.9.0の応答速度と処理時間削減</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-27">2026.11.27</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>対象バージョン: ZeroConvert-IME v0.9.0</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>AI搭載の日本語IMEと聞くと、変換のたびにワンテンポ待たされる印象を持つ人は少なくありません。ZeroConvert-IME v0.9.0では推論エンジン全体のオーバーヘッドを見直し、ローカルAIが毎打鍵動いているにもかかわらず、人間の打鍵リズムに余裕で追いつく応答速度に到達しました。本稿では実装の内部ではなく、実測した性能の結果だけをまとめます。</p>
+
+                    <div class="callout">
+                        <div class="callout-title">ポイント：60Hzの1フレーム（16.6ms）より速いAI変換</div>
+                        <p style="margin: 0;">Windows CPU環境（Nano v4.2 IQ4_emb8・18.7 MiB）のライブ変換プロファイルでは、1打鍵あたりの平均処理時間が <strong>5.31〜6.60 ms</strong> になりました。840問の一括ベンチマークでも、旧エンジンの <strong>24.55秒 → 7.69秒（CPU） / 6.58秒（Vulkan）</strong> まで縮んでいます。</p>
+                    </div>
+
+                    <h2>Windows：840問共通候補生成のBefore / After</h2>
+                    <p>同じPC（Intel Core i5-14500HX・CPU実行およびNVIDIA GeForce RTX 4070・Vulkan実行）と同一の840問評価セットで、旧エンジンとv0.9.0世代の新エンジンを比較した結果が下の表です。Zenzaiの生成と辞書候補の統合・順位付けまでを含んでいます。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>モデル（サイズ）</th>
+                                <th>条件</th>
+                                <th>840問 壁時間</th>
+                                <th>1問平均</th>
+                                <th>p50 / p95</th>
+                                <th>正答率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Nano v4.2 IQ4_emb8 (18.7 MiB)</td>
+                                <td>旧エンジン CPU</td>
+                                <td>24.55秒</td>
+                                <td>26.65 ms</td>
+                                <td>24.51 / 50.29 ms</td>
+                                <td>827/840 (98.5%)</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>Nano v4.2 IQ4_emb8 (18.7 MiB)</td>
+                                <td>新エンジン CPU</td>
+                                <td>7.69秒</td>
+                                <td>7.21 ms</td>
+                                <td>6.86 / 11.53 ms</td>
+                                <td>829/840 (98.7%)</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>Nano v4.2 IQ4_emb8 (18.7 MiB)</td>
+                                <td>新エンジン Vulkan</td>
+                                <td>6.58秒</td>
+                                <td>6.74 ms</td>
+                                <td>6.26 / 11.08 ms</td>
+                                <td>829/840 (98.7%)</td>
+                            </tr>
+                            <tr>
+                                <td>Nano v4.2 Q8 (27.7 MiB)</td>
+                                <td>旧エンジン CPU</td>
+                                <td>24.80秒</td>
+                                <td>26.98 ms</td>
+                                <td>25.02 / 49.11 ms</td>
+                                <td>835/840 (99.4%)</td>
+                            </tr>
+                            <tr>
+                                <td>Nano v4.2 Q8 (27.7 MiB)</td>
+                                <td>新エンジン CPU</td>
+                                <td>11.68秒</td>
+                                <td>11.59 ms</td>
+                                <td>10.70 / 19.43 ms</td>
+                                <td>836/840 (99.5%)</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.08); font-weight: 700;">
+                                <td>Nano v4.2 Q8 (27.7 MiB)</td>
+                                <td>新エンジン Vulkan</td>
+                                <td>6.53秒</td>
+                                <td>6.68 ms</td>
+                                <td>6.33 / 10.35 ms</td>
+                                <td>836/840 (99.5%)</td>
+                            </tr>
+                            <tr>
+                                <td>Standard v4.2 Q8 (99.1 MiB)</td>
+                                <td>旧エンジン CPU</td>
+                                <td>53.94秒</td>
+                                <td>58.62 ms</td>
+                                <td>57.37 / 96.83 ms</td>
+                                <td>836/840 (99.5%)</td>
+                            </tr>
+                            <tr>
+                                <td>Standard v4.2 Q8 (99.1 MiB)</td>
+                                <td>新エンジン CPU</td>
+                                <td>32.55秒</td>
+                                <td>33.04 ms</td>
+                                <td>28.71 / 61.68 ms</td>
+                                <td>837/840 (99.6%)</td>
+                            </tr>
+                            <tr>
+                                <td>Standard v4.2 Q8 (99.1 MiB)</td>
+                                <td>新エンジン Vulkan</td>
+                                <td>11.50秒</td>
+                                <td>11.96 ms</td>
+                                <td>11.31 / 18.50 ms</td>
+                                <td>837/840 (99.6%)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Nano v4.2 IQ4_emb8はCPU単体でも壁時間が約3.2分の1、1問あたりの平均応答が26.65 msから7.21 msへ落ちました。GPUを使える環境なら99 MiB級のStandard v4.2 Q8でさえ平均11.96 msで回り、99.6%の正答率と即応性を同時に確保できます。</p>
+
+                    <h2>打鍵ごとのライブ変換：平均5.31〜6.60ms</h2>
+                    <p>一括ベンチマークだけでなく、1文字打つごとにライブ変換を走らせる打鍵プロファイル（Nano v4.2 IQ4_emb8・Windows CPU・各条件2,040回計測）も測りました。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>文脈条件（2,040回ずつ計測）</th>
+                                <th>平均</th>
+                                <th>中央値 (p50)</th>
+                                <th>p95</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>空文脈ライブ変換</td>
+                                <td>5.31 ms</td>
+                                <td>5.31 ms</td>
+                                <td>8.98 ms</td>
+                            </tr>
+                            <tr>
+                                <td>長文脈ライブ変換</td>
+                                <td>6.60 ms</td>
+                                <td>5.85 ms</td>
+                                <td>13.85 ms</td>
+                            </tr>
+                            <tr>
+                                <td>数式・記号文脈ライブ変換</td>
+                                <td>6.44 ms</td>
+                                <td>5.97 ms</td>
+                                <td>12.57 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>95%の打鍵が9〜14ms以内で完了するため、画面が次のフレームを描画するより先にAIの変換候補が届きます。入力中にAIが裏で動いていることを意識させないレスポンスです。</p>
+
+                    <h2>Android実機と実行時自動チューニング</h2>
+                    <p>スマートフォンでも同じ傾向が出ています。実行環境に合わせてCPUスレッド数や変換モードを初回起動時などに自動調整する仕組みを入れたことで、実機上の変換負荷が大きく下がりました。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Android実機（Nano v4.2 IQ4_emb8）</th>
+                                <th>計測内容</th>
+                                <th>最適化前</th>
+                                <th>最適化後</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Snapdragon 8 Elite (OPD2415)</td>
+                                <td>200問エンジン実測平均</td>
+                                <td>71.95 ms</td>
+                                <td><strong>32.92 ms</strong>（約2.2倍高速）</td>
+                            </tr>
+                            <tr>
+                                <td>Snapdragon 8 Elite (OPD2415)</td>
+                                <td>840問 共通候補生成</td>
+                                <td>20.92秒</td>
+                                <td><strong>11.80秒</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Dimensity 8020</td>
+                                <td>200問エンジン実測平均</td>
+                                <td>172.65 ms</td>
+                                <td><strong>119.70 ms</strong>（約31%短縮）</td>
+                            </tr>
+                            <tr>
+                                <td>Dimensity 8020</td>
+                                <td>840問 共通候補生成</td>
+                                <td>52.23秒</td>
+                                <td><strong>47.27秒</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Snapdragon 8 Eliteでは200問の実エンジン計測が平均32.92 msまで縮み、モバイルCPUだけでも軽快なライブ変換が成立しています。ミドル帯のDimensity 8020でも約31%の短縮を確認しました。</p>
+
+                    <h2>使い心地の変化</h2>
+                    <p>速記のように続けて文字を打っても、未確定の文字列が後からガタついて追いかけてくる感覚が消えました。従来の辞書ベースIMEと同じリズムのまま、文脈判断や口語表現、自動確定といったローカルAIの恩恵を受けられます。また、WindowsとAndroidのどちらでも端末のCPU構成に応じた自動チューニングが働くため、ユーザーが手動でスレッド数を探り当てる手間もありません。</p>
+
+                    <h2>まとめ</h2>
+                    <p>ZeroConvert-IME v0.9.0では、18.7 MiBのNano v4.2 IQ4_emb8がWindows CPUで1打鍵平均5〜7ms台、840問全体で7.69秒（Vulkanなら6.58秒）、AndroidのSnapdragon 8 Eliteで平均32.92 msまで高速化しました。AIが動いているから遅いという妥協を外したリリースです。配布ファイルと詳細な検証記録は GitHub Releases をご覧ください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>ZeroConvert-IME v0.9.0 cuts inference and candidate-generation latency across both Windows and Android so local AI runs faster than a single 60Hz display frame without disrupting typing rhythm. Performance results only.</p>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Platform / Benchmark</th>
+                                <th>Before</th>
+                                <th>After (v0.9.0)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Windows CPU (i5-14500HX) — 840-case Nano v4.2 IQ4</td>
+                                <td>24.55 s (26.65 ms avg)</td>
+                                <td><strong>7.69 s (7.21 ms avg)</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Windows Vulkan (RTX 4070) — 840-case Nano v4.2 IQ4</td>
+                                <td>—</td>
+                                <td><strong>6.58 s (6.74 ms avg)</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Windows CPU Live Typing Profile (2,040 steps)</td>
+                                <td>—</td>
+                                <td><strong>5.31–6.60 ms avg</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Android Snapdragon 8 Elite — 200-case Engine Perf</td>
+                                <td>71.95 ms avg</td>
+                                <td><strong>32.92 ms avg</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Android Dimensity 8020 — 200-case Engine Perf</td>
+                                <td>172.65 ms avg</td>
+                                <td><strong>119.70 ms avg</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Both Windows and Android also perform automatic runtime thread and mode tuning on the user's hardware. Download the latest installer and APKs from GitHub Releases.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

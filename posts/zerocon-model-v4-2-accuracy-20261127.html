@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroCon Model v4.2 性能レポート――840問で99.5%超え、追加辞書・専門語を大幅強化 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="ZeroCon Model v4.2 性能レポート――840問で99.5%超え、追加辞書・専門語を大幅強化">
+    <meta property="og:description" content="840問ベンチマークでNano v4.2 Q8が99.5%（836/840）、18.7 MiBのNano v4.2 IQ4_emb8が98.7%（829/840）に到達したZeroCon Model v4.2の性能比較。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zerocon-model-v4-2-accuracy-20261127.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Model / Release v0.9.0</span>
+                <h1 class="article-title">ZeroCon Model v4.2 性能レポート――840問で99.5%超え、追加辞書・専門語を大幅強化</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-27">2026.11.27</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>対象バージョン: ZeroConvert-IME v0.9.0 / models-v4.2</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>ZeroConvert-IME v0.9.0から標準の変換モデルをZeroCon Model v4.2へ切り替えました。既定のNano v4.2 IQ4_emb8（18.7 MiB）をはじめ、Nano Q8（27.7 MiB）、Standard IQ4_emb8（58.6 MiB）、Standard Q8（99.1 MiB）の4種類をWindowsとAndroidで共通に選べます。本稿では学習手法の内部ではなく、840問ベンチマークでの性能の結果だけをまとめます。</p>
+
+                    <h2>840問ベンチマークでの世代比較</h2>
+                    <p>基本230問・高難度250問・実経路160問・口語100問・追加辞書100問の計840問を、同一CPU条件（Intel Core i5-14500HX）の共通候補生成プロトコルで比較した結果です。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>モデル</th>
+                                <th>サイズ</th>
+                                <th>正解 / 840</th>
+                                <th>正答率</th>
+                                <th>追加辞書 100問</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>ZeroCon Standard v4.2 Q8_0</td>
+                                <td>99.1 MiB</td>
+                                <td>836（最新エンジン 837）</td>
+                                <td>99.5%（99.6%）</td>
+                                <td>100.0%</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>ZeroCon Nano v4.2 Q8_0</td>
+                                <td>27.7 MiB</td>
+                                <td>835（最新エンジン 836）</td>
+                                <td>99.4%（99.5%）</td>
+                                <td>99.0%</td>
+                            </tr>
+                            <tr>
+                                <td>ZeroCon Standard v4.2 IQ4_NL emb8</td>
+                                <td>58.6 MiB</td>
+                                <td>834（最新エンジン 836）</td>
+                                <td>99.3%（99.5%）</td>
+                                <td>100.0%</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.08); font-weight: 700;">
+                                <td>ZeroCon Nano v4.2 IQ4_NL emb8</td>
+                                <td>18.7 MiB</td>
+                                <td>827（最新エンジン 829）</td>
+                                <td>98.5%（98.7%）</td>
+                                <td>99.0%</td>
+                            </tr>
+                            <tr>
+                                <td>ZeroCon Standard v4.1 Q8_0</td>
+                                <td>99.1 MiB</td>
+                                <td>802</td>
+                                <td>95.5%</td>
+                                <td>73.0%</td>
+                            </tr>
+                            <tr>
+                                <td>ZeroCon Nano v4.1 Q8_0</td>
+                                <td>27.7 MiB</td>
+                                <td>783</td>
+                                <td>93.2%</td>
+                                <td>68〜73%帯</td>
+                            </tr>
+                            <tr>
+                                <td>ZeroCon Nano v4.1 IQ4_NL emb8</td>
+                                <td>18.7 MiB</td>
+                                <td>775</td>
+                                <td>92.3%</td>
+                                <td>57.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Zenz v3.2 small Q4_K_M</td>
+                                <td>61.3 MiB</td>
+                                <td>727</td>
+                                <td>86.5%</td>
+                                <td>76.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Zenz v3.2 xsmall Q4_K_M</td>
+                                <td>17.6 MiB</td>
+                                <td>650</td>
+                                <td>77.4%</td>
+                                <td>58.0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Nano v4.2 Q8は27.7 MiBでありながら836/840問（99.5%）に達し、Standard v4.2 Q8との差はわずか1問です。既定の18.7 MiB版Nano v4.2 IQ4_emb8でも829/840問（98.7%）を記録し、前世代のStandard v4.1（95.5%）を大きく上回りました。なおモデル単体の直接推論でも、Nano v4.2 Q8が836/840問（99.5%）、Nano v4.2 IQ4_emb8が828〜829/840問（98.6〜98.7%）を出しており、辞書候補を足す前の1発目から正確に当てています。</p>
+
+                    <h2>追加辞書と時間・数値表記の安定化</h2>
+                    <p>v4.1からv4.2への最大の差は、固有名詞・専門複合語・時間や数値単位を含むケースです。追加辞書100問ではv4.1の57〜73%からv4.2の99〜100%へ一気に跳ね上がりました。また、基本230問や日常口語100問でも98.3〜100.0%の高水準を維持しています。</p>
+
+                    <h2>使い心地の変化</h2>
+                    <p>人名やサービス名、IT用語、時刻・数量の混ざる文章でも、変換候補から探し直す回数が目に見えて減ります。モデルファイルは初回起動時にGitHub Releasesの<code>models-v4.2</code>から自動で案内・取得されるため、インストール直後から最新世代の変換精度をそのまま利用できます。</p>
+
+                    <h2>まとめ</h2>
+                    <p>ZeroCon Model v4.2は18.7〜27.7 MiBの軽量サイズのまま840問で98.7〜99.5%を達成し、前世代およびベースZenzモデルから精度を一段引き上げました。固定データセット上の測定結果と取得仕様の詳細はGitHub Releasesをご確認ください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>ZeroConvert-IME v0.9.0 adopts ZeroCon Model v4.2 across Windows and Android. On the 840-case conversion benchmark (CPU same-condition), Nano v4.2 Q8 (27.7 MiB) reaches 836/840 (99.5%) and the default 18.7 MiB Nano v4.2 IQ4_emb8 reaches 829/840 (98.7%), with additional-dictionary terms jumping from 57–73% in v4.1 to 99–100%. Performance summary only.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

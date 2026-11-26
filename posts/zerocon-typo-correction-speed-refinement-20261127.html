@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイポ補正の高速化と追従再調整――編集中レイテンシ35.0ms→14.5ms、誤補正は自動で元へ | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="タイポ補正の高速化と追従再調整――編集中レイテンシ35.0ms→14.5ms、誤補正は自動で元へ">
+    <meta property="og:description" content="編集中タイポ補正の平均遅延を35.04ms→14.47msへ約59%削減。450問全体でも速度と精度を同時に伸ばし、追加入力時の自動再調整と自動取り消しに対応。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zerocon-typo-correction-speed-refinement-20261127.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Typo Correction / Release v0.9.0</span>
+                <h1 class="article-title">タイポ補正の高速化と追従再調整――編集中レイテンシ35.0ms→14.5ms、誤補正は自動で元へ</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-27">2026.11.27</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>対象バージョン: ZeroConvert-IME v0.9.0</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>タイポ補正は正確であるほど重くなりやすく、しかも文の途中で一度直した箇所が、後ろの文字を打ち足したときに噛み合わなくなることがあります。ZeroConvert-IME v0.9.0ではAIによる補正判定の応答時間を大幅に削りつつ、後続の文脈に合わせて自動補正を再調整・自動取り消しする仕組みを加えました。本稿は性能の結果と使い心地をまとめます。</p>
+
+                    <h2>補正レイテンシと450問ベンチマークの結果</h2>
+                    <p>Windows（Intel Core i5-14500HX・CPU実行・Nano v4.2 IQ4_emb8）で、入力や削除を繰り返す編集中シーケンス422回と、タイポ255問＋正常入力195問の計450問セットを測定した結果です。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>測定項目</th>
+                                <th>最適化前</th>
+                                <th>最適化後 (v0.9.0)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>編集中シーケンス 平均遅延（422回）</td>
+                                <td>35.04 ms</td>
+                                <td>14.47 ms（約59%短縮）</td>
+                            </tr>
+                            <tr>
+                                <td>編集中シーケンス 中央値 / p95</td>
+                                <td>31.94 / 51.75 ms</td>
+                                <td>19.59 / 32.91 ms</td>
+                            </tr>
+                            <tr>
+                                <td>220ms超過（遅延スパイク）</td>
+                                <td>1回</td>
+                                <td>0回</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.08); font-weight: 700;">
+                                <td>450問 合計壁時間</td>
+                                <td>35.25秒</td>
+                                <td>25.06秒（約29%短縮）</td>
+                            </tr>
+                            <tr>
+                                <td>タイポ正解（255問中・完全一致）</td>
+                                <td>197問</td>
+                                <td>200問</td>
+                            </tr>
+                            <tr>
+                                <td>正常入力の保持（195問中）</td>
+                                <td>190問</td>
+                                <td>192問</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Android実機（450問）でも、Snapdragon 8 Eliteで全体4.36秒（1問あたり約9.7 ms）、Dimensity 8020で22.36秒（1問あたり約49.7 ms）で完了しています。AIモデルが文脈を見ながら誤字を直しているにもかかわらず、編集のたびに待たされる感覚がありません。</p>
+
+                    <h2>使い心地の変化：追従再調整・自動取り消し・12キーフリック</h2>
+                    <ul>
+                        <li><strong>文脈に合わせた再調整と自動取り消し</strong>：入力が長くなってから「実は先ほどの語は正しい入力だった」「別の直し方のほうが自然だ」と分かった場合、自動で元の入力へ戻したり、より自然な補正へ切り替えたりします。2箇所目のタイポもそのまま保護されます。</li>
+                        <li><strong>Escキーでの原入力復元</strong>：補正がかかった状態でもEscキーを押せば、打ち間違えを含む生の入力へワンタッチで戻せます。</li>
+                        <li><strong>数字混在・12キーフリック対応</strong>：数字を含む文の読み処理を整え、Androidの12キーフリック入力モードにも対応を広げました。</li>
+                    </ul>
+
+                    <h2>まとめ</h2>
+                    <p>v0.9.0のタイポ補正は編集中の平均遅延を14.47 msまで縮め、速さと安全性の両方を引き上げました。固定ベンチマークの詳細は GitHub Releases をご覧ください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>ZeroConvert-IME v0.9.0 cuts typo-correction latency during live editing (422 edit/delete steps) from 35.04 ms to 14.47 ms on Windows CPU while improving 450-case total wall time from 35.25 s to 25.06 s, typo exact matches from 197/255 to 200/255, and clean preservation from 190/195 to 192/195. Automatic context refinement, auto-revert, Esc raw-input restore, and Android 12-key flick support are included. Performance summary only.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

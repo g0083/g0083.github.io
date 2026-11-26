@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動確定が3段階に進化――誤確定ゼロのまま確定割合を35.9%→54.4%へ引き上げたv0.9.0 | O-ya tech</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:title" content="自動確定が3段階に進化――誤確定ゼロのまま確定割合を35.9%→54.4%へ引き上げたv0.9.0">
+    <meta property="og:description" content="「オフ / 通常 / 早め」の3段階自動確定をWindowsとAndroidに導入。228件の評価で誤確定0件を保ったまま自動確定発動率55.3%→83.3%を実現。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/zerocon-auto-commit-3levels-20261127.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(80, 200, 120, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <h1 class="logo"><a href="../index.html" style="color: inherit; text-decoration: none;">O-ya tech(g0083)'s Projects</a></h1>
+            <div class="header-actions">
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="article-container">
+        <div class="back-nav">
+            <a href="../index.html?tab=blog" class="back-link">
+                <span>←</span>
+                <span class="text-jp">記事一覧に戻る</span>
+                <span class="text-en">Back to Articles</span>
+            </a>
+        </div>
+
+        <article>
+            <header class="article-header">
+                <span class="article-category">Feature / Release v0.9.0</span>
+                <h1 class="article-title">自動確定が3段階に進化――誤確定ゼロのまま確定割合を35.9%→54.4%へ引き上げたv0.9.0</h1>
+                <div class="article-meta">
+                    <time datetime="2026-11-27">2026.11.27</time>
+                    <span>著者: g0083 (O-ya tech)</span>
+                    <span>対象バージョン: ZeroConvert-IME v0.9.0</span>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>長文を打ち続けていると、未確定の下線が画面に長く伸びて視線が散ったり、Enterを押すタイミングに迷ったりします。ZeroConvert-IME v0.9.0ではライブ変換中の自動確定をWindows・Androidともに3段階設定へ広げ、安全性と確定の早さを選べるようにしました。本稿は内部の判定式ではなく、ベンチマークでの結果と使い心地をまとめます。</p>
+
+                    <h2>選べる3つのモード</h2>
+                    <ul>
+                        <li><strong>オフ</strong>：自動確定を使わず、従来どおりEnterで確定します。</li>
+                        <li><strong>通常（推奨）</strong>：文脈の安定を見極めて先頭から確定する既定モードです。</li>
+                        <li><strong>早め（速度重視）</strong>：モデルの確信度が高い文節や句読点周辺をより短い入力長から前倒しで確定します。</li>
+                    </ul>
+
+                    <h2>228件の長文評価での比較</h2>
+                    <p>Nano v4.2とStandard v4.2を使い、長文入力の途中経過を追跡するテストセットで従来設定と早めモードを比較しました。</p>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>モデル / 条件</th>
+                                <th>発動した文の割合</th>
+                                <th>自動確定された読みの割合</th>
+                                <th>平均未確定長</th>
+                                <th>最終結果との誤確定</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Nano v4.2 従来基準（228件）</td>
+                                <td>126 / 228 (55.3%)</td>
+                                <td>35.9%</td>
+                                <td>10.01文字</td>
+                                <td>0件 (0.0%)</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.12); font-weight: 700;">
+                                <td>Nano v4.2 早めモード（228件）</td>
+                                <td>190 / 228 (83.3%)</td>
+                                <td>54.4%</td>
+                                <td>8.24文字</td>
+                                <td>0件 (0.0%)</td>
+                            </tr>
+                            <tr>
+                                <td>Standard v4.2 従来基準（48件）</td>
+                                <td>41 / 48 (85.4%)</td>
+                                <td>56.5%</td>
+                                <td>10.82文字</td>
+                                <td>0件 (0.0%)</td>
+                            </tr>
+                            <tr style="background: rgba(80, 200, 120, 0.08); font-weight: 700;">
+                                <td>Standard v4.2 早めモード（48件）</td>
+                                <td>41 / 48 (85.4%)</td>
+                                <td>61.5%</td>
+                                <td>8.76文字</td>
+                                <td>0件 (0.0%)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Nano v4.2では自動確定が働く文の割合が55.3%から83.3%へ増え、入力した読みのうち半分以上（54.4%）が打鍵の流れの中で確定するようになりました。それでいて最終的な正解文と食い違う誤確定は0件のままです。AIがすでに高速に動いているからこそ、確定の判断を遅らせずに前へ進められます。</p>
+
+                    <h2>使い心地の変化：未確定表示とBackspace取り消し</h2>
+                    <p>もし確定した直後に言い回しを変えたくなった場合も、直後のBackspaceキーで自動確定を取り消して未確定状態へ戻せます。またv0.9.0ではWindowsとAndroidの両方で未確定読みの表示と移動カーソルの扱いを揃えたため、長文の途中を戻って編集する際の視認性も整いました。</p>
+
+                    <h2>まとめ</h2>
+                    <p>v0.9.0の3段階自動確定は、誤確定ゼロを保ったままEnter操作の回数をさらに減らします。スピードを重視する方は設定画面から「早め（速度重視）」を試してみてください。</p>
+                </section>
+
+                <section class="text-en">
+                    <p>ZeroConvert-IME v0.9.0 introduces a 3-level live-conversion auto-commit mode (Off, Standard, and Fast) across Windows and Android. On 228 long-form test cases with Nano v4.2, Fast mode raises triggered cases from 55.3% to 83.3% and committed reading ratio from 35.9% to 54.4% while maintaining 0 miscommits against the final output. Performance summary only.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

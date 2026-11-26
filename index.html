@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">20</span>
+                <span class="tab-badge">25</span>
             </button>
         </div>
 
@@ -105,8 +105,8 @@
                     </div>
                     <div class="card-content">
                         <h3>ZeroConvert-IME</h3>
-                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4.1（18.7 MiB）」を搭載し、自動確定・統合タイポ補正・先読みアシストに対応（Windows / Android）。</p>
-                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4.1 (18.7 MiB)' for auto-commit, unified typo correction, and predictive assist (Windows / Android).</p>
+                        <p class="text-jp">変換キー操作をゼロに近づける次世代AI日本語IME。独自開発の極小モデル「ZeroCon Model Nano v4.2（18.7 MiB）」を搭載し、1打鍵5〜7ms台の応答で自動確定・統合タイポ補正・先読みアシスト・全国住所辞書に対応（Windows / Android）。</p>
+                        <p class="text-en">Next-generation AI Japanese IME aiming for zero conversion keypresses. Powered by the custom 'ZeroCon Model Nano v4.2 (18.7 MiB)' for 5–7 ms live response, 3-level auto-commit, unified typo correction, and predictive assist (Windows / Android).</p>
                         <div class="card-actions">
                             <a href="https://github.com/g0083/ZeroConvert-IME/releases" class="btn-primary" target="_blank" rel="noopener noreferrer">
                                 <span class="text-jp">ダウンロード</span>
@@ -123,7 +123,32 @@
                                 <span class="text-jp">📝 関連記事</span>
                                 <span class="text-en">📝 Related Article</span>
                             </div>
-                            <a href="posts/zerocon-ime-custom-model-training.html" class="related-link">
+                            <a href="posts/zerocon-ai-fast-response-20261127.html" class="related-link">
+                                <span class="text-jp">【v0.9.0性能】AIが動いているのに1打鍵5〜7ms――ZeroConvert-IMEの応答速度と処理時間削減</span>
+                                <span class="text-en">【v0.9.0 Perf】5–7 ms Keystroke Response While Running Local AI</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-model-v4-2-accuracy-20261127.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【v0.9.0モデル】ZeroCon Model v4.2 性能レポート――840問で99.5%超え</span>
+                                <span class="text-en">【v0.9.0 Model】ZeroCon Model v4.2 Performance Report (99.5%+ on 840 Cases)</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-auto-commit-3levels-20261127.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【v0.9.0機能】自動確定が3段階に進化――誤確定ゼロのまま確定割合を35.9%→54.4%へ</span>
+                                <span class="text-en">【v0.9.0 Feature】3-Level Auto-Commit with Zero Miscommits</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-typo-correction-speed-refinement-20261127.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【v0.9.0機能】タイポ補正の高速化と追従再調整――編集中35.0ms→14.5ms</span>
+                                <span class="text-en">【v0.9.0 Feature】Faster &amp; Context-Refining Typo Correction (14.5 ms)</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-dictionary-v2-ondemand-20261127.html" class="related-link" style="margin-top: 0.6rem;">
+                                <span class="text-jp">【v0.9.0機能】全国住所・町字辞書（161万組超）とオンデマンド軽量配布</span>
+                                <span class="text-en">【v0.9.0 Feature】1.61M Address Dictionary &amp; On-Demand Packaging</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-ime-custom-model-training.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【開発記】18MBの極小モデルで変換キーをゼロへ――独自モデル学習の全軌跡</span>
                                 <span class="text-en">【DevLog】Pushing 18MB SLMs to the Limit: Custom Model Training</span>
                                 <span class="arrow">→</span>
@@ -426,6 +451,135 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: ZeroConvert-IME v0.9.0 Fast AI Response (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME v0.9.0 Fast AI Response" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Performance / Release v0.9.0</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">AIが動いているのに1打鍵5〜7ms――ZeroConvert-IME v0.9.0の応答速度と処理時間削減</span>
+                            <span class="text-en">5–7 ms Keystroke Response While Running Local AI: ZeroConvert-IME v0.9.0 Performance Report</span>
+                        </h3>
+                        <p class="text-jp">Windows CPUで840問24.55秒→7.69秒（ライブ変換平均5.31〜6.60ms）、Vulkanなら6.58秒。Android（Snapdragon 8 Elite）でも71.95ms→32.92msへ短縮し、AI変換の常識を覆す応答速度を実現しました。</p>
+                        <p class="text-en">Cuts 840-case CPU runtime from 24.55 s to 7.69 s (5.31–6.60 ms per live keystroke) on Windows and from 71.95 ms to 32.92 ms on Snapdragon 8 Elite Android, proving local AI can respond faster than a 60Hz frame.</p>
+                        <a href="posts/zerocon-ai-fast-response-20261127.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: ZeroCon Model v4.2 Accuracy (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroCon Model v4.2 Performance Report" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Model / Release v0.9.0</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">ZeroCon Model v4.2 性能レポート――840問で99.5%超え、追加辞書・専門語を大幅強化</span>
+                            <span class="text-en">ZeroCon Model v4.2 Performance Report: Over 99.5% on 840 Cases &amp; Additional Dictionary Boost</span>
+                        </h3>
+                        <p class="text-jp">27.7 MiBのNano v4.2 Q8が836/840（99.5%）、18.7 MiBのNano v4.2 IQ4_emb8が829/840（98.7%）に到達。追加辞書100問でもv4.1の57〜73%から99〜100%へ大きく伸びました。</p>
+                        <p class="text-en">Nano v4.2 Q8 (27.7 MiB) reaches 836/840 (99.5%) and the default 18.7 MiB Nano v4.2 IQ4_emb8 reaches 829/840 (98.7%), jumping from 57–73% to 99–100% on additional-dictionary terms.</p>
+                        <a href="posts/zerocon-model-v4-2-accuracy-20261127.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: 3-Level Auto-Commit (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME v0.9.0 3-Level Auto-Commit" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Feature / Release v0.9.0</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">自動確定が3段階に進化――誤確定ゼロのまま確定割合を35.9%→54.4%へ引き上げたv0.9.0</span>
+                            <span class="text-en">3-Level Auto-Commit in v0.9.0: Raising Committed Ratio from 35.9% to 54.4% with Zero Miscommits</span>
+                        </h3>
+                        <p class="text-jp">「オフ / 通常 / 早め」の3段階設定をWindowsとAndroidへ導入。228件の長文評価で誤確定0件を保ったまま、自動確定の発動率を55.3%→83.3%へ引き上げました。</p>
+                        <p class="text-en">Adds Off / Standard / Fast auto-commit modes to Windows and Android. On 228 long-form cases, Fast mode boosts triggered auto-commits from 55.3% to 83.3% with 0 miscommits.</p>
+                        <a href="posts/zerocon-auto-commit-3levels-20261127.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: Typo Correction Speed & Refinement (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME v0.9.0 Typo Correction" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Typo Correction / Release v0.9.0</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">タイポ補正の高速化と追従再調整――編集中レイテンシ35.0ms→14.5ms、誤補正は自動で元へ</span>
+                            <span class="text-en">Faster &amp; Context-Refining Typo Correction: 35.0 ms to 14.5 ms During Live Editing</span>
+                        </h3>
+                        <p class="text-jp">編集中シーケンスの補正平均時間を35.04ms→14.47msへ約59%短縮し、450問全体も25.06秒へ高速化。後続文脈に合わせた再調整と自動取り消し、Esc復元、12キーフリックにも対応しました。</p>
+                        <p class="text-en">Cuts live-edit typo correction latency from 35.04 ms to 14.47 ms and 450-case wall time to 25.06 s, while adding context-aware refinement, auto-revert, Esc raw restore, and 12-key flick support.</p>
+                        <a href="posts/zerocon-typo-correction-speed-refinement-20261127.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Article: Dictionary v2 & On-Demand Distribution (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="ZeroConvert-IME v0.9.0 Dictionary v2 & On-Demand Assets" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Dictionary &amp; Distribution / Release v0.9.0</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">全国住所・町字辞書（161万組超）とオンデマンド軽量配布――辞書2.5倍でも変換遅延ほぼゼロ増</span>
+                            <span class="text-en">1.61M-Entry Nationwide Address Dictionary &amp; On-Demand Packaging: Half the Installer Size, Same Speed</span>
+                        </h3>
+                        <p class="text-jp">全国町字まで取り込んだdictionary-v2で収録組数を62.9万→161.9万組へ広げつつ、辞書引きp50は2.52ms→2.54msを維持。モデルと辞書の初回一括取得で配布インストーラーも61.99 MiBへ半減しました。</p>
+                        <p class="text-en">Expands dictionary-v2 to 1,618,968 pairs with virtually zero lookup slowdown (2.52 ms to 2.54 ms p50), and cuts installer/APK sizes by over half via verified on-demand first-launch downloads.</p>
+                        <a href="posts/zerocon-dictionary-v2-ondemand-20261127.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
                 <!-- Article: Anti-Rasterization agent-desktop & DarkModePDF (2026/11/23) -->
                 <article class="card">
                     <div class="card-image-wrapper">
