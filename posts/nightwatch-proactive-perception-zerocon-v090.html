@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【考察】「Don't Sleep, Keep Watch」の知覚・行動ギャップ解消と、1打鍵5〜7msで動くZeroConvert-IME v0.9.0の同じ設計課題 | O-ya tech</title>
+    <meta name="description" content="Hugging Face Daily Papersで話題の「Don't Sleep, Keep Watch」（NightWatch-0.8B、arXiv:2611.28947）と、1打鍵5〜7ms・追従再調整を備えたZeroConvert-IME v0.9.0を比較し、動的環境でAIの古い出力を無効化する設計を考察します。">
+    <link rel="canonical" href="https://g0083.github.io/posts/nightwatch-proactive-perception-zerocon-v090.html">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../icon.png">
+
+    <!-- AdSense Code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9543327719024469"
+        crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph / Meta for Social Sharing -->
+    <meta property="og:title" content="【考察】「Don't Sleep, Keep Watch」の知覚・行動ギャップ解消と、1打鍵5〜7msで動くZeroConvert-IME v0.9.0の同じ設計課題">
+    <meta property="og:description" content="推論中に環境が変われば出力は腐る。0.8Bの監視モデルで古い行動を無効化するNightWatch（arXiv:2611.28947）と、1打鍵5〜7msで追従するZeroConvert-IME v0.9.0の共通点を整理します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://g0083.github.io/posts/nightwatch-proactive-perception-zerocon-v090.html">
+    <meta property="og:image" content="https://g0083.github.io/zeroconvert.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ooyatech">
+
+    <style>
+        .article-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .article-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            padding-bottom: 1.5rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(80, 200, 120, 0.3);
+        }
+
+        .article-title {
+            font-size: 2.05rem;
+            line-height: 1.35;
+            margin: 0 0 1rem;
+            color: #ffffff;
+        }
+
+        .article-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #e0e0e0;
+        }
+
+        .article-content h2 {
+            font-size: 1.55rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(80, 200, 120, 0.2);
+            color: var(--primary-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+
+        .article-content p {
+            margin: 1.2rem 0;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: #50C878;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .callout {
+            background: rgba(80, 200, 120, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.8rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(80, 200, 120, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-success {
+            color: #50C878;
+            font-weight: 700;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(80, 200, 120, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 3.5rem;
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #0f172a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(80, 200, 120, 0.35);
+        }
+    </style>
+</head>
+
+<body class="lang-jp">
+    <header>
+        <div class="container header-content">
+            <a href="../index.html" class="logo">O-ya tech(g0083)'s Projects</a>
+            <div class="header-actions">
+                <a href="../index.html" class="btn-secondary">Home</a>
+                <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary btn-github">
+                    GitHub
+                </a>
+                <a href="https://x.com/ooyatech" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-x">
+                    X(twitter)
+                </a>
+                <button id="lang-toggle" class="btn-secondary">
+                    <span class="text-jp">English</span>
+                    <span class="text-en">日本語</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container article-container">
+        <a href="../index.html?tab=blog" class="nav-back">← 記事一覧に戻る</a>
+
+        <article>
+            <div class="article-header">
+                <span class="article-category">Edge AI / Architecture</span>
+                <h1 class="article-title">【考察】「Don't Sleep, Keep Watch」の知覚・行動ギャップ解消と、1打鍵5〜7msで動くZeroConvert-IME v0.9.0の同じ設計課題</h1>
+                <div class="article-meta">
+                    <span>投稿日: 2026年11月27日</span>
+                    <span>筆者: O-ya tech (g0083)</span>
+                    <span>関連: ZeroConvert-IME v0.9.0 / NightWatch (arXiv:2611.28947)</span>
+                </div>
+            </div>
+
+            <!-- Related Project Banner -->
+            <div class="related-project-banner" style="background: rgba(80, 200, 120, 0.08); border: 1px solid rgba(80, 200, 120, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 2.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #50C878; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Related Project / 関連プロジェクト</span>
+                    <strong style="font-size: 1.15rem; color: #fff;">ZeroConvert-IME v0.9.0</strong>
+                    <div style="font-size: 0.88rem; color: #b0b0b0; margin-top: 2px;">1打鍵5〜7ms台で追従する極小AI日本語IME（Windows / Android）</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="../index.html?project=zeroconvert" class="btn-secondary" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">トップで見る ↗</a>
+                    <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-github" style="font-size: 0.85rem; padding: 6px 14px; height: auto;">GitHub</a>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <section class="text-jp">
+                    <p>AIが推論しているあいだに現実の画面や入力状態が先に進んでしまうと、モデル単体の精度がどれだけ高くても、返ってきた結果はその瞬間に古いものになります。</p>
+
+                    <p>Hugging Face Daily Papersで注目を集めた論文『Don't Sleep, Keep Watch: Proactive Perception for Computer-Use Agents』（arXiv:2611.28947）は、まさにこの時間差を真正面から扱っています。巨大なVLMに画面操作を任せる際、モデルを賢くするのではなく、わずか0.8Bの軽量監視モデルを横に並べて古い行動を止める仕組みを提案しました。</p>
+
+                    <p>この構造は、私が開発しているローカルAI日本語IMEのZeroConvert-IME v0.9.0で追いかけた設計課題とそのまま重なります。公開済みベンチマークの数値とあわせて、動的環境における応答速度と状態無効化の共通点を整理します。実装の詳細や学習レシピは（内部）に留め、ここでは公開されている性能結果と挙動のみを扱います。</p>
+
+                    <h2>1. NightWatchが突いた「知覚と行動のギャップ」</h2>
+
+                    <p>GUIを操作するVLMエージェントは、ある瞬間のスクリーンショットを受け取って長い推論を走らせ、数秒後にクリックや入力を返します。ところが動的なWebページやアプリでは、モデルが考えているあいだにロードが完了したり、ポップアップが閉じたり、ボタンの位置がずれたりします。</p>
+
+                    <p>NightWatchの著者らはこのズレをperception-action gapと呼び、既存のVLM本体の重みやプロンプトを一切いじらずに外付けの軽量モデルNightWatch-0.8Bを常時ストリーム監視へ置く解決策を取りました。役割は3つに絞られています。</p>
+
+                    <ul>
+                        <li><strong>Interrupt</strong>：監視中に画面が予期せず変わったら、実行中の重い推論を途中で止める。</li>
+                        <li><strong>Void</strong>：推論が終わる直前に前提が崩れていた場合、発行予定だった古い操作を破棄する。</li>
+                        <li><strong>Wake</strong>：読み込みやアニメーションが落ち着いた瞬間を検知し、次の判断を即座に起こす。</li>
+                    </ul>
+
+                    <div class="callout">
+                        <div class="callout-title">NightWatch（arXiv:2611.28947）の主なベンチマーク結果</div>
+                        <p style="margin: 0;">OSWorld-Verifiedではタスク成功率を維持・微増させたまま、非推論の壁時間を <strong>33%削減</strong>、無駄な待ち時間を <strong>53%削減</strong> しました。動的なWeb操作を測るDynaCU-Benchでは、大型VLM単体の <strong>39.5% → 44.2%</strong> へ成功率が伸びています。しかもこの0.8Bの監視モデルは、受動的な監視手法や30倍以上大きなSystem-1判定モデルを上回る結果を出しました。</p>
+                    </div>
+
+                    <p>要点は明確です。遅い推論をそのまま通すと、精度の低さではなく「世界の進行速度に負けた鮮度落ち」で失敗します。だから軽い監視役が前段に立ち、古い推論結果を容赦なく無効化できる構造が効きます。</p>
+
+                    <h2>2. 日本語IMEは毎秒何十回も起きる「動的環境」</h2>
+
+                    <p>人間がキーボードを打つ環境も、VLMにとってのGUIと同じく絶えず状態が変わる動的環境です。しかもGUI操作が数秒単位のやり取りなのに対し、タイピングは1打鍵あたり数十ミリ秒から百ミリ秒間隔で状態が書き換わります。</p>
+
+                    <p>もし1回のAI変換やタイポ補正に50msや100msかかっていれば、結果を返す頃にはユーザーの指はすでに次の文字を打っています。変換候補のちらつきや、直前の誤字を直したつもりが次の文字と衝突して崩れる現象は、まさにIME版perception-action gapと言えます。</p>
+
+                    <p>ZeroConvert-IME v0.9.0では、この問題に対して「1打鍵あたりの処理をディスプレイの更新周期より速くすること」と「文脈が進んだときに過去の判断を安全に撤回できること」の2点からアプローチしました。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>比較軸</th>
+                                <th>NightWatch (arXiv:2611.28947)</th>
+                                <th>ZeroConvert-IME v0.9.0 (公開実測)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>対象となる動的環境</td>
+                                <td>変化し続けるデスクトップ / Web画面</td>
+                                <td>連続入力が続くWindows / Android IME</td>
+                            </tr>
+                            <tr>
+                                <td>中核のボトルネック</td>
+                                <td>VLM推論中に画面が変わり操作が古くなる</td>
+                                <td>打鍵中にAI推論が遅延し変換や補正がズレる</td>
+                            </tr>
+                            <tr>
+                                <td>高速化の実測値</td>
+                                <td>非推論壁時間 33%減 / 無駄時間 53%減</td>
+                                <td>Windows CPU 5.31〜6.60 ms/打鍵（840問 24.55秒→7.69秒）<br>Android Snapdragon 8 Elite 71.95 ms→32.92 ms</td>
+                            </tr>
+                            <tr>
+                                <td>鮮度落ちへの安全装置</td>
+                                <td>Interrupt / Void / Wake による古い行動の破棄</td>
+                                <td>タイポ補正の追従再調整・自動取り消し・Esc復元<br>3段階自動確定＋Backspaceでの確定撤回</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>3. 速さだけでなく「撤回と保留」で鮮度落ちを潰す</h2>
+
+                    <p>v0.9.0で特に手応えがあったのは、処理時間を削っただけでは解決しない境界を、挙動側の安全装置で塞いだ点です。</p>
+
+                    <h3>タイポ補正の短縮と、後続文脈での自動取り消し</h3>
+                    <p>入力中のタイポ補正は、Windows CPUの編集中シーケンス平均で <strong>35.04 ms → 14.47 ms</strong>（約59%短縮）まで縮み、220msを超える遅延スパイクも1回から <strong>0回</strong> に抑えました。450問の合計壁時間も35.25秒から25.06秒へ落ちています。</p>
+
+                    <p>ただ、入力途中の短い読みだけで補正を確定させてしまうと、続きの文字が打たれた瞬間に別の単語だったと判明するケースが出ます。そこでv0.9.0では、文脈が伸びた段階で「元の入力のほうが正しかった」と分かれば補正を自動で取り消し、別の候補が自然なら追従して再調整する挙動を入れました。納得いかないときはEscキーで生の入力へ戻せます。</p>
+
+                    <h3>自動確定の3段階化と誤確定ゼロ</h3>
+                    <p>先読みやライブ変換でEnter操作を減らす自動確定も、急ぎすぎれば誤確定になります。228件の長文評価でNano v4.2（18.7 MiB）の「早め」モードを測ったところ、自動確定が発動した文の割合は <strong>55.3% → 83.3%</strong>、自動確定された読みの割合は <strong>35.9% → 54.4%</strong> まで増えましたが、最終正解との誤確定は <strong>0件（0.0%）</strong> を保っています。万が一確定した直後に言い回しを変えたくなっても、直後のBackspaceで未確定状態へ戻せます。</p>
+
+                    <h2>4. 2026年11月の開発トレンドに共通する「遅延と境界の制御」</h2>
+
+                    <p>この視点はAIエージェントやIMEに限った話ではありません。最近のGitHub Trendingで話題になったCloudflareやOxc周辺のRust製TypeScriptコンパイラ移植プロジェクト <code>tsrs</code> でも、GoではなくRustを選んだ理由としてWebAssemblyにガベージコレクタを抱え込ませずにブラウザやエッジで遅延なく動かす点が挙げられていました。また、数日前に取り上げたデスクトップ操作CLIの <code>agent-desktop</code> が画面変化を <code>STALE_REF</code> エラーで止める設計も、古い状態のまま手を動かさないための境界です。</p>
+
+                    <p>巨大なモデルやリッチなランタイムをそのまま動かす時代から、軽量な監視やネイティブ実装でループを極限まで短くし、前提が崩れた出力は即座に無効化する時代へ移っています。モデルのパラメータを増やす前に、知覚から行動までの時間差をどれだけ潰せるか。NightWatchの0.8BとZeroConvert-IMEの18.7 MiBは、規模こそ違えど同じ現実解に辿り着いています。</p>
+
+                    <h2>まとめ</h2>
+                    <ul>
+                        <li>NightWatch（arXiv:2611.28947）は、0.8Bの常時監視モデルで古い推論や行動をInterrupt / Void / Wakeすることで、巨大VLMの壁時間を33%・無駄時間を53%削減した。</li>
+                        <li>ZeroConvert-IME v0.9.0は、1打鍵5.31〜6.60 msのライブ応答と14.47 msのタイポ補正により、人間の打鍵速度の内側に推論を収めている。</li>
+                        <li>速度に加えて「追従再調整・自動取り消し」「誤確定ゼロの3段階自動確定」「Esc / Backspace復元」を組み合わせることで、動的入力における鮮度落ちを防いでいる。</li>
+                    </ul>
+                </section>
+
+                <section class="text-en">
+                    <p>When an environment changes faster than an AI model finishes thinking, even a highly capable model produces stale, wrong actions. The Hugging Face Daily Papers highlight <em>"Don't Sleep, Keep Watch: Proactive Perception for Computer-Use Agents"</em> (arXiv:2611.28947) tackles this perception-action gap by pairing a large VLM with a lightweight 0.8B System-1 watcher (NightWatch-0.8B) that interrupts stale reasoning, voids obsolete actions, and wakes the agent when UI state settles—cutting non-reasoning wall-clock time by 33% and wasted time by 53% on OSWorld-Verified, while boosting DynaCU-Bench success from 39.5% to 44.2%.</p>
+                    <p>Live Japanese typing is an even tighter dynamic loop. ZeroConvert-IME v0.9.0 addresses the same perception-action gap through sub-frame local inference (5.31–6.60 ms per keystroke on Windows CPU, 32.92 ms on Snapdragon 8 Elite Android) and live-edit typo correction (35.04 ms down to 14.47 ms) backed by context-aware refinement, auto-revert, Esc raw restore, and 3-level auto-commit with zero miscommits on 228 long-form cases. Performance results only; internal recipes remain private.</p>
+                </section>
+
+                <div class="cta-box">
+                    <h3>ZeroConvert-IME v0.9.0 を試してみる</h3>
+                    <p>Windowsインストーラー・Android APKをGitHub Releasesからダウンロードできます。</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <a href="https://github.com/g0083/ZeroConvert-IME/releases/latest" target="_blank" rel="noopener noreferrer" class="cta-btn">
+                            最新版をダウンロード ↗
+                        </a>
+                        <a href="https://github.com/g0083/ZeroConvert-IME" target="_blank" rel="noopener noreferrer" class="cta-btn" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            GitHubリポジトリ ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 O-ya tech (g0083). Hosted on GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

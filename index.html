@@ -58,7 +58,7 @@
             <button class="tab-btn" data-tab="blog">
                 <span class="text-jp">📝 記事・ブログ</span>
                 <span class="text-en">📝 Articles & Blog</span>
-                <span class="tab-badge">25</span>
+                <span class="tab-badge">26</span>
             </button>
         </div>
 
@@ -123,7 +123,12 @@
                                 <span class="text-jp">📝 関連記事</span>
                                 <span class="text-en">📝 Related Article</span>
                             </div>
-                            <a href="posts/zerocon-ai-fast-response-20261127.html" class="related-link">
+                            <a href="posts/nightwatch-proactive-perception-zerocon-v090.html" class="related-link">
+                                <span class="text-jp">【考察】「Don't Sleep, Keep Watch」の知覚・行動ギャップ解消とZeroConvert-IME v0.9.0</span>
+                                <span class="text-en">【Architecture】NightWatch (arXiv:2611.28947) &amp; ZeroConvert-IME v0.9.0's 5–7 ms Live Loop</span>
+                                <span class="arrow">→</span>
+                            </a>
+                            <a href="posts/zerocon-ai-fast-response-20261127.html" class="related-link" style="margin-top: 0.6rem;">
                                 <span class="text-jp">【v0.9.0性能】AIが動いているのに1打鍵5〜7ms――ZeroConvert-IMEの応答速度と処理時間削減</span>
                                 <span class="text-en">【v0.9.0 Perf】5–7 ms Keystroke Response While Running Local AI</span>
                                 <span class="arrow">→</span>
@@ -451,6 +456,32 @@
         <!-- TAB 2: Blog & Articles Panel -->
         <div id="tab-blog" class="tab-panel">
             <div class="projects-grid">
+                <!-- Article: NightWatch Proactive Perception & ZeroConvert-IME v0.9.0 (2026/11/27) -->
+                <article class="card">
+                    <div class="card-image-wrapper">
+                        <img src="zeroconvert.png" alt="NightWatch Proactive Perception and ZeroConvert-IME v0.9.0" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-tag-row">
+                            <span class="tag-category">Edge AI / Architecture</span>
+                            <button class="project-pill-btn" data-target-project="zeroconvert" title="プロジェクト詳細を表示">
+                                <span class="text-jp">関連: ZeroConvert-IME ↗</span>
+                                <span class="text-en">Project: ZeroConvert-IME ↗</span>
+                            </button>
+                        </div>
+                        <h3>
+                            <span class="text-jp">【考察】「Don't Sleep, Keep Watch」の知覚・行動ギャップ解消と、1打鍵5〜7msで動くZeroConvert-IME v0.9.0の同じ設計課題</span>
+                            <span class="text-en">Closing the Perception-Action Gap: NightWatch (arXiv:2611.28947) &amp; ZeroConvert-IME v0.9.0's 5–7 ms Live Loop</span>
+                        </h3>
+                        <p class="text-jp">0.8Bの常時監視モデルで古い推論を止めて壁時間を33%削減した論文「NightWatch」（arXiv:2611.28947）と、1打鍵5.31〜6.60 msのライブ応答・14.47 msの追従タイポ補正・自動取り消しを備えたZeroConvert-IME v0.9.0を比較し、動的環境で鮮度落ちを防ぐ設計を考察します。</p>
+                        <p class="text-en">Comparing NightWatch-0.8B (arXiv:2611.28947, cutting non-reasoning wall time by 33% via proactive Interrupt/Void/Wake) with ZeroConvert-IME v0.9.0's 5–7 ms live keystroke loop, 14.47 ms typo correction, and auto-revert safeguards.</p>
+                        <a href="posts/nightwatch-proactive-perception-zerocon-v090.html" class="btn-primary">
+                            <span class="text-jp">記事を読む</span>
+                            <span class="text-en">Read Article</span>
+                        </a>
+                    </div>
+                </article>
+
                 <!-- Article: ZeroConvert-IME v0.9.0 Fast AI Response (2026/11/27) -->
                 <article class="card">
                     <div class="card-image-wrapper">
